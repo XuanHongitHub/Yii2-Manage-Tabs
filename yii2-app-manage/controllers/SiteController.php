@@ -20,22 +20,22 @@ class SiteController extends Controller
         return [
             'access' => [
                 'class' => AccessControl::class,
-                'only' => ['logout', 'admin-only', 'profile'], // Thêm các hành động mà bạn muốn kiểm soát
+                'only' => ['logout', 'admin-only', 'profile'],
                 'rules' => [
                     [
                         'actions' => ['logout'],
                         'allow' => true,
-                        'roles' => ['@'], // Chỉ cho phép người dùng đã đăng nhập
+                        'roles' => ['@'],
                     ],
                     [
                         'actions' => ['admin-only'],
                         'allow' => true,
-                        'roles' => ['admin'], // Chỉ cho phép admin truy cập
+                        'roles' => ['admin'],
                     ],
                     [
                         'actions' => ['profile'],
                         'allow' => true,
-                        'roles' => ['user'], // Chỉ cho phép user truy cập
+                        'roles' => ['user'],
                     ],
                 ],
             ],
