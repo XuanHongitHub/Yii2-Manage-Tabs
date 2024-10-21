@@ -8,7 +8,9 @@ use yii\web\Controller;
 use yii\web\Response;
 use yii\filters\VerbFilter;
 use app\models\LoginForm;
+use app\models\SignupForm;
 use app\models\ContactForm;
+use app\models\User;
 
 class SiteController extends Controller
 {
@@ -19,28 +21,31 @@ class SiteController extends Controller
     {
         return [
             'access' => [
-                'class' => AccessControl::class,
-                'only' => ['logout', 'admin-only', 'profile'],
+                'class' => AccessControl::className(),
+                'only' => ['logout', 'signup', 'about'],
                 'rules' => [
+                    [
+                        'actions' => ['signup'],
+                        'allow' => true,
+                        'roles' => ['?'],
+                    ],
                     [
                         'actions' => ['logout'],
                         'allow' => true,
                         'roles' => ['@'],
                     ],
                     [
-                        'actions' => ['admin-only'],
+                        'actions' => ['about'],
                         'allow' => true,
-                        'roles' => ['admin'],
-                    ],
-                    [
-                        'actions' => ['profile'],
-                        'allow' => true,
-                        'roles' => ['user'],
+                        'roles' => ['@'],
+                        'matchCallback' => function ($rule, $action) {
+                            return User::isUserAdmin(Yii::$app->user->identity->username);
+                        }
                     ],
                 ],
             ],
             'verbs' => [
-                'class' => VerbFilter::class,
+                'class' => VerbFilter::className(),
                 'actions' => [
                     'logout' => ['post'],
                 ],
@@ -80,21 +85,36 @@ class SiteController extends Controller
      *
      * @return Response|string
      */
+    // public function actionLogin()
+    // {
+    //     if (!Yii::$app->user->isGuest) {
+    //         return $this->goHome();
+    //     }
+
+    //     $model = new LoginForm();
+    //     if ($model->load(Yii::$app->request->post()) && $model->login()) {
+    //         return $this->goBack();
+    //     }
+
+    //     $model->password = '';
+    //     return $this->render('login', [
+    //         'model' => $model,
+    //     ]);
+    // }
     public function actionLogin()
     {
-        if (!Yii::$app->user->isGuest) {
+        if (!\Yii::$app->user->isGuest) {
             return $this->goHome();
         }
 
         $model = new LoginForm();
-        if ($model->load(Yii::$app->request->post()) && $model->login()) {
+        if ($model->load(Yii::$app->request->post()) && $model->loginAdmin()) {
             return $this->goBack();
+        } else {
+            return $this->render('login', [
+                'model' => $model,
+            ]);
         }
-
-        $model->password = '';
-        return $this->render('login', [
-            'model' => $model,
-        ]);
     }
 
     /**
@@ -135,5 +155,18 @@ class SiteController extends Controller
     public function actionAbout()
     {
         return $this->render('about');
+    }
+
+    public function actionSignup()
+    {
+        $model = new SignupForm();
+        if ($model->load(Yii::$app->request->post()) && $model->signup()) {
+            Yii::$app->session->setFlash('success', 'Thank you for registration. Please check your inbox for verification email.');
+            return $this->goHome();
+        }
+
+        return $this->render('signup', [
+            'model' => $model,
+        ]);
     }
 }

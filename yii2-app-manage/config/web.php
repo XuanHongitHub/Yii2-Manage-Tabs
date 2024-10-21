@@ -15,6 +15,7 @@ $config = [
         'request' => [
             // !!! insert a secret key in the following (if it is empty) - this is required by cookie validation
             'cookieValidationKey' => '4cwGu6IvHYlwQ1CS7YTaAZ3Lcjx6obTD',
+            'enableCsrfValidation' => true,
         ],
         'cache' => [
             'class' => 'yii\caching\FileCache',
@@ -41,14 +42,19 @@ $config = [
                 ],
             ],
         ],
-        'authManager' => [
-            'class' => 'yii\rbac\DbManager',
-        ],
+
         'db' => $db,
+
         'urlManager' => [
             'enablePrettyUrl' => true,
             'showScriptName' => false,
             'rules' => [
+                'tabs' => 'tabs/index',
+                'tabs/about' => 'tabs/about',
+                'tabs/manage-tabs' => 'tabs/manage-tabs',
+                'tabs/manage-users' => 'tabs/manage-users',
+
+                'tabs/add-table' => 'tabs/add-table',
             ],
         ],
     ],
@@ -61,7 +67,7 @@ if (YII_ENV_DEV) {
     $config['modules']['debug'] = [
         'class' => 'yii\debug\Module',
         // uncomment the following to add your IP if you are not connecting from localhost.
-        'allowedIPs' => ['127.0.0.1', '::1'],
+        'allowedIPs' => ['127.0.0.1', '::1', '172.19.0.3', '172.19.0.4', '172.19.0.1', '172.19.0.2'],
     ];
 
     $config['bootstrap'][] = 'gii';

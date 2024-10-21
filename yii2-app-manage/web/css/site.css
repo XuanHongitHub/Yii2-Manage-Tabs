@@ -1,4 +1,13 @@
-main > .container {
+body {
+    background-color: #f4f4f4;
+    color: #1f2f3e;
+    font-family: Nunito Sans, sans-serif;
+    font-size: 14px;
+    overflow-x: hidden;
+}
+
+
+main>.container {
     padding: 70px 15px 20px;
 }
 
@@ -8,7 +17,7 @@ main > .container {
     height: 60px;
 }
 
-.footer > .container {
+.footer>.container {
     padding-right: 15px;
     padding-left: 15px;
 }
@@ -19,7 +28,8 @@ main > .container {
 }
 
 /* add sorting icons to gridview sort links */
-a.asc:after, a.desc:after {
+a.asc:after,
+a.desc:after {
     content: '';
     left: 3px;
     display: inline-block;
@@ -59,30 +69,125 @@ a.desc:after {
 }
 
 /* align the logout "link" (button in form) of the navbar */
-.nav li > form > button.logout {
+.nav li>form>button.logout {
     padding-top: 7px;
     color: rgba(255, 255, 255, 0.5);
 }
 
 @media(max-width:767px) {
-    .nav li > form > button.logout {
-        display:block;
+    .nav li>form>button.logout {
+        display: block;
         text-align: left;
         width: 100%;
         padding: 10px 0;
     }
 }
 
-.nav > li > form > button.logout:focus,
-.nav > li > form > button.logout:hover {
+.nav>li>form>button.logout:focus,
+.nav>li>form>button.logout:hover {
     text-decoration: none;
     color: rgba(255, 255, 255, 0.75);
 }
 
-.nav > li > form > button.logout:focus {
+.nav>li>form>button.logout:focus {
     outline: none;
 }
 
 .form-group {
     margin-bottom: 1rem;
+}
+
+.richtext-area {
+    border: 1px solid #ced4da;
+    border-radius: 0.25rem;
+    padding: 10px;
+    min-height: 200px;
+    overflow-y: auto;
+}
+
+.content-body {
+    padding: 0 15px;
+    position: relative;
+    transition: .5s;
+}
+
+.card {
+    background-color: #fff;
+    border: 1px solid #ecf3fa;
+    border-radius: 10px;
+    letter-spacing: .5px;
+    margin-bottom: 30px;
+}
+
+.card .card-header {
+    background-color: #fff;
+    border-bottom: none;
+    border-top-left-radius: 10px;
+    border-top-right-radius: 10px;
+    padding: 18px;
+    position: relative;
+}
+
+.nav {
+    display: flex;
+    flex-wrap: wrap;
+    padding-left: 0;
+    margin-bottom: 0;
+    list-style: none;
+}
+
+.nav-tabs {
+    border-bottom-color: #eaeaea;
+}
+
+
+.cm-cl {
+    color: #2b5f60 !important;
+}
+
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+th,
+td {
+    padding: 15px;
+    text-align: center;
+    vertical-align: middle;
+}
+
+th {
+    background-color: #dadee4 !important;
+    padding: 20px 10px !important;
+
+}
+
+tr:hover {
+    background-color: #e9ecef;
+}
+
+tr:nth-child(even) td {
+    background-color: #f3f1f1;
+    /* Màu nền cho ô hàng chẵn */
+}
+
+tr:nth-child(odd) td {
+    background-color: #ffffff;
+    /* Màu nền cho ô hàng lẻ */
+}
+
+.data-input,
+.new-data-input {
+    border: none;
+    background-color: transparent;
+    /* Chỉnh sửa màu nền cho input */
+    transition: border-color 0.3s;
+}
+
+.data-input:focus,
+.new-data-input:focus {
+    outline: none;
+    /* Xóa đường viền mặc định */
 }
