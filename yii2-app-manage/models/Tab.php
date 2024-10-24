@@ -97,4 +97,14 @@ class Tab extends \yii\db\ActiveRecord
     {
         return $this->hasOne(User::class, ['id' => 'user_id']);
     }
+
+    public function getTableColumns()
+    {
+        $tableTabs = TableTab::find()->where(['tab_id' => $this->id])->all();
+        return array_map(function ($tableTab) {
+            return (object) ['name' => $tableTab->column_name]; // Đảm bảo trả về tên cột
+        }, $tableTabs);
+    }
+
+
 }

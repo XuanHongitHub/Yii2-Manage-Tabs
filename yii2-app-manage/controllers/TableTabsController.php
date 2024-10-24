@@ -26,10 +26,14 @@ class TableTabsController extends Controller
     {
         if (Yii::$app->request->isPost) {
             $userId = Yii::$app->user->id;
+            $tableName = Yii::$app->request->post('tableName');
             $columns = Yii::$app->request->post('columns');
             $dataTypes = Yii::$app->request->post('data_types');
-            $tableName = Yii::$app->request->post('tableName');
             $dataSizes = Yii::$app->request->post('data_sizes');
+            $isPrimary = Yii::$app->request->post('is_primary', []);
+            $isNotNull = Yii::$app->request->post('is_not_null', []);
+            $defaultValues = Yii::$app->request->post('default_values', []);
+            $characterSet = Yii::$app->request->post('character_set', 'utf8mb4');
 
             Yii::error($columns, 'columns');
             Yii::error($dataTypes, 'data_types');
@@ -63,20 +67,38 @@ class TableTabsController extends Controller
                     }
 
                     $createTableQuery = "CREATE TABLE `$tableName` (";
+                    $createTableQuery .= "`id` INT AUTO_INCREMENT PRIMARY KEY, "; // Thêm cột ID tự động tăng
+
                     foreach ($columns as $index => $column) {
+                        if (strtolower(trim($column)) === 'id') {
+                            continue; // Bỏ qua cột này nếu nó đã là 'id'
+                        }
+
                         $dataType = $dataTypes[$index];
                         $dataSize = isset($dataSizes[$index]) ? $dataSizes[$index] : null;
+                        $isNotNullColumn = isset($isNotNull[$index]) ? 'NOT NULL' : 'NULL';
+
+                        if (in_array($dataType, ['TEXT', 'BLOB', 'JSON', 'GEOMETRY'])) {
+                            $defaultValue = '';
+                        } else {
+                            $defaultValue = isset($defaultValues[$index]) && $defaultValues[$index] !== ''
+                                ? "DEFAULT '" . addslashes($defaultValues[$index]) . "'" : '';
+                        }
 
                         $columnName = preg_replace('/[^a-zA-Z0-9_]/', '_', $column);
+                        $columnDef = "`$columnName` $dataType";
+
                         if ($dataType === 'VARCHAR' && $dataSize) {
-                            $createTableQuery .= "`$columnName` VARCHAR($dataSize), ";
-                        } elseif ($dataType === 'CHAR' && $dataSize) {
-                            $createTableQuery .= "`$columnName` CHAR($dataSize), ";
-                        } else {
-                            $createTableQuery .= "`$columnName` $dataType, ";
+                            $columnDef .= "($dataSize)";
                         }
+
+                        $columnDef .= " $isNotNullColumn $defaultValue";
+
+                        $createTableQuery .= $columnDef . ", ";
                     }
-                    $createTableQuery = rtrim($createTableQuery, ', ') . ")";
+
+                    // Thêm kiểu mã hóa cho bảng
+                    $createTableQuery = rtrim($createTableQuery, ', ') . ") CHARACTER SET $characterSet COLLATE ${characterSet}_unicode_ci";
 
                     Yii::$app->db->createCommand($createTableQuery)->execute();
 
@@ -97,6 +119,7 @@ class TableTabsController extends Controller
         return $this->redirect(['index']);
     }
 
+
     public function actionEditTableTab($id)
     {
         $tableTab = TableTab::findOne($id);
@@ -105,17 +128,13 @@ class TableTabsController extends Controller
         }
 
         if (Yii::$app->request->isPost) {
-            // Cập nhật thông tin cột trong table_tab
             $tableTab->column_name = Yii::$app->request->post('column_name');
             $tableTab->data_type = Yii::$app->request->post('data_type');
 
-            // Cập nhật bảng SQL nếu cần thiết
             $tableName = $tableTab->table_name;
             $originalColumnName = preg_replace('/[^a-zA-Z0-9_]/', '_', $tableTab->column_name);
 
-            // Lưu thay đổi cho table_tab
             if ($tableTab->save()) {
-                // Nếu kiểu dữ liệu đã thay đổi, cập nhật trong bảng SQL
                 $newColumnName = preg_replace('/[^a-zA-Z0-9_]/', '_', Yii::$app->request->post('column_name'));
                 if ($originalColumnName !== $newColumnName || $tableTab->data_type !== Yii::$app->request->post('data_type')) {
                     $alterTableQuery = "ALTER TABLE `$tableName` CHANGE `$originalColumnName` `$newColumnName` " . Yii::$app->request->post('data_type');
@@ -165,11 +184,9 @@ class TableTabsController extends Controller
             $tableName = $column->table_name;
             $columnName = preg_replace('/[^a-zA-Z0-9_]/', '_', $column->column_name);
 
-            // Xóa cột khỏi bảng SQL
             $dropColumnQuery = "ALTER TABLE `$tableName` DROP `$columnName`";
             Yii::$app->db->createCommand($dropColumnQuery)->execute();
 
-            // Xóa cột khỏi bảng table_tab
             $column->delete();
 
             return $this->asJson(['success' => true, 'message' => 'Xóa cột thành công!']);

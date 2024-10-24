@@ -14,6 +14,8 @@ use app\models\SignupForm;
 use app\models\ContactForm;
 use yii\filters\VerbFilter;
 use yii\filters\AccessControl;
+use yii\db\Exception;
+use yii\data\Pagination;
 
 class TabsController extends Controller
 {
@@ -78,6 +80,7 @@ class TabsController extends Controller
 
     public function actionManageTabs()
     {
+
         $tabs = Tab::find()->all();
         $tableTabs = TableTab::find()->all();
         $richtextTabs = RichtextTab::find()->all();
@@ -87,44 +90,117 @@ class TabsController extends Controller
             'richtextTabs' => $richtextTabs,
         ]);
     }
-
-    // Action Add Table
-    public function actionAddTable()
+    public function actionLoadTabData($tab_id)
     {
-        $request = Yii::$app->request;
-        if ($request->isPost) {
-            $title = $request->post('title');
-            $tabType = $request->post('tab_type');
-            $columns = $request->post('columns');
+        $tableTab = TableTab::find()->where(['tab_id' => $tab_id])->one();
+        $tableName = $tableTab ? $tableTab->table_name : null;
 
-            $tab = new Tab();
-            $tab->user_id = Yii::$app->user->id;
-            $tab->title = $title;
-            $tab->tab_type = $tabType;
-            $tab->deleted = 0;
-            $tab->created_at = date('Y-m-d H:i:s');
-            $tab->updated_at = date('Y-m-d H:i:s');
+        $charsetInfo = Yii::$app->db->createCommand("SHOW TABLE STATUS LIKE '$tableName'")->queryOne();
+        $collation = $charsetInfo['Collation'] ?? 'Không xác định';
+        $collation = $charsetInfo['Collation'] ?? 'Không xác định';
 
-            if ($tab->save()) {
-                $tableTab = new TableTab();
-                $tableTab->tab_id = $tab->id;
-                $tableTab->table_name = $title;
-                $tableTab->columns = $columns;
-                $tableTab->created_at = date('Y-m-d H:i:s');
-                $tableTab->updated_at = date('Y-m-d H:i:s');
+        if ($tableName) {
+            $columns = Yii::$app->db->schema->getTableSchema($tableName)->columns;
+            $data = Yii::$app->db->createCommand("SELECT * FROM `$tableName`")->queryAll();
 
-                if ($tableTab->save()) {
-                    return $this->asJson(['success' => true, 'message' => 'Thêm tab và bảng thành công!']);
-                } else {
-                    return $this->asJson(['success' => false, 'message' => 'Không thể lưu vào bảng table_tab.']);
-                }
-            } else {
-                return $this->asJson(['success' => false, 'message' => 'Không thể lưu tab.']);
+            return $this->renderPartial('_tableData', [
+                'columns' => $columns,
+                'data' => $data,
+                'tableName' => $tableName,
+                'collation' => $collation,
+            ]);
+        }
+
+        return 'No data';
+    }
+
+    public function actionUpdateData()
+    {
+        $tableName = Yii::$app->request->post('table');
+        $data = Yii::$app->request->post('data');
+        $originalValues = Yii::$app->request->post('originalValues');
+
+        if (isset($originalValues['id'])) {
+            $whereCondition = "`id` = :original_id";
+        } else {
+            $whereCondition = '';
+        }
+
+        $setClause = [];
+        foreach ($data as $column => $value) {
+            $setClause[] = "`$column` = :$column";
+        }
+        $setCondition = implode(", ", $setClause);
+
+        $sql = "UPDATE `$tableName` SET $setCondition" . ($whereCondition ? " WHERE $whereCondition" : "");
+        $command = Yii::$app->db->createCommand($sql);
+
+        foreach ($data as $column => $value) {
+            $command->bindValue(":$column", $value === '' ? null : $value);
+        }
+        if (isset($originalValues['id'])) {
+            $command->bindValue(":original_id", $originalValues['id']);
+        }
+
+        // Yii::error($sql, __METHOD__);
+
+        try {
+            $command->execute();
+            return $this->asJson(['success' => true]);
+        } catch (\Exception $e) {
+            return $this->asJson(['success' => false, 'message' => $e->getMessage()]);
+        }
+    }
+    public function actionAddData()
+    {
+        $tableName = Yii::$app->request->post('table');
+        $data = Yii::$app->request->post('data');
+
+        $validData = [];
+        foreach ($data as $column => $value) {
+            if (preg_match('/^[a-zA-Z_][a-zA-Z0-9_]*$/', $column) || is_numeric($column)) {
+                $validData[$column] = $value === '' ? null : $value;
             }
         }
 
-        return $this->asJson(['success' => false, 'message' => 'Yêu cầu không hợp lệ.']);
+        if (empty($validData)) {
+            return $this->asJson(['success' => false, 'message' => 'Không có cột hợp lệ để thêm dữ liệu.']);
+        }
+
+        $sql = "INSERT INTO `$tableName` (`" . implode("`, `", array_keys($validData)) . "`) VALUES (:" . implode(", :", array_keys($validData)) . ")";
+        $command = Yii::$app->db->createCommand($sql);
+
+        foreach ($validData as $column => $value) {
+            $command->bindValue(":$column", $value);
+        }
+
+        try {
+            $command->execute();
+            return $this->asJson(['success' => true, 'redirect' => '/tabs/manage-tabs']);
+        } catch (\Exception $e) {
+            return $this->asJson(['success' => false, 'message' => $e->getMessage()]);
+        }
     }
+
+    public function actionDeleteData()
+    {
+        Yii::$app->response->format = Response::FORMAT_JSON;
+
+        $tabId = Yii::$app->request->post('tab_id');
+        $rowId = Yii::$app->request->post('row_id');
+        $tableName = Yii::$app->request->post('table_name');
+
+        try {
+            Yii::$app->db->createCommand()->delete($tableName, ['id' => $rowId])->execute();
+            return ['success' => true];
+        } catch (Exception $e) {
+            return ['success' => false, 'message' => $e->getMessage()];
+        }
+    }
+
+
+
+
 
 
     /**

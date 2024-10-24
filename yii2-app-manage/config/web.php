@@ -54,7 +54,12 @@ $config = [
                 'tabs/manage-tabs' => 'tabs/manage-tabs',
                 'tabs/manage-users' => 'tabs/manage-users',
 
+                'tabs/data/<id:\d+>' => 'tabs/data',
+                'tabs/load-tab-data' => 'tabs/load-tab-data',
                 'tabs/add-table' => 'tabs/add-table',
+                'tabs/update-data' => 'tabs/update-data',
+                'tabs/add-data' => 'tabs/add-data',
+                'tabs/delete-data' => 'tabs/delete-data',
             ],
         ],
     ],
