@@ -181,11 +181,14 @@ tr:nth-child(odd) td {
 
 .data-input,
 .new-data-input {
+    line-height: 1.5;
+    padding: 3.5px;
     border: none;
     background-color: transparent;
     transition: border-color 0.3s;
 }
 
+/* 
 .new-data-input {
     font-size: 13px;
 }
@@ -193,7 +196,7 @@ tr:nth-child(odd) td {
 .data-input:focus,
 .new-data-input:focus {
     outline: none;
-}
+} */
 
 .alert-light-success {
     background-color: #d6eed4 !important;

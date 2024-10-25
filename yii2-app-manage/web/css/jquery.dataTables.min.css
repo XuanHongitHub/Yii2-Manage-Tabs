@@ -338,7 +338,7 @@ table.dataTable>thead>tr>td:active {
 table.dataTable>tfoot>tr>th,
 table.dataTable>tfoot>tr>td {
     padding: 10px 10px 6px 10px;
-    border-top: 1px solid rgba(0, 0, 0, 0.3)
+    /* border-top: 1px solid rgba(0, 0, 0, 0.3) */
 }
 
 table.dataTable tbody tr {
@@ -600,6 +600,22 @@ table.dataTable td {
     margin-left: 3px
 }
 
+.dataTables_wrapper .dataTables_filter input[type="search"] {
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    padding: 6px;
+    width: 200px;
+    font-size: 14px;
+    box-shadow: none;
+    outline: none;
+    transition: border-color 0.3s ease;
+}
+
+.dataTables_wrapper .dataTables_filter input[type="search"]:focus {
+    border-color: #007bff;
+    /* Đổi màu viền khi được focus */
+}
+
 .dataTables_wrapper .dataTables_info {
     clear: both;
     float: left;
@@ -609,7 +625,7 @@ table.dataTable td {
 .dataTables_wrapper .dataTables_paginate {
     float: right;
     text-align: right;
-    padding-top: .25em
+    padding-top: 1.45em
 }
 
 .dataTables_wrapper .dataTables_paginate .paginate_button {
@@ -623,7 +639,7 @@ table.dataTable td {
     cursor: pointer;
     color: inherit !important;
     border: 1px solid transparent;
-    border-radius: 2px;
+    border-radius: 0.375rem;
     background: transparent
 }
 
@@ -669,6 +685,12 @@ table.dataTable td {
 .dataTables_wrapper .dataTables_processing,
 .dataTables_wrapper .dataTables_paginate {
     color: inherit
+}
+
+.dataTables_wrapper .dataTables_info {
+    color: #7e8185 !important;
+    font-size: 15px !important;
+    font-weight: 400 !important;
 }
 
 .dataTables_wrapper .dataTables_scroll {

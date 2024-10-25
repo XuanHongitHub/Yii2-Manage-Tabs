@@ -183,62 +183,66 @@ class TabsController extends Controller
     }
     public function actionDeleteData()
     {
-        $tableName = Yii::$app->request->post('table');
-        $conditions = Yii::$app->request->post('conditions');
+        $postData = Yii::$app->request->post();
+        $conditions = $postData['conditions'] ?? [];
+        $tableName = $postData['table_name'] ?? null;
 
-        Yii::error("Received data for deletion: table=$tableName, conditions=" . json_encode($conditions), __METHOD__);
+        Yii::info('Table name: ' . $tableName);
+        Yii::info('Conditions: ' . json_encode($conditions));
 
-        // Kiểm tra xem bảng có tồn tại hay không
         if (empty($tableName)) {
-            return $this->asJson(['success' => false, 'message' => 'Tên bảng không hợp lệ.']);
+            return json_encode(['success' => false, 'message' => 'Tên bảng không hợp lệ.']);
         }
 
-        $whereConditions = [];
+        // Lấy danh sách các trường từ bảng
+        $fields = $this->getTableFields($tableName);
 
-        // Xử lý điều kiện: Chỉ lấy các giá trị hợp lệ (không trống)
-        if (!empty($conditions) && is_array($conditions)) {
-            foreach ($conditions as $condition) {
-                $tempConditions = [];
-                foreach ($condition as $column => $value) {
-                    if (!empty($value) && preg_match('/^[a-zA-Z_][a-zA-Z0-9_]*$/', $column)) {
-                        $tempConditions[$column] = $value;
+        // Biến để theo dõi nếu có điều kiện xóa
+        $hasConditions = false;
+
+        // Kiểm tra nếu có điều kiện
+        foreach ($conditions as $condition) {
+            $deleteConditions = [];
+            $conditionSql = [];
+
+            // Xây dựng điều kiện cho mỗi trường
+            foreach ($fields as $field) {
+                if (isset($condition[$field])) {
+                    $value = $condition[$field];
+                    if ($value === '') {
+                        $conditionSql[] = "`$field` = ''"; // Điều kiện cho chuỗi rỗng
+                    } elseif ($value === null) {
+                        $conditionSql[] = "`$field` IS NULL"; // Điều kiện cho NULL
+                    } else {
+                        $conditionSql[] = "`$field` = :$field"; // Điều kiện cho giá trị khác
+                        $deleteConditions[":$field"] = $value; // Thêm tham số vào lệnh xóa
                     }
                 }
-
-                // Nếu có điều kiện hợp lệ, thêm vào mảng điều kiện
-                if (!empty($tempConditions)) {
-                    $whereConditions[] = $tempConditions;
-                }
-            }
-        } else {
-            return $this->asJson(['success' => false, 'message' => 'Không có điều kiện hợp lệ để xóa dữ liệu.']);
-        }
-
-        // Nếu không có điều kiện hợp lệ nào được xây dựng, trả về lỗi
-        if (empty($whereConditions)) {
-            return $this->asJson(['success' => false, 'message' => 'Không có điều kiện hợp lệ để xóa dữ liệu.']);
-        }
-
-        // Xây dựng câu lệnh SQL xóa với các điều kiện
-        $transaction = Yii::$app->db->beginTransaction();
-        try {
-            foreach ($whereConditions as $condition) {
-                // Xóa dữ liệu dựa trên điều kiện hợp lệ
-                Yii::$app->db->createCommand()
-                    ->delete($tableName, $condition)
-                    ->execute();
             }
 
-            $transaction->commit();
-            return $this->asJson(['success' => true]);
-
-        } catch (\Exception $e) {
-            $transaction->rollBack();
-            Yii::error("Error executing delete: " . $e->getMessage(), __METHOD__);
-            return $this->asJson(['success' => false, 'message' => $e->getMessage()]);
+            if (!empty($conditionSql)) {
+                $hasConditions = true; // Đánh dấu rằng có điều kiện
+                $conditionString = implode(' AND ', $conditionSql);
+                // Thực hiện lệnh xóa với điều kiện
+                Yii::$app->db->createCommand()->delete($tableName, $conditionString, $deleteConditions)->execute();
+            }
         }
+
+        if (!$hasConditions) {
+            $defaultConditions = array_fill_keys($fields, null); // Tạo điều kiện mặc định cho tất cả các trường
+            Yii::$app->db->createCommand()->delete($tableName, $defaultConditions)->execute();
+        }
+
+        return json_encode(['success' => true, 'message' => 'Đã xóa bản ghi thành công.']);
     }
 
+    protected function getTableFields($tableName)
+    {
+        $command = Yii::$app->db->createCommand("SHOW COLUMNS FROM `$tableName`");
+        $columns = $command->queryAll();
+
+        return array_column($columns, 'Field');
+    }
 
     /**
      * Login action.
