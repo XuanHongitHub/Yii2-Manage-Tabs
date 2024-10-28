@@ -7,80 +7,71 @@ use app\models\User;
 use yii\web\Response;
 use yii\web\Controller;
 use app\models\Tab;
-use app\models\RichtextTab;
+use app\models\TableTab;
+
 class RichtextTabsController extends Controller
 {
     public function actionIndex()
     {
-        $richtextTabs = RichtextTab::find()->all();
+        $userId = Yii::$app->user->id;
+
+        $richtext_tab = Tab::find()->where(['tab_type' => 'richtext'])
+            ->where(['user_id' => $userId])
+            ->all();
 
         return $this->render('index', [
-            'richtextTabs' => $richtextTabs,
+            'richtext_tab' => $richtext_tab,
         ]);
     }
-    public function actionCreateRichtextTab($tabId)
+    public function actionCreateRichtextTabs()
     {
         if (Yii::$app->request->isPost) {
+            $userId = Yii::$app->user->id;
+            $tab_name = Yii::$app->request->post('tab_name');
             $content = Yii::$app->request->post('content');
 
             $tab = new Tab();
-            $tab->user_id = Yii::$app->user->id;
+            $tab->user_id = $userId;
             $tab->tab_type = 'richtext';
+            $tab->tab_name = $tab_name;
             $tab->deleted = 0;
             $tab->created_at = date('Y-m-d H:i:s');
             $tab->updated_at = date('Y-m-d H:i:s');
 
-            $richtextTab = new RichtextTab();
-            $richtextTab->tab_id = $tabId;
-            $richtextTab->content = $content;
-            $richtextTab->created_at = date('Y-m-d H:i:s');
-            $richtextTab->updated_at = date('Y-m-d H:i:s');
+            // if (!empty($content)) {
+            //     $tab->content = $content; 
+            // }
 
-            if ($richtextTab->save()) {
-                Yii::$app->session->setFlash('success', 'Thêm nội dung thành công!');
-                return $this->redirect(['table-tabs']);
+            if ($tab->save()) {
+                $filePath = Yii::getAlias('@runtime/richtext/' . $tab->id . '.txt');
+                try {
+                    file_put_contents($filePath, $content);
+                    Yii::$app->session->setFlash('info', 'Created successfully!');
+                } catch (\Exception $e) {
+                    Yii::error('Không thể tạo file: ' . $e->getMessage());
+                    Yii::$app->session->setFlash('error', 'An error occurred while saving the file.');
+                }
             } else {
-                Yii::$app->session->setFlash('error', 'Không thể lưu nội dung.');
-                return $this->redirect(['table-tabs']);
+                Yii::$app->session->setFlash('error', 'An error occurred while creating the tab. Please try again.');
             }
+
+            return $this->redirect(['tabs/settings', 'activeTab' => 'addRichtextTab']);
+
         }
 
-        return $this->render('create', [
-            'tabId' => $tabId,
-        ]);
+        return $this->redirect(['tabs/settings', 'activeTab' => 'addRichtextTab']);
     }
-    public function actionEditRichtextTab($id)
+
+    public function actionDetail($id)
     {
-        $richtextTab = RichtextTab::findOne($id);
-        if (!$richtextTab) {
-            return $this->asJson(['success' => false, 'message' => 'Nội dung không tồn tại.']);
-        }
+        $richtextTab = Tab::find()->where(['id' => $id])->one();
+        $filePath = Yii::getAlias('@runtime/richtext/' . $id . '.txt');
+        $content = file_exists($filePath) ? file_get_contents($filePath) : '';
 
-        if (Yii::$app->request->isPost) {
-            $richtextTab->content = Yii::$app->request->post('content');
-            $richtextTab->updated_at = date('Y-m-d H:i:s');
-
-            if ($richtextTab->save()) {
-                return $this->asJson(['success' => true, 'message' => 'Chỉnh sửa nội dung thành công!']);
-            } else {
-                return $this->asJson(['success' => false, 'message' => 'Không thể lưu thay đổi.']);
-            }
-        }
-
-        return $this->render('edit', [
+        return $this->render('_detail', [
             'richtextTab' => $richtextTab,
+            'content' => $content,
         ]);
     }
-    public function actionDeleteRichtextTab($id)
-    {
-        $richtextTab = RichtextTab::findOne($id);
-        if ($richtextTab) {
-            $richtextTab->delete();
-            return $this->asJson(['success' => true, 'message' => 'Xóa nội dung thành công!']);
-        }
-
-        return $this->asJson(['success' => false, 'message' => 'Nội dung không tồn tại.']);
-    }
-
 
 }

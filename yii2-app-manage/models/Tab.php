@@ -9,13 +9,14 @@ use Yii;
  *
  * @property int $id
  * @property int $user_id
+ * @property string|null $tab_name
  * @property string $tab_type
+ * @property string|null $content
  * @property int|null $deleted
+ * @property int|null $position
  * @property string $created_at
  * @property string $updated_at
  *
- * @property RichtextTab[] $richtextTabs
- * @property TabVisibility[] $tabVisibilities
  * @property TableTab[] $tableTabs
  * @property User $user
  */
@@ -36,9 +37,10 @@ class Tab extends \yii\db\ActiveRecord
     {
         return [
             [['user_id', 'tab_type'], 'required'],
-            [['user_id', 'deleted'], 'integer'],
-            [['tab_type'], 'string'],
+            [['user_id', 'deleted', 'position'], 'integer'],
+            [['tab_type', 'content'], 'string'],
             [['created_at', 'updated_at'], 'safe'],
+            [['tab_name'], 'string', 'max' => 255],
             [['user_id'], 'exist', 'skipOnError' => true, 'targetClass' => User::class, 'targetAttribute' => ['user_id' => 'id']],
         ];
     }
@@ -51,31 +53,14 @@ class Tab extends \yii\db\ActiveRecord
         return [
             'id' => 'ID',
             'user_id' => 'User ID',
+            'tab_name' => 'Tab Name',
             'tab_type' => 'Tab Type',
+            'content' => 'Content',
             'deleted' => 'Deleted',
+            'position' => 'Position',
             'created_at' => 'Created At',
             'updated_at' => 'Updated At',
         ];
-    }
-
-    /**
-     * Gets query for [[RichtextTabs]].
-     *
-     * @return \yii\db\ActiveQuery
-     */
-    public function getRichtextTabs()
-    {
-        return $this->hasMany(RichtextTab::class, ['tab_id' => 'id']);
-    }
-
-    /**
-     * Gets query for [[TabVisibilities]].
-     *
-     * @return \yii\db\ActiveQuery
-     */
-    public function getTabVisibilities()
-    {
-        return $this->hasMany(TabVisibility::class, ['tab_id' => 'id']);
     }
 
     /**
@@ -97,14 +82,4 @@ class Tab extends \yii\db\ActiveRecord
     {
         return $this->hasOne(User::class, ['id' => 'user_id']);
     }
-
-    public function getTableColumns()
-    {
-        $tableTabs = TableTab::find()->where(['tab_id' => $this->id])->all();
-        return array_map(function ($tableTab) {
-            return (object) ['name' => $tableTab->column_name]; // Đảm bảo trả về tên cột
-        }, $tableTabs);
-    }
-
-
 }

@@ -27,6 +27,13 @@ class AppAsset extends AssetBundle
     public $js = [
         'js/manage-tabs.js',
         'js/jquery.dataTables.min.js',
+        'js/dataTables.buttons.min.js',
+        'js/jszip.min.js',
+        'js/pdfmake.min.js',
+        'js/vfs_fonts.js',
+        'js/buttons.html5.min.js',
+        'js/buttons.print.min.js',
+        'js/jquery-ui.js',
     ];
     public $depends = [
         'yii\web\YiiAsset',

@@ -6,7 +6,6 @@ use yii\helpers\Html;
 /** @var app\models\TableTab[] $tableTabs */
 
 $this->title = 'Settings';
-$activeTab = Yii::$app->request->get('activeTab', 'addTableTab');
 
 ?>
 
@@ -17,36 +16,29 @@ $activeTab = Yii::$app->request->get('activeTab', 'addTableTab');
                 <div class="card-header">
                     <ul class="nav nav-tabs">
                         <li class="nav-item">
-                            <a class="nav-link <?= $activeTab === 'addTableTab' ? 'active' : '' ?>" data-bs-toggle="tab"
-                                href="#addTableTab">Add New Table</a>
+                            <a class="nav-link active" data-bs-toggle="tab" href="#addTableTab">Add New Table</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link <?= $activeTab === 'addRichtextTab' ? 'active' : '' ?>"
-                                data-bs-toggle="tab" href="#addRichtextTab">Add New Richtext</a>
+                            <a class="nav-link" data-bs-toggle="tab" href="#addRichtextTab">Add New Richtext</a>
                         </li>
-                        <?php if ($isAdmin): ?>
-                            <li class="nav-item">
-                                <a class="nav-link <?= $activeTab === 'userManagementTab' ? 'active' : '' ?>"
-                                    data-bs-toggle="tab" href="#userManagementTab">User Manage</a>
-                            </li>
-                        <?php endif; ?>
-
+                        <li class="nav-item">
+                            <a class="nav-link" data-bs-toggle="tab" href="#userManagementTab">User Manage</a>
+                        </li>
                     </ul>
                 </div>
                 <div class="card-body pt-0">
                     <div class="tab-content">
                         <!-- Tab Add New Table -->
-                        <div class="tab-pane fade <?= $activeTab === 'addTableTab' ? 'show active' : '' ?>"
-                            id="addTableTab">
+                        <div class="tab-pane fade show active" id="addTableTab">
                             <div class="d-flex my-3">
                                 <h5>Add New Table</h5>
                                 <div class="ms-auto">
-                                    <a href="<?= \yii\helpers\Url::to(['table-tabs/index']) ?>"
-                                        class="btn btn-success">List Table</a>
+                                    <button class="btn btn-success" id=""> List
+                                        Table</button>
                                 </div>
                             </div>
                             <form action="<?= \yii\helpers\Url::to(['create-table-tabs']) ?>" method="post">
-                                <?= Html::hiddenInput(Yii::$app->request->csrfParam, Yii::$app->request->csrfToken) ?>
+                                <?= \yii\helpers\Html::hiddenInput(Yii::$app->request->csrfParam, Yii::$app->request->csrfToken) ?>
 
                                 <div class="mb-3 row">
                                     <div class="col-3">
@@ -74,7 +66,7 @@ $activeTab = Yii::$app->request->get('activeTab', 'addTableTab');
                                             <option value="macroman" data-collation="macroman_general_ci">macroman
                                             </option>
                                         </select>
-                                        <?= Html::hiddenInput('collation', '', ['id' => 'collationField']) ?>
+                                        <?= \yii\helpers\Html::hiddenInput('collation', '', ['id' => 'collationField']) ?>
                                     </div>
                                 </div>
 
@@ -147,18 +139,16 @@ $activeTab = Yii::$app->request->get('activeTab', 'addTableTab');
                         </div>
 
                         <!-- Tab Add New Richtext -->
-                        <div class="tab-pane fade <?= $activeTab === 'addRichtextTab' ? 'show active' : '' ?>"
-                            id="addRichtextTab">
+                        <div class="tab-pane fade" id="addRichtextTab">
                             <div class="d-flex my-3">
                                 <h5>Add New Richtext Tab</h5>
                                 <div class="ms-auto">
-                                    <a href="<?= \yii\helpers\Url::to(['richtext-tabs/index']) ?>"
-                                        class="btn btn-success">List Richtext</a>
+                                    <button class="btn btn-success" id=""> List Richtext</button>
                                 </div>
                             </div>
                             <form action="<?= \yii\helpers\Url::to(['create-richtext-tabs']) ?>" method="post"
                                 id="richtextForm">
-                                <?= Html::hiddenInput(Yii::$app->request->csrfParam, Yii::$app->request->csrfToken) ?>
+                                <?= \yii\helpers\Html::hiddenInput(Yii::$app->request->csrfParam, Yii::$app->request->csrfToken) ?>
 
                                 <div class="mb-3">
                                     <label for="tab_name" class="form-label">Tab Name</label>
@@ -177,62 +167,60 @@ $activeTab = Yii::$app->request->get('activeTab', 'addTableTab');
                             </form>
                         </div>
 
-                        <?php if ($isAdmin): ?>
-                            <!-- Tab User Manage -->
-                            <div class="tab-pane fade <?= $activeTab === 'userManagementTab' ? 'show active' : '' ?>"
-                                id="userManagementTab">
-                                <h5>User Manage</h5>
-                                <div class="table-responsive">
-                                    <table class="table">
-                                        <thead>
+                        <!-- Tab User Manage -->
+                        <div class="tab-pane fade" id="userManagementTab">
+                            <h5>User Manage</h5>
+                            <div class="table-responsive">
+                                <table class="table">
+                                    <thead>
+                                        <tr>
+                                            <th>ID</th>
+                                            <th>Username</th>
+                                            <th>Email</th>
+                                            <th>Status</th>
+                                            <th>Role</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <?php foreach ($users as $user): ?>
                                             <tr>
-                                                <th>ID</th>
-                                                <th>Username</th>
-                                                <th>Email</th>
-                                                <th style="text-align: center;">Status</th>
-                                                <th>Role</th>
-                                                <th>Actions</th>
+                                                <td><?= Html::encode($user->id) ?></td>
+                                                <td><?= Html::encode($user->username) ?></td>
+                                                <td><?= Html::encode($user->email) ?></td>
+                                                <td><?= $user->status == 10 ? 'Active' : 'Inactive' ?></td>
+                                                <td>
+                                                    <form
+                                                        action="<?= \yii\helpers\Url::to(['users/update-role', 'id' => $user->id]) ?>"
+                                                        method="post">
+                                                        <?= \yii\helpers\Html::hiddenInput(Yii::$app->request->csrfParam, Yii::$app->request->csrfToken) ?>
+
+                                                        <select class="form-control" name="role">
+                                                            <option value="10" <?= $user->role == 10 ? 'selected' : '' ?>>
+                                                                User</option>
+                                                            <option value="20" <?= $user->role == 20 ? 'selected' : '' ?>>
+                                                                Admin</option>
+                                                        </select>
+
+                                                </td>
+                                                <td>
+                                                    <button type="submit" class="btn btn-warning">Update</button>
+                                                    <?= Html::a('Delete', ['delete', 'id' => $user->id], [
+                                                        'class' => 'btn btn-danger',
+                                                        'data' => [
+                                                            'confirm' => 'Are you sure you want to delete this user?',
+                                                            'method' => 'post',
+                                                        ],
+                                                    ]) ?>
+                                                    </form>
+                                                </td>
                                             </tr>
-                                        </thead>
-                                        <tbody>
-                                            <?php foreach ($users as $user): ?>
-                                                <tr>
-                                                    <td><?= Html::encode($user->id) ?></td>
-                                                    <td><?= Html::encode($user->username) ?></td>
-                                                    <td><?= Html::encode($user->email) ?></td>
-                                                    <td style="text-align: center;">
-                                                        <span
-                                                            class="btn <?= $user->status == 10 ? 'btn-success' : 'btn-danger' ?>">
-                                                            <?= $user->status == 10 ? '<i class="fa-solid fa-circle-check"></i>' : '<i class="fa-solid fa-circle-xmark"></i>' ?>
-                                                        </span>
-                                                    </td>
-                                                    <td>
-                                                        <form
-                                                            action="<?= \yii\helpers\Url::to(['users/update-role', 'id' => $user->id]) ?>"
-                                                            method="post">
-                                                            <?= Html::hiddenInput(Yii::$app->request->csrfParam, Yii::$app->request->csrfToken) ?>
+                                        <?php endforeach; ?>
+                                    </tbody>
+                                </table>
 
-                                                            <select class="form-control" name="role">
-                                                                <option value="10" <?= $user->role == 10 ? 'selected' : '' ?>>
-                                                                    User</option>
-                                                                <option value="20" <?= $user->role == 20 ? 'selected' : '' ?>>
-                                                                    Admin</option>
-                                                            </select>
-
-                                                    </td>
-                                                    <td>
-                                                        <button type="submit" class="btn btn-primary">Update</button>
-
-                                                    </td>
-                                                </tr>
-                                            <?php endforeach; ?>
-                                        </tbody>
-                                    </table>
-
-                                </div>
                             </div>
-                        <?php endif; ?>
-
+                        </div>
                     </div>
                 </div>
             </div>

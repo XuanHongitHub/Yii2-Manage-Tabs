@@ -67,7 +67,7 @@ $this->registerLinkTag(['rel' => 'icon', 'type' => 'image/x-icon', 'href' => Yii
     <main id="main" class="flex-shrink-0" role="main">
         <div class="container">
             <?php if (!empty($this->params['breadcrumbs'])): ?>
-            <?= Breadcrumbs::widget(['links' => $this->params['breadcrumbs']]) ?>
+                <?= Breadcrumbs::widget(['links' => $this->params['breadcrumbs']]) ?>
             <?php endif ?>
             <?= Alert::widget() ?>
             <?= $content ?>
@@ -85,16 +85,6 @@ $this->registerLinkTag(['rel' => 'icon', 'type' => 'image/x-icon', 'href' => Yii
 
     <?php $this->endBody() ?>
 </body>
-
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-<script src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js"></script>
-<script src="https://cdn.datatables.net/buttons/2.3.5/js/dataTables.buttons.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/pdfmake.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/vfs_fonts.js"></script>
-<script src="https://cdn.datatables.net/buttons/2.3.5/js/buttons.html5.min.js"></script>
-<script src="https://cdn.datatables.net/buttons/2.3.5/js/buttons.print.min.js"></script>
-
 
 </html>
 <?php $this->endPage() ?>
