@@ -1,12 +1,13 @@
 <?php
 
 use yii\helpers\Html;
-
+use app\models\User;
 /** @var yii\web\View $this */
 /** @var app\models\TableTab[] $tableTabs */
 
 $this->title = 'Settings';
 $activeTab = Yii::$app->request->get('activeTab', 'addTableTab');
+$isAdmin = User::isUserAdmin(Yii::$app->user->identity->username);
 
 ?>
 
