@@ -8,58 +8,74 @@ $tabId = $_GET['tab_id'];
 
 
 ?>
+<div class="toast-container position-fixed top-0 end-0 mt-5 p-3">
+    <div id="liveToastSuccess" class="toast bg-success text-white" role="alert" aria-live="assertive"
+        aria-atomic="true">
+        <div class="toast-header bg-success text-white">
+            <strong class="me-auto">Notification</strong>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast" aria-label="Close"></button>
+        </div>
+        <div class="toast-body">
+            Successfully!
+        </div>
+    </div>
 
-<div class="d-flex mb-3">
-    <div class="me-2">
-        <!-- Three-dot button with dropdown -->
-        <div class="btn-group-ellipsis">
+    <div id="liveToastError" class="toast bg-danger text-white" role="alert" aria-live="assertive" aria-atomic="true">
+        <div class="toast-header bg-danger text-white">
+            <strong class="me-auto">Error</strong>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast" aria-label="Close"></button>
+        </div>
+        <div class="toast-body">
+            Error!
+        </div>
+    </div>
+</div>
+<div class="d-flex flex-wrap justify-content-between mb-3">
+    <div class="d-flex align-items-center me-2 mb-1">
+        <div class="btn-group-ellipsis me-2">
             <button type="button" class="btn btn-outline-secondary" data-bs-toggle="dropdown" aria-expanded="false">
                 <i class="fa-solid fa-ellipsis"></i>
             </button>
             <ul class="dropdown-menu">
-                <li><a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#deleteModal">Delete
-                        Tab</a>
+                <li>
+                    <a class="dropdown-item fw-medium text-light-emphasis" href="#" data-bs-toggle="modal"
+                        data-bs-target="#hideModal">
+                        <i class="fas fa-eye me-1"></i> Show/Hidden Tab
+                    </a>
                 </li>
-                <li><a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#hideModal">Show/Hidden
-                        Tab</a></li>
-                <li><a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#sortModal">Sort Order
-                        Tab</a>
+                <li>
+                    <a class="dropdown-item fw-medium text-light-emphasis" href="#" data-bs-toggle="modal"
+                        data-bs-target="#sortModal">
+                        <i class="fas fa-sort-amount-down me-1"></i> Sort Order Tab
+                    </a>
+                </li>
+                <li>
+                    <a class="dropdown-item fw-medium text-light-emphasis" href="#" data-bs-toggle="modal"
+                        data-bs-target="#deleteModal">
+                        <i class="fas fa-trash-alt me-1"></i> Delete Tab
+                    </a>
+                </li>
+                <li>
+                    <a class="dropdown-item fw-medium text-light-emphasis" href="#" data-bs-toggle="modal"
+                        data-bs-target="#trashBinModal">
+                        <i class="fas fa-trash me-1"></i> Trash Bin
+                    </a>
                 </li>
             </ul>
         </div>
+        <button class="btn btn-danger" id="delete-selected-btn">
+            <i class="fa-regular fa-trash-can"></i> Delete selected
+        </button>
+    </div>
 
-        <!-- Modal Confirm Delete -->
-        <div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden=" true">
-            <div class="modal-dialog">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title" id="deleteModalLabel">Confirm remove tab</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                    </div>
-                    <div class=" modal-body">
-                        Are you sure you want to delete this tab? This action cannot be undone.
-                    </div>
-                    <div class="modal-footer"> <button type="button" class="btn btn-secondary"
-                            data-bs-dismiss="modal">Cancel</button> <button type="button " class="btn btn-danger"
-                            id="confirm-delete-btn" data-tab-id="<?= htmlspecialchars($tabId) ?>">Delete</button>
-                        <?php if ($isAdmin): ?> <button type="button" class="btn btn-danger"
-                                id="confirm-delete-permanently-btn" data-tab-id="<?= htmlspecialchars($tabId) ?>">Delete
-                                permanently</button> <?php endif; ?>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-    <div class="me-auto">
-        <button class="btn btn-danger" id="delete-selected-btn"><i class="fa-regular fa-trash-can"></i> Delete
-            selected</button>
-    </div>
-    <div class="m-0">
+    <div class="col-auto mb-1">
         <div class="btn btn-outline-primary">
-            <span class="fw-medium"><?= htmlspecialchars($tableName) ?></span> | <?= htmlspecialchars($collation) ?>
+            <span class="fw-medium"><?= htmlspecialchars($tableName) ?></span> |
+            <?= htmlspecialchars($collation) ?>
         </div>
     </div>
 </div>
+
 <?php if (!empty($data)): ?>
     <table class="table table-bordered table-hover dataTable">
         <thead class="table-light">
@@ -145,12 +161,36 @@ $tabId = $_GET['tab_id'];
     </table>
 <?php endif; ?>
 
+<!-- Modal Confirm Delete -->
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteModalLabel">Confirm remove tab</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                Are you sure you want to delete this tab? This action cannot be undone.
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-danger" id="confirm-delete-btn"
+                    data-tab-id="<?= htmlspecialchars($tabId) ?>">Delete</button>
+                <?php if ($isAdmin): ?>
+                    <button type="button" class="btn btn-danger" id="confirm-delete-permanently-btn"
+                        data-tab-id="<?= htmlspecialchars($tabId) ?>">Delete permanently</button>
+                <?php endif; ?>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script>
     var tabId = <?= json_encode($tabId) ?>;
     var columns = <?= json_encode(array_map(function ($column) {
         return htmlspecialchars($column->name);
     }, $columns)) ?>;
-
+    var tabtype = 'table';
     // Data Table
     $(document).ready(function () {
         $('.dataTable').DataTable({
@@ -212,12 +252,28 @@ $tabId = $_GET['tab_id'];
                 success: function (response) {
                     if (response.success) {
                         loadTabData(tabId);
+
+                        var toastElementSuccess = document.getElementById('liveToastSuccess');
+                        var toastBodySuccess = toastElementSuccess.querySelector('.toast-body');
+                        toastBodySuccess.innerText = "Data added successfully!";
+
+                        var toastSuccess = new bootstrap.Toast(toastElementSuccess, {
+                            delay: 3000
+                        });
+                        toastSuccess.show();
                     } else {
-                        alert(response.message || "Add dữ liệu thất bại.");
+                        var toastElementError = document.getElementById('liveToastError');
+                        var toastBodyError = toastElementError.querySelector('.toast-body');
+                        toastBodyError.innerText = response.message || "Failed to add data.";
+
+                        var toastError = new bootstrap.Toast(toastElementError, {
+                            delay: 3000
+                        });
+                        toastError.show();
                     }
                 },
                 error: function (error) {
-                    alert("Có lỗi xảy ra khi Add dữ liệu.");
+                    alert("An error occurred while adding data.");
                 }
             });
         });
@@ -269,12 +325,28 @@ $tabId = $_GET['tab_id'];
                     inputs.forEach(function (input) {
                         input.setAttribute('data-original-value', input.value);
                     });
+
+                    var toastElementSuccess = document.getElementById('liveToastSuccess');
+                    var toastBodySuccess = toastElementSuccess.querySelector('.toast-body');
+                    toastBodySuccess.innerText = "Data saved successfully!";
+
+                    var toastSuccess = new bootstrap.Toast(toastElementSuccess, {
+                        delay: 3000
+                    });
+                    toastSuccess.show();
                 } else {
-                    alert(response.message || "Lưu dữ liệu thất bại.");
+                    var toastElementError = document.getElementById('liveToastError');
+                    var toastBodyError = toastElementError.querySelector('.toast-body');
+                    toastBodyError.innerText = response.message || "Failed to save data.";
+
+                    var toastError = new bootstrap.Toast(toastElementError, {
+                        delay: 3000
+                    });
+                    toastError.show();
                 }
             },
             error: function (error) {
-                alert("Có lỗi xảy ra khi lưu dữ liệu.");
+                alert("An error occurred while saving data.");
             }
         });
     }
@@ -284,7 +356,7 @@ $tabId = $_GET['tab_id'];
         var selectedCheckboxes = $('.row-checkbox:checked');
 
         if (selectedCheckboxes.length === 0) {
-            alert("Vui lòng chọn ít nhất một mục để xóa.");
+            alert("Please select at least one item to delete.");
             return;
         }
 
@@ -293,18 +365,13 @@ $tabId = $_GET['tab_id'];
             return $(this).data('value');
         }).get().filter(Boolean);
 
-        console.log("Selected IDs:", selectedIds);
-
         var conditions = [];
 
         $('.row-checkbox:checked').each(function () {
             var rowIndex = $(this).data('row');
-            console.log("Row Index:", rowIndex);
-
             var inputs = $('input[data-row-index="' + rowIndex + '"]');
 
             if (inputs.length === 0) {
-                console.log("No inputs found for row index:", rowIndex);
                 return;
             }
 
@@ -312,8 +379,6 @@ $tabId = $_GET['tab_id'];
             inputs.each(function () {
                 let columnName = $(this).data('column');
                 let columnValue = $(this).val();
-
-                console.log("Column Name:", columnName, "Value:", columnValue);
 
                 if (columnName && columnName !== 'undefined') {
                     condition[columnName] = columnValue ||
@@ -323,12 +388,9 @@ $tabId = $_GET['tab_id'];
 
             if (Object.keys(condition).length > 0) {
                 conditions.push(condition);
-            } else {
-                console.log("No valid conditions found for row index:", rowIndex);
-            }
+            } else { }
         });
 
-        console.log("Conditions for SQL:", conditions);
         if (confirm("Are you sure you want to delete data?")) {
             $.ajax({
                 url: '<?= \yii\helpers\Url::to(['tabs/delete-data']) ?>',
@@ -397,10 +459,9 @@ $tabId = $_GET['tab_id'];
     $(document).ready(function () {
         $('#confirm-delete-btn').on('click', function () {
             const tabId = $(this).data('tab-id');
-            console.log("🚀 ~ tabId:", tabId);
 
             $.ajax({
-                url: '<?= \yii\helpers\Url::to(['tabs/delete-table']) ?>',
+                url: '<?= \yii\helpers\Url::to(['tabs/delete-tab']) ?>',
                 method: 'POST',
                 headers: {
                     'X-CSRF-Token': $('meta[name="csrf-token"]').attr('content')
@@ -424,28 +485,32 @@ $tabId = $_GET['tab_id'];
 
         $('#confirm-delete-permanently-btn').on('click', function () {
             const tabId = $(this).data('tab-id');
+            var tableName = '<?= $tableName ?>';
 
-            $.ajax({
-                url: '<?= \yii\helpers\Url::to(['tabs/delete-permanently-table']) ?>',
-                method: 'POST',
-                headers: {
-                    'X-CSRF-Token': $('meta[name="csrf-token"]').attr('content')
-                },
-                data: {
-                    tabId: tabId,
-                },
-                success: function (response) {
-                    if (response.success) {
-                        location.reload();
-                        $('#deleteModal').modal('hide');
-                    } else {
-                        alert(response.message || "Deleting table failed.");
+            if (confirm("Are you sure you want to delete permanenttly?")) {
+                $.ajax({
+                    url: '<?= \yii\helpers\Url::to(['tabs/delete-permanently-tab']) ?>',
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-Token': $('meta[name="csrf-token"]').attr('content')
+                    },
+                    data: {
+                        tabId: tabId,
+                        tableName: tableName,
+                    },
+                    success: function (response) {
+                        if (response.success) {
+                            location.reload();
+                            $('#deleteModal').modal('hide');
+                        } else {
+                            alert(response.message || "Deleting table failed.");
+                        }
+                    },
+                    error: function (error) {
+                        alert("An error occurred while deleting table.");
                     }
-                },
-                error: function (error) {
-                    alert("An error occurred while deleting table.");
-                }
-            });
+                });
+            }
         });
     });
 </script>

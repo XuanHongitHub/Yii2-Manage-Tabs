@@ -15,21 +15,19 @@ class UsersController extends Controller
         $user = User::findOne($id);
 
         if ($user === null) {
-            throw new NotFoundHttpException("Người dùng không tồn tại.");
+            throw new NotFoundHttpException("User does not exist.");
         }
-
         if (Yii::$app->request->isPost) {
             $user->role = Yii::$app->request->post('role');
             if ($user->save()) {
+                Yii::$app->session->setFlash('success', 'Role update successful.');
                 return $this->redirect(['tabs/settings', 'activeTab' => 'userManagementTab']);
-
             } else {
                 Yii::error($user->getErrors());
+                Yii::$app->session->setFlash('error', 'Role update failed. Please try again.');
             }
         }
 
-        return $this->redirect(['tabs/settings', 'activeTab' => 'userManagementTab']);
+        return $this->redirect(['tabs/settings', 'activeTab ' => 'userManagementTab']);
     }
-
-
 }

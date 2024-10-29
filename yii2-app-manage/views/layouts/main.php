@@ -24,6 +24,7 @@ $this->registerLinkTag(['rel' => 'icon', 'type' => 'image/x-icon', 'href' => Yii
 <html lang="<?= Yii::$app->language ?>" class="h-100">
 
 <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <title><?= Html::encode($this->title) ?></title>
     <?php $this->head() ?>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css" />
@@ -45,7 +46,7 @@ $this->registerLinkTag(['rel' => 'icon', 'type' => 'image/x-icon', 'href' => Yii
             'options' => ['class' => 'navbar-nav'],
             'items' => [
                 ['label' => 'Home', 'url' => ['/site/index']],
-                ['label' => 'Tabs Manage', 'url' => ['/tabs/manage-tabs']],
+                ['label' => 'Manage Tabs', 'url' => ['/tabs/index']],
                 ['label' => 'Table Tabs', 'url' => ['/table-tabs/index']],
 
                 Yii::$app->user->isGuest
@@ -67,9 +68,67 @@ $this->registerLinkTag(['rel' => 'icon', 'type' => 'image/x-icon', 'href' => Yii
     <main id="main" class="flex-shrink-0" role="main">
         <div class="container">
             <?php if (!empty($this->params['breadcrumbs'])): ?>
-                <?= Breadcrumbs::widget(['links' => $this->params['breadcrumbs']]) ?>
+            <?= Breadcrumbs::widget(['links' => $this->params['breadcrumbs']]) ?>
             <?php endif ?>
-            <?= Alert::widget() ?>
+            <div class="content-body">
+                <?php
+                $successMessage = Yii::$app->session->getFlash('success');
+                $errorMessage = Yii::$app->session->getFlash('error');
+                $warningMessage = Yii::$app->session->getFlash('warning');
+                $infoMessage = Yii::$app->session->getFlash('info');
+
+                if ($successMessage || $errorMessage || $warningMessage || $infoMessage) {
+                    echo '<div class="toast-container position-fixed top-1 end-0 px-3">';
+
+                    if ($successMessage) {
+                        echo '<div class="toast align-items-center text-bg-success border-0" role="alert" aria-live="assertive" aria-atomic="true" data-bs-delay="3000">
+                                <div class="d-flex">
+                                    <div class="toast-body">
+                                        ' . Html::encode($successMessage) . '
+                                    </div>
+                                    <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+                                </div>
+                            </div>';
+                    }
+
+                    if ($errorMessage) {
+                        echo '<div class="toast align-items-center text-bg-danger border-0" role="alert" aria-live="assertive" aria-atomic="true" data-bs-delay="10000">
+                                <div class="d-flex">
+                                    <div class="toast-body">
+                                        ' . Html::encode($errorMessage) . '
+                                    </div>
+                                    <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+                                </div>
+                            </div>';
+                    }
+
+                    if ($warningMessage) {
+                        echo '<div class="toast align-items-center text-bg-warning border-0" role="alert" aria-live="assertive" aria-atomic="true" data-bs-delay="3000">
+                                <div class="d-flex">
+                                    <div class="toast-body">
+                                        ' . Html::encode($warningMessage) . '
+                                    </div>
+                                    <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+                                </div>
+                            </div>';
+                    }
+
+                    if ($infoMessage) {
+                        echo '<div class="toast align-items-center text-bg-info border-0" role="alert" aria-live="assertive" aria-atomic="true" data-bs-delay="3000">
+                                <div class="d-flex">
+                                    <div class="toast-body">
+                                        ' . Html::encode($infoMessage) . '
+                                    </div>
+                                    <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+                                </div>
+                            </div>';
+                    }
+
+                    echo '</div>';
+                }
+
+                ?>
+            </div>
             <?= $content ?>
         </div>
     </main>
@@ -85,6 +144,18 @@ $this->registerLinkTag(['rel' => 'icon', 'type' => 'image/x-icon', 'href' => Yii
 
     <?php $this->endBody() ?>
 </body>
+<?php
+$script = <<<JS
+    const toastElements = document.querySelectorAll('.toast');
+    const toastList = [...toastElements].map(toastEl => {
+        return new bootstrap.Toast(toastEl, { autohide: true, delay: 3000 });
+    });
+
+    toastList.forEach(toast => toast.show());
+JS;
+$this->registerJs($script);
+?>
+
 
 </html>
 <?php $this->endPage() ?>

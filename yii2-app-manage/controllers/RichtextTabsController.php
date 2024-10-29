@@ -7,7 +7,6 @@ use app\models\User;
 use yii\web\Response;
 use yii\web\Controller;
 use app\models\Tab;
-use app\models\TableTab;
 
 class RichtextTabsController extends Controller
 {
@@ -46,9 +45,9 @@ class RichtextTabsController extends Controller
                 $filePath = Yii::getAlias('@runtime/richtext/' . $tab->id . '.txt');
                 try {
                     file_put_contents($filePath, $content);
-                    Yii::$app->session->setFlash('info', 'Created successfully!');
+                    Yii::$app->session->setFlash('success', 'Created successfully!');
                 } catch (\Exception $e) {
-                    Yii::error('Không thể tạo file: ' . $e->getMessage());
+                    Yii::error('Cannot create file: ' . $e->getMessage());
                     Yii::$app->session->setFlash('error', 'An error occurred while saving the file.');
                 }
             } else {

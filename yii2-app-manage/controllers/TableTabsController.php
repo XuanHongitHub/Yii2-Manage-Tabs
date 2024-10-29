@@ -40,6 +40,11 @@ class TableTabsController extends Controller
             $collation = Yii::$app->request->post('collation');
             $transaction = Yii::$app->db->beginTransaction();
 
+            if (!preg_match('/^[a-zA-Z0-9_]+$/', $tableName)) {
+                Yii::$app->session->setFlash('error', 'Table names can only contain letters, numbers and underscores');
+                return $this->redirect(['tabs/settings']);
+            }
+
             try {
                 $tab = new Tab();
                 $tab->user_id = $userId;
@@ -115,7 +120,7 @@ class TableTabsController extends Controller
                     Yii::$app->db->createCommand($createTableQuery)->execute();
 
                     $transaction->commit();
-                    Yii::$app->session->setFlash('success', 'Tạo bảng thành công!');
+                    Yii::$app->session->setFlash('success', 'Role update successful.');
                     return $this->redirect(['tabs/settings']);
                 } else {
                     Yii::$app->session->setFlash('error', 'Có lỗi xảy ra khi lưu tab.');

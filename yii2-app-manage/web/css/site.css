@@ -154,6 +154,8 @@ table {
     border: #1f2f3e 1px solid;
 }
 
+.table-ui th,
+.table-ui td,
 .dataTable th,
 .dataTable td {
     padding: 15px;

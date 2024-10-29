@@ -6,15 +6,11 @@ use Yii;
 use app\models\User;
 use yii\web\Response;
 use yii\web\Controller;
-use app\models\LoginForm;
 use app\models\Tab;
 use app\models\TableTab;
-use app\models\SignupForm;
-use app\models\ContactForm;
 use yii\filters\VerbFilter;
 use yii\filters\AccessControl;
 use yii\db\Exception;
-use yii\data\Pagination;
 
 class TabsController extends Controller
 {
@@ -26,10 +22,10 @@ class TabsController extends Controller
         return [
             'access' => [
                 'class' => AccessControl::className(),
-                'only' => ['index', 'manage-tabs', 'manage-users', 'about', 'contact', 'signup', 'login', 'logout'],
+                'only' => ['index', 'manage-users', 'about', 'contact', 'signup', 'login', 'logout'],
                 'rules' => [
                     [
-                        'actions' => ['index', 'about', 'manage-tabs', 'manage-users'],
+                        'actions' => ['index', 'about', 'manage-users'],
                         'allow' => true,
                         'roles' => ['@'],
                     ],
@@ -61,64 +57,63 @@ class TabsController extends Controller
             ],
         ];
     }
-
     /**
-     * Displays homepage.
+     * Displays Manage Tabs.
      *
      * @return string
      */
     public function actionIndex()
     {
-        return $this->render('index');
-    }
-
-    // public function actionSettings()
-    // {
-    //     $users = User::find()->all(); // Lấy tất cả người dùng
-    //     return $this->render('settings', [
-    //         'users' => $users,
-    //     ]);
-    // }
-    public function actionSettings($view = 'index')
-    {
-        // Lấy giá trị view từ tham số, mặc định là 'index'
-        $contentView = $view;
-
-        return $this->render('settings', [
-            'contentView' => $contentView, // Truyền tên view
-            'users' => User::find()->all(), // Các tham số khác cho view
-        ]);
-    }
-
-    public function actionManageTabs()
-    {
         $userId = Yii::$app->user->id;
 
         $tabs = Tab::find()
             ->where(['user_id' => $userId])
-            ->andWhere(['in', 'deleted', [0, 3]])
-            ->orderBy(['position' => SORT_ASC])
+            ->orderBy([
+                'position' => SORT_ASC,
+                'id' => SORT_ASC,
+            ])
             ->all();
 
         $tableTabs = TableTab::find()->all();
 
-        return $this->render('manage-tabs', [
+        return $this->render('index', [
             'tabs' => $tabs,
             'tableTabs' => $tableTabs,
         ]);
     }
 
-
-    public function actionLoadTabData($tab_id, $tabType)
+    /**
+     * Displays Settings Page.
+     *
+     */
+    public function actionSettings()
     {
+        return $this->render('settings', [
+            'users' => User::find()->all(),
+        ]);
+    }
+    /**
+     * Load Tab Data Action.
+     *
+     */
+    public function actionLoadTabData($tab_id)
+    {
+        $tab = Tab::find()->where(['id' => $tab_id])->one();
+
+        if ($tab === null) {
+            return 'No data';
+        }
+
+        $tabType = $tab->tab_type;
+
         if ($tabType === 'table') {
-            // Nếu loại tab là bảng
+            // Table Tab
             $tableTab = TableTab::find()->where(['tab_id' => $tab_id])->one();
             $tableName = $tableTab ? $tableTab->table_name : null;
 
             if ($tableName) {
                 $charsetInfo = Yii::$app->db->createCommand("SHOW TABLE STATUS LIKE '$tableName'")->queryOne();
-                $collation = $charsetInfo['Collation'] ?? 'Không xác định';
+                $collation = $charsetInfo['Collation'] ?? 'Unknown';
                 $columns = Yii::$app->db->schema->getTableSchema($tableName)->columns;
                 $data = Yii::$app->db->createCommand("SELECT * FROM `$tableName`")->queryAll();
 
@@ -130,36 +125,43 @@ class TabsController extends Controller
                 ]);
             }
         } elseif ($tabType === 'richtext') {
-            $richtextTab = Tab::find()->where(['id' => $tab_id])->one();
+            // Richtext Tab
             $filePath = Yii::getAlias('@runtime/richtext/' . $tab_id . '.txt');
             $content = file_exists($filePath) ? file_get_contents($filePath) : '';
 
             return $this->renderPartial('_richtextData', [
-                'richtextTab' => $richtextTab,
+                'richtextTab' => $tab,
                 'content' => $content,
                 'filePath' => $filePath,
             ]);
         }
 
-        return 'No data'; // Trả về thông báo nếu không tìm thấy dữ liệu
+        return 'No data';
     }
+    /** 
+     * Update RichtextData Action.
+     *
+     */
     public function actionSaveRichtext()
     {
-        if (Yii::$app->request->isAjax && Yii::$app->request->isPost) {
-            $tabId = Yii::$app->request->post('tab_id');
+        if (Yii::$app->request->isPost) {
+            $tabId = Yii::$app->request->post('tabId');
             $content = Yii::$app->request->post('content');
 
             $filePath = Yii::getAlias('@runtime/richtext/' . $tabId . '.txt');
             try {
-                file_put_contents($filePath, $content); // Cập nhật nội dung vào file
-                return json_encode(['status' => 'success', 'message' => 'Nội dung đã được cập nhật thành công.']);
+                file_put_contents($filePath, $content);
+                return json_encode(['status' => 'success', 'message' => 'Content has been updated successfully.']);
             } catch (\Exception $e) {
-                Yii::error('Không thể cập nhật file: ' . $e->getMessage());
-                return json_encode(['status' => 'error', 'message' => 'Có lỗi xảy ra khi cập nhật nội dung.']);
+                return json_encode(['status' => 'error', 'message' => 'An error occurred while updating the content.']);
             }
         }
-        return json_encode(['status' => 'error', 'message' => 'Yêu cầu không hợp lệ.']);
+        return json_encode(['status' => 'error', 'message ' => 'Invalid request.']);
     }
+    /** 
+     * Download RichtextData Action.
+     *
+     */
     public function actionDownload($tab_id)
     {
         $filePath = Yii::getAlias('@runtime/richtext/' . $tab_id . '.txt');
@@ -170,13 +172,15 @@ class TabsController extends Controller
             throw new \yii\web\NotFoundHttpException('File not found.');
         }
     }
-
+    /** 
+     * Update TableData Action.
+     *
+     */
     public function actionUpdateData()
     {
         $tableName = Yii::$app->request->post('table');
         $data = Yii::$app->request->post('data');
         $originalValues = Yii::$app->request->post('originalValues');
-        Yii::error("zzzz Table name: " . $tableName);
 
         if (isset($originalValues['id'])) {
             $whereCondition = "`id` = :original_id";
@@ -200,8 +204,6 @@ class TabsController extends Controller
             $command->bindValue(":original_id", $originalValues['id']);
         }
 
-        // Yii::error($sql, __METHOD__);
-
         try {
             $command->execute();
             return $this->asJson(['success' => true]);
@@ -209,6 +211,10 @@ class TabsController extends Controller
             return $this->asJson(['success' => false, 'message' => $e->getMessage()]);
         }
     }
+    /** 
+     * Create TableData Action.
+     *
+     */
     public function actionAddData()
     {
         $tableName = Yii::$app->request->post('table');
@@ -234,11 +240,15 @@ class TabsController extends Controller
 
         try {
             $command->execute();
-            return $this->asJson(['success' => true, 'redirect' => '/tabs/manage-tabs']);
+            return $this->asJson(['success' => true, 'redirect' => '/tabs']);
         } catch (\Exception $e) {
             return $this->asJson(['success' => false, 'message' => $e->getMessage()]);
         }
     }
+    /** 
+     * Delete TableData Action.
+     *
+     */
     public function actionDeleteData()
     {
         $postData = Yii::$app->request->post();
@@ -256,9 +266,7 @@ class TabsController extends Controller
             $tempConditions = [];
 
             foreach ($condition as $column => $value) {
-                Yii::error("Checking condition: Column - $column, Value - " . json_encode($value), __METHOD__);
 
-                // Cập nhật regex cho tên cột để cho phép bắt đầu bằng số
                 if (preg_match('/^[a-zA-Z_0-9][a-zA-Z0-9_]*$/', $column)) {
                     if ($value === '') {
                         $tempConditions[] = "`$column` IS NULL";
@@ -277,7 +285,6 @@ class TabsController extends Controller
             }
         }
 
-        Yii::error('Where conditions before SQL generation: ' . json_encode($whereConditions), __METHOD__);
 
         if (empty($whereConditions)) {
             $sql = "DELETE FROM `$table` WHERE ";
@@ -293,16 +300,18 @@ class TabsController extends Controller
             $sql = "DELETE FROM `$table` WHERE " . implode(' OR ', $whereConditions);
         }
 
-        Yii::error('Generated SQL: ' . $sql, __METHOD__);
-
         try {
             Yii::$app->db->createCommand($sql)->execute();
-            return $this->asJson(['success' => true, 'message' => 'Dữ liệu đã được xóa thành công.']);
+            return $this->asJson(['success' => true, 'message' => 'Successfully!']);
         } catch (\Exception $e) {
             return $this->asJson(['success' => false, 'message' => $e->getMessage()]);
         }
     }
-    public function actionDeleteTable()
+    /** 
+     * Delete Tab Action.
+     *
+     */
+    public function actionDeleteTab()
     {
         $postData = Yii::$app->request->post();
 
@@ -323,75 +332,94 @@ class TabsController extends Controller
             return $this->asJson(['success' => false, 'message' => 'Missing tabId.']);
         }
     }
-
-
-    public function actionDeletePermanentlyTable()
+    /** 
+     * Update Restore Action.
+     *
+     */
+    public function actionRestoreTab()
     {
         $postData = Yii::$app->request->post();
 
-        $table = $postData['table'];
-        $conditions = isset($postData['conditions']) ? $postData['conditions'] : [];
+        if (isset($postData['tabId'])) {
+            $tabId = $postData['tabId'];
 
-        if (!preg_match('/^[a-zA-Z_][a-zA-Z0-9_]*$/', $table)) {
-            return $this->asJson(['success' => false, 'message' => 'Tên bảng không hợp lệ.']);
-        }
+            $affectedRows = Tab::updateAll(
+                ['deleted' => 0],
+                ['id' => $tabId]
+            );
 
-        $whereConditions = [];
-
-        foreach ($conditions as $condition) {
-            $tempConditions = [];
-
-            foreach ($condition as $column => $value) {
-                Yii::error("Checking condition: Column - $column, Value - " . json_encode($value), __METHOD__);
-
-                // Cập nhật regex cho tên cột để cho phép bắt đầu bằng số
-                if (preg_match('/^[a-zA-Z_0-9][a-zA-Z0-9_]*$/', $column)) {
-                    if ($value === '') {
-                        $tempConditions[] = "`$column` IS NULL";
-                    } else {
-                        $tempConditions[] = "`$column` = '" . addslashes($value) . "'";
-                    }
-                } else {
-                    Yii::error("Invalid column name: $column", __METHOD__);
-                }
-            }
-
-            if (!empty($tempConditions)) {
-                $whereConditions[] = '(' . implode(' AND ', $tempConditions) . ')';
+            if ($affectedRows > 0) {
+                return $this->asJson(['success' => true, 'message' => 'Restore successful.']);
             } else {
-                Yii::error("No valid conditions for this set: " . json_encode($condition), __METHOD__);
+                return $this->asJson(['success' => false, 'message' => 'No records updated.']);
             }
-        }
-
-        Yii::error('Where conditions before SQL generation: ' . json_encode($whereConditions), __METHOD__);
-
-        if (empty($whereConditions)) {
-            $sql = "DELETE FROM `$table` WHERE ";
-            $columns = array_keys($conditions[0]);
-            $nullConditions = [];
-
-            foreach ($columns as $column) {
-                $nullConditions[] = "`$column` IS NULL";
-            }
-
-            $sql .= implode(' AND ', $nullConditions);
         } else {
-            $sql = "DELETE FROM `$table` WHERE " . implode(' OR ', $whereConditions);
-        }
-
-        Yii::error('Generated SQL: ' . $sql, __METHOD__);
-
-        try {
-            Yii::$app->db->createCommand($sql)->execute();
-            return $this->asJson(['success' => true, 'message' => 'Dữ liệu đã được xóa thành công.']);
-        } catch (\Exception $e) {
-            return $this->asJson(['success' => false, 'message' => $e->getMessage()]);
+            return $this->asJson(['success' => false, 'message' => 'Missing tabId.']);
         }
     }
+    /** 
+     * Delete Permanently Tab Action.
+     *
+     */
+    public function actionDeletePermanentlyTab()
+    {
+        $postData = Yii::$app->request->post();
 
+        $tabId = $postData['tabId'];
+
+        $tab = Tab::find()->where(['id' => $tabId])->one();
+
+        if (!$tab) {
+            return $this->asJson(['success' => false, 'message' => 'Tab does not exist.']);
+        }
+        if ($tab->tab_type == 'table') {
+            $tableName = $postData['tableName'];
+
+            if (!preg_match('/^[a-zA-Z_][a-zA-Z0-9_]*$/', $tableName)) {
+                return $this->asJson(['success' => false, ' message' => 'Invalid table name.']);
+            }
+            $sql = "DROP TABLE IF EXISTS `$tableName`";
+
+            try {
+                Yii::$app->db->createCommand($sql)->execute();
+
+                $tableTabTable = 'table_tab';
+                $deleteTabSql = "DELETE FROM `$tableTabTable` WHERE `tab_id` = :tabId";
+                Yii::$app->db->createCommand($deleteTabSql)->bindValue(':tabId', $tabId)->execute();
+
+                $tabTable = 'tab';
+                $deleteTabRecordSql = "DELETE FROM `$tabTable` WHERE `id` = :tabId";
+                Yii::$app->db->createCommand($deleteTabRecordSql)->bindValue(':tabId', $tabId)->execute();
+
+                return $this->asJson(['success' => true, 'message' => 'Table and data were successfully deleted.']);
+            } catch (\Exception $e) {
+                return $this->asJson(['success' => false, 'message' => $e->getMessage()]);
+            }
+        } elseif ($tab->tab_type == 'richtext') {
+            try {
+                $filePath = Yii::getAlias('@runtime/richtext/' . $tabId . '.txt');
+
+                if (file_exists($filePath)) {
+                    unlink($filePath);
+                }
+                $tabTable = 'tab';
+                $deleteTabRecordSql = "DELETE FROM `$tabTable` WHERE `id` = :tabId";
+                Yii::$app->db->createCommand($deleteTabRecordSql)->bindValue(':tabId', $tabId)->execute();
+
+                return $this->asJson(['success' => true, 'message' => 'Richtext data was successfully deleted.']);
+            } catch (\Exception $e) {
+                return $this->asJson(['success' => false, 'message' => $e->getMessage()]);
+            }
+        }
+        return $this->asJson(['success' => false, 'message' => 'Invalid tab type.']);
+    }
+    /** 
+     * Update Postion Action.
+     *
+     */
     public function actionUpdateSortOrder()
     {
-        Yii::$app->response->format = Response::FORMAT_JSON; // Định dạng phản hồi là JSON
+        Yii::$app->response->format = Response::FORMAT_JSON;
         $tabs = Yii::$app->request->post('tabs');
 
         if ($tabs) {
@@ -402,7 +430,7 @@ class TabsController extends Controller
                     if (!$model->save()) {
                         return [
                             'success' => false,
-                            'message' => 'Không thể lưu tab với ID: ' . $tab['id'],
+                            'message' => 'Unable to save tab with ID: ' . $tab['id'],
                         ];
                     }
                 }
@@ -412,9 +440,13 @@ class TabsController extends Controller
 
         return [
             'success' => false,
-            'message' => 'Dữ liệu không hợp lệ.'
+            'message' => 'Invalid data.'
         ];
     }
+    /** 
+     * Update Show/Hide Tab Action.
+     *
+     */
     public function actionUpdateHideStatus()
     {
         $hideStatus = Yii::$app->request->post('hideStatus', []);
@@ -429,98 +461,4 @@ class TabsController extends Controller
 
         return $this->asJson(['success' => true]);
     }
-
-    /**
-     * Login action.
-     *
-     * @return Response|string
-     */
-
-    public function actionLogin()
-    {
-        if (!\Yii::$app->user->isGuest) {
-            return $this->goHome();
-        }
-
-        $model = new LoginForm();
-        if ($model->load(Yii::$app->request->post()) && $model->loginAdmin()) {
-            return $this->goBack();
-        } else {
-            return $this->render('login', [
-                'model' => $model,
-            ]);
-        }
-    }
-
-    /**
-     * Logout action.
-     *
-     * @return Response
-     */
-    public function actionLogout()
-    {
-        Yii::$app->user->logout();
-
-        return $this->goHome();
-    }
-
-    /**
-     * Displays contact page.
-     *
-     * @return Response|string
-     */
-    public function actionContact()
-    {
-        $model = new ContactForm();
-        if ($model->load(Yii::$app->request->post()) && $model->contact(Yii::$app->params['adminEmail'])) {
-            Yii::$app->session->setFlash('contactFormSubmitted');
-
-            return $this->refresh();
-        }
-        return $this->render('contact', [
-            'model' => $model,
-        ]);
-    }
-
-    /**
-     * Displays about page.
-     *
-     * @return string
-     */
-    public function actionAbout()
-    {
-        return $this->render('about');
-    }
-
-    public function actionSignup()
-    {
-        $model = new SignupForm();
-        if ($model->load(Yii::$app->request->post()) && $model->signup()) {
-            Yii::$app->session->setFlash('success', 'Thank you for registration. Please check your inbox for verification email.');
-            return $this->goHome();
-        }
-
-        return $this->render('signup', [
-            'model' => $model,
-        ]);
-    }
-
-    // public function actionSaveRichtext()
-    // {
-    //     $tabId = Yii::$app->request->post('tab_id');
-    //     $content = Yii::$app->request->post('content');
-
-    //     $richtextTab = Tab::find()->where(['id' => $tabId])->one();
-
-    //     if ($richtextTab) {
-    //         $richtextTab->content = $content;
-    //         if ($richtextTab->save()) {
-    //             return json_encode(['status' => 'success', 'message' => 'Nội dung đã được lưu thành công!']);
-    //         } else {
-    //             return json_encode(['status' => 'error', 'message' => 'Có lỗi xảy ra khi lưu nội dung.']);
-    //         }
-    //     }
-
-    //     return json_encode(['status' => 'error', 'message' => 'Tab không tồn tại.']);
-    // }
 }
