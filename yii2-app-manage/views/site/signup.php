@@ -16,10 +16,10 @@ $this->title = 'Signup';
                 <div>
                     <div>
                         <a class="logo" href="<?= Yii::$app->homeUrl ?>">
-                            <img class="img-fluid for-light" src="<?= Yii::getAlias('@web') ?>/images/logo/logo-1.png"
-                                alt="login page">
-                            <img class="img-fluid for-dark" src="<?= Yii::getAlias('@web') ?>/images/logo/logo.png"
-                                alt="login page">
+                            <img class="img-fluid for-light" width="32px"
+                                src="<?= Yii::getAlias('@web') ?>/images/logo-icon.png" alt="login page">
+                            <img class="img-fluid for-dark" width="32px"
+                                src="<?= Yii::getAlias('@web') ?>/images/logo-icon.png" alt="login page">
                         </a>
                     </div>
                     <div class="login-main">

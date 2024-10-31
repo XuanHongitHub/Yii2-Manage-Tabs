@@ -27,7 +27,8 @@ $this->registerLinkTag(['rel' => 'icon', 'type' => 'image/x-icon', 'href' => Yii
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title><?= Html::encode($this->title) ?></title>
     <?php $this->head() ?>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css" />
+    <!-- <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css" /> -->
+    <!-- <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.css"> -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
 </head>
@@ -56,23 +57,7 @@ $this->registerLinkTag(['rel' => 'icon', 'type' => 'image/x-icon', 'href' => Yii
         <!-- Main Content Ends-->
 
 
-        <!-- footer start-->
-        <footer class="footer">
-            <div class="container-fluid">
-                <div class="row">
-                    <div class="col-md-6 p-0 footer-copyright">
-                        <p class="mb-0">Copyright 2024 ©.</p>
-                    </div>
-                    <!-- <div class="col-md-6 p-0">
-                            <p class="heart mb-0"> &amp;
-                                <svg class="footer-icon">
-                                    <use href="<?= Yii::getAlias('@web') ?>/images/icon-sprite.svg#heart"></use>
-                                </svg>
-                            </p>
-                        </div> -->
-                </div>
-            </div>
-        </footer>
+
     </div>
     </div>
 

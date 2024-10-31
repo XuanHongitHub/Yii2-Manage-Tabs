@@ -8,14 +8,19 @@ use yii\bootstrap5\Breadcrumbs;
 use yii\bootstrap5\Html;
 use yii\bootstrap5\Nav;
 use yii\bootstrap5\NavBar;
+use app\models\User;
+
+$isAdmin = User::isUserAdmin(Yii::$app->user->identity->username);
+
 ?>
 
 <!-- Page Header Start-->
 <div class="page-header">
     <div class="header-wrapper row m-0">
         <div class="header-logo-wrapper col-auto p-0">
-            <div class="logo-wrapper"><a href="<?= \yii\helpers\Url::to(['/']) ?>"><img class="img-fluid for-light"
-                        src="<?= Yii::getAlias('@web') ?>/images/logo-1.png" alt=""><img class="img-fluid for-dark"
+            <div class="logo-wrapper"><a href="<?= \yii\helpers\Url::to(['/']) ?>"><img
+                        class="img-fluid logo-cs for-light" src="<?= Yii::getAlias('@web') ?>/images/logo-1.png"
+                        alt=""><img class="img-fluid logo-cs for-dark"
                         src="<?= Yii::getAlias('@web') ?>/images/logo.png" alt=""></a>
             </div>
             <div class="toggle-sidebar">
@@ -25,38 +30,11 @@ use yii\bootstrap5\NavBar;
             </div>
         </div>
         <div class="left-header col-xxl-5 col-xl-6 col-auto box-col-4 horizontal-wrapper p-0">
-            <div class="left-menu-header">
-                <ul class="header-left">
-                    <li>
-                        <div class="form-group w-100">
-                            <div class="Typeahead Typeahead--twitterUsers">
-                                <div class="u-posRelative d-flex">
-                                    <svg class="search-bg svg-color me-2">
-                                        <use href="<?= Yii::getAlias('@web') ?>/images/icon-sprite.svg#fill-search">
-                                        </use>
-                                    </svg>
-                                    <input class="demo-input py-0 Typeahead-input form-control-plaintext w-100"
-                                        type="text" placeholder="Search .." name="q" title="">
-                                </div>
-                            </div>
-                        </div>
-                    </li>
-                </ul>
-            </div>
-        </div>
-        <div class="nav-right col-xxl-7 col-xl-6 col-auto box-col-6 pull-right right-header p-0 ms-auto">
-            <ul class="nav-menus">
-                <li class="serchinput">
-                    <div class="serchbox">
-                        <svg>
-                            <use href="<?= Yii::getAlias('@web') ?>/images/icon-sprite.svg#fill-search"></use>
-                        </svg>
-                    </div>
-                    <div class="form-group search-form">
-                        <input type="text" placeholder="Search here...">
-                    </div>
-                </li>
 
+        </div>
+        <div
+            class="nav-right col-xxl-7 col-xl-6 col-auto box-col-6 pull-right right-header p-0 ms-auto d-flex align-items-center">
+            <ul class="nav-menus">
                 <li>
                     <div class="mode">
                         <svg>
@@ -67,20 +45,24 @@ use yii\bootstrap5\NavBar;
 
                 <li class="profile-nav onhover-dropdown p-0">
                     <div class="d-flex align-items-center profile-media">
-                        <img class="b-r-10 img-40" src="<?= Yii::getAlias('@web') ?>/images/profile.png" alt="">
+                        <img class="b-r-10 img-40" src="<?= Yii::getAlias('@web') ?>/images/profile.svg" alt="">
                         <div class="flex-grow-1">
                             <?php if (!Yii::$app->user->isGuest): ?>
                             <span><?= Html::encode(Yii::$app->user->identity->username) ?></span>
-                            <p class="mb-0"><?= Html::encode(Yii::$app->user->identity->role) ?> <i
-                                    class="middle fa fa-angle-down"></i></p>
-                            <?php else: ?>
-                            <span>Guest</span>
-                            <p class="mb-0">Not logged in <i class="middle fa fa-angle-down"></i></p>
-                            <?php endif; ?>
+                            <p class="mb-0">
+                                <?php if (Yii::$app->user->identity->role == 10): ?>
+                                User
+                                <?php elseif (Yii::$app->user->identity->role == 20): ?>
+                                Admin
+                                <?php else: ?>
+                                <?= Html::encode(Yii::$app->user->identity->role) ?>
+                                <?php endif; ?>
+                                <i class="middle fa fa-angle-down"></i>
+                            </p>
+
                         </div>
                     </div>
                     <ul class="profile-dropdown onhover-show-div">
-                        <?php if (!Yii::$app->user->isGuest): ?>
                         <li>
                             <form action="<?= Html::encode(Yii::$app->urlManager->createUrl(['site/logout'])) ?>"
                                 method="post" style="display:inline;">
@@ -90,31 +72,19 @@ use yii\bootstrap5\NavBar;
                                 </a>
                             </form>
                         </li>
-                        <?php else: ?>
-                        <li>
-                            <a href="<?= Yii::$app->urlManager->createUrl(['site/login']) ?>" class="nav-link">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none"
-                                    viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M15 12H9m0 0h6m-6 0l-3 3m3-3l3-3" />
-                                </svg> Login
-                            </a>
-                        </li>
-                        <li>
-                            <a href="<?= Yii::$app->urlManager->createUrl(['site/signup']) ?>" class="nav-link">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none"
-                                    viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M5 12h14m-7-7l7 7-7 7" />
-                                </svg> Sign Up
-                            </a>
-                        </li>
-                        <?php endif; ?>
                     </ul>
-                </li>
-            </ul>
+                    <?php else: ?>
+                    <div class="auth-buttons">
+                        <a href="<?= Yii::$app->urlManager->createUrl(['site/login']) ?>" class="btn btn-primary me-1">
+                            <i class="fa-solid fa-right-to-bracket"></i> Login
+                        </a>
+                        <a href="<?= Yii::$app->urlManager->createUrl(['site/signup']) ?>"
+                            class="btn btn-outline-success">
+                            <i class="fa-solid fa-user-plus"></i> Sign Up
+                        </a>
+                    </div>
+                    <?php endif; ?>
         </div>
-
 
         <script class="result-template" type="text/x-handlebars-template">
             <div class="ProfileCard u-cf">                        
@@ -130,22 +100,26 @@ use yii\bootstrap5\NavBar;
     </div>
 </div>
 <!-- Page Header Ends-->
+
 <!-- Page Body Start-->
 <div class="page-body-wrapper">
     <!-- Page Sidebar Start-->
     <div class="sidebar-wrapper" data-layout="stroke-svg">
         <div>
-            <div class="logo-wrapper"><a href="<?= \yii\helpers\Url::to(['/']) ?>"><img class="img-fluid for-light"
-                        src="<?= Yii::getAlias('@web') ?>/images/logo-1.png" alt=""><img class="img-fluid for-dark"
-                        src="<?= Yii::getAlias('@web') ?>/images/logo.png" alt=""></a>
+            <div class="logo-wrapper">
+                <a href="<?= \yii\helpers\Url::to(['/']) ?>">
+                    <img class="img-fluid for-light" src="<?= Yii::getAlias('@web') ?>/images/logo-1.png"
+                        style="width: 141px !important; padding-top: 7px;" alt="">
+                    <img class="img-fluid for-dark" src="<?= Yii::getAlias('@web') ?>/images/logo.png"
+                        style="width: 141px !important; padding-top: 7px;" alt="">
+                </a>
                 <div class="toggle-sidebar">
-                    <svg class="sidebar-toggle">
-                        <use href="<?= Yii::getAlias('@web') ?>/images/icon-sprite.svg#toggle-icon"></use>
-                    </svg>
+                    <i class="fa-solid fa-bars-staggered font-primary fs-4"></i>
                 </div>
             </div>
             <div class="logo-icon-wrapper"><a href="<?= \yii\helpers\Url::to(['/']) ?>"><img class="img-fluid"
-                        src="<?= Yii::getAlias('@web') ?>/images/logo-icon.png" alt=""></a></div>
+                        src="<?= Yii::getAlias('@web') ?>/images/logo-icon.png" style="width: 29px !important;"
+                        alt=""></a></div>
             <nav class="sidebar-main">
                 <div class="left-arrow" id="left-arrow"><i data-feather="arrow-left"></i></div>
                 <div id="sidebar-menu">
@@ -155,42 +129,86 @@ use yii\bootstrap5\NavBar;
                             <div class="mobile-back text-end"><span>Back</span><i class="fa fa-angle-right ps-2"
                                     aria-hidden="true"></i></div>
                         </li>
-                        <li class="pin-title sidebar-main-title">
-                            <div>
-                                <h6>Pinned</h6>
-                            </div>
-                        </li>
+
                         <li class="sidebar-main-title">
                             <div>
-                                <h6 class="lan-1">General</h6>
+                                <h6 class="lan-1">Manage Tabs</h6>
                             </div>
                         </li>
                         <li class="sidebar-list">
                             <a class="sidebar-link sidebar-title link-nav"
-                                href="<?= \yii\helpers\Url::to(['table-tabs/index']) ?>">
+                                href="<?= \yii\helpers\Url::to(['site/index']) ?>">
                                 <svg class="stroke-icon">
-                                    <use href="<?= Yii::getAlias('@web') ?>/images/icon-sprite.svg#stroke-file"></use>
+                                    <use href="<?= Yii::getAlias('@web') ?>/images/icon-sprite.svg#stroke-table"></use>
                                 </svg>
                                 <svg class="fill-icon">
-                                    <use href="<?= Yii::getAlias('@web') ?>/images/icon-sprite.svg#fill-home"></use>
+                                    <use href="<?= Yii::getAlias('@web') ?>/images/icon-sprite.svg#fill-table"></use>
 
-                                </svg><span>Manage Tabs</span>
+                                </svg><span> Tabs</span>
                                 <div class="according-menu"><i class="fa fa-angle-right"></i>
                                 </div>
                             </a>
                         </li>
-                        <li class="sidebar-list"><a class="sidebar-link sidebar-title link-nav"
-                                href="landing-page.html">
+                        <li class="sidebar-list"><a class="sidebar-link sidebar-title" href="#">
                                 <svg class="stroke-icon">
-                                    <use href="<?= Yii::getAlias('@web') ?>/images/icon-sprite.svg#stroke-landing-page">
+                                    <use href="<?= Yii::getAlias('@web') ?>/images/icon-sprite.svg#stroke-social"></use>
+                                </svg>
+                                <svg class="fill-icon">
+                                    <use href="<?= Yii::getAlias('@web') ?>/images/icon-sprite.svg#fill-social"></use>
+                                </svg><span>Table Tab</span>
+                                <div class="according-menu"><i class="fa fa-angle-right"></i></div>
+                            </a>
+                            <ul class="sidebar-submenu" style="display: none;">
+                                <li><a href="<?= \yii\helpers\Url::to(['table-tabs/index']) ?>">
+                                        <svg class="svg-menu">
+                                            <use href="<?= Yii::getAlias('@web') ?>/images/icon-sprite.svg#right-3">
+                                            </use>
+                                        </svg>Create</a></li>
+                                <li><a href="<?= \yii\helpers\Url::to(['table-tabs/index']) ?>">
+                                        <svg class="svg-menu">
+                                            <use href="<?= Yii::getAlias('@web') ?>/images/icon-sprite.svg#right-3">
+                                            </use>
+                                        </svg>List</a></li>
+                            </ul>
+                        </li>
+                        <li class="sidebar-list"><a class="sidebar-link sidebar-title" href="#">
+                                <svg class="stroke-icon">
+                                    <use href="<?= Yii::getAlias('@web') ?>/images/icon-sprite.svg#stroke-editors">
                                     </use>
                                 </svg>
                                 <svg class="fill-icon">
-                                    <use href="<?= Yii::getAlias('@web') ?>/images/icon-sprite.svg#fill-landing-page">
+                                    <use href="<?= Yii::getAlias('@web') ?>/images/icon-sprite.svg#fill-editors"></use>
+                                </svg><span>Richtext Tab</span>
+                                <div class="according-menu"><i class="fa fa-angle-right"></i></div>
+                            </a>
+                            <ul class="sidebar-submenu" style="display: none;">
+                                <li><a href="<?= \yii\helpers\Url::to(['richtext-tabs/index']) ?>">
+                                        <svg class="svg-menu">
+                                            <use href="<?= Yii::getAlias('@web') ?>/images/icon-sprite.svg#right-3">
+                                            </use>
+                                        </svg>Create</a></li>
+                                <li><a href="<?= \yii\helpers\Url::to(['richtext-tabs/index']) ?>">
+                                        <svg class="svg-menu">
+                                            <use href="<?= Yii::getAlias('@web') ?>/images/icon-sprite.svg#right-3">
+                                            </use>
+                                        </svg>List</a></li>
+                            </ul>
+                        </li>
+                        <?php if ($isAdmin): ?>
+                        <li class="sidebar-list"><a class="sidebar-link sidebar-title link-nav"
+                                href="<?= \yii\helpers\Url::to(['users/index']) ?>">
+                                <svg class="stroke-icon">
+                                    <use href="<?= Yii::getAlias('@web') ?>/images/icon-sprite.svg#stroke-user">
                                     </use>
-                                </svg><span>Landing page</span>
+                                </svg>
+                                <svg class="fill-icon">
+                                    <use href="<?= Yii::getAlias('@web') ?>/images/icon-sprite.svg#fill-user">
+                                    </use>
+                                </svg><span>Manage Users</span>
                             </a>
                         </li>
+                        <?php endif; ?>
+
                     </ul>
                 </div>
                 <div class="right-arrow" id="right-arrow"><i data-feather="arrow-right"></i></div>

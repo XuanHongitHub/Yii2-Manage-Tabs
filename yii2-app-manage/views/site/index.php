@@ -43,9 +43,7 @@ $this->title = 'Manage Tabs';
                             <?php endforeach; ?>
                             <?php else: ?>
                             <div class="align-items-center m-2">
-                                <a class="btn btn-primary" href="<?= \yii\helpers\Url::to(['tabs/settings']) ?>">
-                                    Click here to add a new tab.
-                                </a>
+                                No Data
                             </div>
                             <?php endif; ?>
                         </ul>
@@ -192,6 +190,7 @@ $this->title = 'Manage Tabs';
         </div>
     </div>
 </div>
+<?php include Yii::getAlias('@app/views/layouts/_footer.php'); ?>
 
 <script>
 $(document).ready(function() {
@@ -337,19 +336,19 @@ function loadTabData(tabId, element) {
         },
         data: {
             tabId: tabId,
-            length: 10, // Số bản ghi trên mỗi trang
-            start: 0 // Vị trí bắt đầu (có thể điều chỉnh theo phân trang)
+            length: 10,
+            start: 0
         },
         success: function(data) {
-            // Nếu dữ liệu trả về là JSON
             if (data.data) {
-                $('#table-data-current').html(data.data); // Chỉ cập nhật phần dữ liệu bảng
+                $('#table-data-current').html(data.data);
                 $('.tab-pane').removeClass('show active');
                 $('#tab-data-current').addClass('show active');
-            } else {
-                $('#table-data-current').html(
-                    'No data available'); // Hiển thị thông báo nếu không có dữ liệu
             }
+            //else {
+            //     $('#table-data-current').html(
+            //         'No data available'); 
+            // }
         },
         error: function(xhr, status, error) {
             console.error('Error:', error);
