@@ -32,130 +32,57 @@ $this->registerLinkTag(['rel' => 'icon', 'type' => 'image/x-icon', 'href' => Yii
 
 </head>
 
-<body class="d-flex flex-column h-100">
-    <?php $this->beginBody() ?>
 
-    <header id="header">
-        <?php
-        NavBar::begin([
-            'brandLabel' => Yii::$app->name,
-            'brandUrl' => Yii::$app->homeUrl,
-            'options' => ['class' => 'navbar-expand-md navbar-dark bg-dark fixed-top']
-        ]);
-        echo Nav::widget([
-            'options' => ['class' => 'navbar-nav'],
-            'items' => [
-                ['label' => 'Home', 'url' => ['/site/index']],
-                ['label' => 'Manage Tabs', 'url' => ['/tabs/index']],
-                ['label' => 'Table Tabs', 'url' => ['/table-tabs/index']],
+<body>
+    <?php $this->beginBody(); ?>
 
-                Yii::$app->user->isGuest
-                ? ['label' => 'Login', 'url' => ['/site/login']]
-                : '<li class="nav-item">'
-                . Html::beginForm(['/site/logout'])
-                . Html::submitButton(
-                    'Logout (' . Yii::$app->user->identity->username . ')',
-                    ['class' => 'nav-link btn btn-link logout']
-                )
-                . Html::endForm()
-                . '</li>'
-            ]
-        ]);
-        NavBar::end();
-        ?>
-    </header>
-
-    <main id="main" class="flex-shrink-0" role="main">
-        <div class="container">
-            <?php if (!empty($this->params['breadcrumbs'])): ?>
-            <?= Breadcrumbs::widget(['links' => $this->params['breadcrumbs']]) ?>
-            <?php endif ?>
-            <div class="content-body">
-                <?php
-                $successMessage = Yii::$app->session->getFlash('success');
-                $errorMessage = Yii::$app->session->getFlash('error');
-                $warningMessage = Yii::$app->session->getFlash('warning');
-                $infoMessage = Yii::$app->session->getFlash('info');
-
-                if ($successMessage || $errorMessage || $warningMessage || $infoMessage) {
-                    echo '<div class="toast-container position-fixed top-1 end-0 px-3">';
-
-                    if ($successMessage) {
-                        echo '<div class="toast align-items-center text-bg-success border-0" role="alert" aria-live="assertive" aria-atomic="true" data-bs-delay="3000">
-                                <div class="d-flex">
-                                    <div class="toast-body">
-                                        ' . Html::encode($successMessage) . '
-                                    </div>
-                                    <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
-                                </div>
-                            </div>';
-                    }
-
-                    if ($errorMessage) {
-                        echo '<div class="toast align-items-center text-bg-danger border-0" role="alert" aria-live="assertive" aria-atomic="true" data-bs-delay="10000">
-                                <div class="d-flex">
-                                    <div class="toast-body">
-                                        ' . Html::encode($errorMessage) . '
-                                    </div>
-                                    <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
-                                </div>
-                            </div>';
-                    }
-
-                    if ($warningMessage) {
-                        echo '<div class="toast align-items-center text-bg-warning border-0" role="alert" aria-live="assertive" aria-atomic="true" data-bs-delay="3000">
-                                <div class="d-flex">
-                                    <div class="toast-body">
-                                        ' . Html::encode($warningMessage) . '
-                                    </div>
-                                    <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
-                                </div>
-                            </div>';
-                    }
-
-                    if ($infoMessage) {
-                        echo '<div class="toast align-items-center text-bg-info border-0" role="alert" aria-live="assertive" aria-atomic="true" data-bs-delay="3000">
-                                <div class="d-flex">
-                                    <div class="toast-body">
-                                        ' . Html::encode($infoMessage) . '
-                                    </div>
-                                    <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
-                                </div>
-                            </div>';
-                    }
-
-                    echo '</div>';
-                }
-
-                ?>
-            </div>
-            <?= $content ?>
+    <!-- loader starts-->
+    <div class="loader-wrapper">
+        <div class="theme-loader">
+            <div class="loader-p"></div>
         </div>
-    </main>
+    </div>
+    <!-- loader ends-->
+    <!-- tap on top starts-->
+    <div class="tap-top"><i data-feather="chevrons-up"></i></div>
+    <!-- tap on tap ends-->
+    <!-- page-wrapper Start-->
+    <div class="page-wrapper compact-wrapper" id="pageWrapper">
 
-    <footer id="footer" class="mt-auto py-3 bg-light">
-        <div class="container">
-            <div class="row text-muted">
-                <div class="col-md-6 text-center text-md-start">&copy; My Company <?= date('Y') ?></div>
-                <div class="col-md-6 text-center text-md-end"><?= Yii::powered() ?></div>
+
+        <!-- Main Content Ends-->
+        <?= $content ?>
+
+        <!-- Main Content Ends-->
+
+
+        <!-- footer start-->
+        <footer class="footer">
+            <div class="container-fluid">
+                <div class="row">
+                    <div class="col-md-6 p-0 footer-copyright">
+                        <p class="mb-0">Copyright 2024 ©.</p>
+                    </div>
+                    <!-- <div class="col-md-6 p-0">
+                            <p class="heart mb-0"> &amp;
+                                <svg class="footer-icon">
+                                    <use href="<?= Yii::getAlias('@web') ?>/images/icon-sprite.svg#heart"></use>
+                                </svg>
+                            </p>
+                        </div> -->
+                </div>
             </div>
-        </div>
-    </footer>
+        </footer>
+    </div>
+    </div>
 
     <?php $this->endBody() ?>
+
 </body>
 <?php
-$script = <<<JS
-    const toastElements = document.querySelectorAll('.toast');
-    const toastList = [...toastElements].map(toastEl => {
-        return new bootstrap.Toast(toastEl, { autohide: true, delay: 3000 });
-    });
 
-    toastList.forEach(toast => toast.show());
-JS;
-$this->registerJs($script);
+
 ?>
-
 
 </html>
 <?php $this->endPage() ?>

@@ -96,9 +96,11 @@ class TabsController extends Controller
      * Load Tab Data Action.
      *
      */
-    public function actionLoadTabData($tab_id)
+    public function actionLoadTabData()
     {
-        $tab = Tab::find()->where(['id' => $tab_id])->one();
+        $tabId = Yii::$app->request->post('tabId');
+
+        $tab = Tab::find()->where(['id' => $tabId])->one();
 
         if ($tab === null) {
             return 'No data';
@@ -108,25 +110,32 @@ class TabsController extends Controller
 
         if ($tabType === 'table') {
             // Table Tab
-            $tableTab = TableTab::find()->where(['tab_id' => $tab_id])->one();
+            $tableTab = TableTab::find()->where(['tab_id' => $tabId])->one();
             $tableName = $tableTab ? $tableTab->table_name : null;
 
             if ($tableName) {
-                $charsetInfo = Yii::$app->db->createCommand("SHOW TABLE STATUS LIKE '$tableName'")->queryOne();
-                $collation = $charsetInfo['Collation'] ?? 'Unknown';
                 $columns = Yii::$app->db->schema->getTableSchema($tableName)->columns;
-                $data = Yii::$app->db->createCommand("SELECT * FROM `$tableName`")->queryAll();
 
-                return $this->renderPartial('_tableData', [
-                    'columns' => $columns,
+                $limit = Yii::$app->request->post('length', 10);
+                $offset = Yii::$app->request->post('start', 0);
+
+                $data = Yii::$app->db->createCommand("SELECT * FROM `$tableName` LIMIT :limit OFFSET :offset")
+                    ->bindValues([':limit' => $limit, ':offset' => $offset])
+                    ->queryAll();
+
+                $totalRecords = Yii::$app->db->createCommand("SELECT COUNT(*) FROM `$tableName`")->queryScalar();
+
+                return $this->asJson([
+                    'draw' => intval(Yii::$app->request->post('draw')),
+                    'recordsTotal' => $totalRecords,
+                    'recordsFiltered' => $totalRecords,
                     'data' => $data,
-                    'tableName' => $tableName,
-                    'collation' => $collation,
+                    'columns' => $columns,
                 ]);
             }
         } elseif ($tabType === 'richtext') {
             // Richtext Tab
-            $filePath = Yii::getAlias('@runtime/richtext/' . $tab_id . '.txt');
+            $filePath = Yii::getAlias('@runtime/richtext/' . $tabId . '.txt');
             $content = file_exists($filePath) ? file_get_contents($filePath) : '';
 
             return $this->renderPartial('_richtextData', [
@@ -138,6 +147,33 @@ class TabsController extends Controller
 
         return 'No data';
     }
+
+    // public function actionGetData()
+    // {
+    //     $tabId = Yii::$app->request->post('tabId');
+    //     $query = User::find()->where(['tab_id' => $tabId]);
+
+    //     // Thực hiện phân trang
+    //     $dataProvider = new ActiveDataProvider([
+    //         'query' => $query,
+    //         'pagination' => [
+    //             'pageSize' => Yii::$app->request->post('length'),
+    //             'page' => (Yii::$app->request->post('start') / Yii::$app->request->post('length')),
+    //         ],
+    //     ]);
+
+    //     $data = $dataProvider->getModels();
+    //     $totalCount = $dataProvider->getTotalCount();
+
+    //     return $this->asJson([
+    //         'draw' => Yii::$app->request->post('draw'),
+    //         'recordsTotal' => $totalCount,
+    //         'recordsFiltered' => $totalCount,
+    //         'data' => $data,
+    //     ]);
+    // }
+
+
     /** 
      * Update RichtextData Action.
      *

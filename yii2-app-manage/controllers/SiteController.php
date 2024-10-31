@@ -11,7 +11,9 @@ use app\models\LoginForm;
 use app\models\SignupForm;
 use app\models\ContactForm;
 use app\models\User;
-
+use app\models\Tab;
+use app\models\TableTab;
+use yii\db\Exception;
 class SiteController extends Controller
 {
     /**
@@ -77,7 +79,22 @@ class SiteController extends Controller
      */
     public function actionIndex()
     {
-        return $this->render('index');
+        $userId = Yii::$app->user->id;
+
+        $tabs = Tab::find()
+            ->where(['user_id' => $userId])
+            ->orderBy([
+                'position' => SORT_ASC,
+                'id' => SORT_ASC,
+            ])
+            ->all();
+
+        $tableTabs = TableTab::find()->all();
+
+        return $this->render('index', [
+            'tabs' => $tabs,
+            'tableTabs' => $tableTabs,
+        ]);
     }
 
     /**
@@ -160,13 +177,16 @@ class SiteController extends Controller
     public function actionSignup()
     {
         $model = new SignupForm();
+
         if ($model->load(Yii::$app->request->post()) && $model->signup()) {
             Yii::$app->session->setFlash('success', 'Thank you for registration. Please check your inbox for verification email.');
-            return $this->goHome();
+
+            return $this->redirect(['login']);
         }
 
         return $this->render('signup', [
             'model' => $model,
         ]);
     }
+
 }
