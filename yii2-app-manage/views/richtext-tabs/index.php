@@ -28,37 +28,37 @@ $this->title = 'Table Tab';
 
                         <div class="table-responsive">
                             <?php if (!empty($richtext_tab)): ?>
-                                <table class="table table-bordered dataTable">
-                                    <thead class="table-light">
-                                        <tr>
-                                            <th>ID</th>
-                                            <th>Tab Name</th>
-                                            <th>Created At</th>
-                                            <th>Actions</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        <?php foreach ($richtext_tab as $tab): ?>
-                                            <tr>
-                                                <td><?= Html::encode($tab->id) ?></td>
-                                                <td><?= Html::encode($tab->tab_name) ?></td>
-                                                <td><?= Html::encode($tab->created_at) ?></td>
-                                                <td>
-                                                    <?= Html::a('Detail', ['detail', 'id' => $tab->id], ['class' => 'btn btn-primary']) ?>
-                                                    <?= Html::a('Delete', ['delete', 'id' => $tab->id], [
+                            <table class="table table-bordered dataTable">
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Tab Name</th>
+                                        <th>Created At</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <?php foreach ($richtext_tab as $tab): ?>
+                                    <tr>
+                                        <td><?= Html::encode($tab->id) ?></td>
+                                        <td><?= Html::encode($tab->tab_name) ?></td>
+                                        <td><?= Html::encode($tab->created_at) ?></td>
+                                        <td>
+                                            <?= Html::a('Detail', ['detail', 'id' => $tab->id], ['class' => 'btn btn-primary']) ?>
+                                            <?= Html::a('Delete', ['delete', 'id' => $tab->id], [
                                                         'class' => 'btn btn-danger',
                                                         'data' => [
                                                             'confirm' => 'Are you sure you want to delete this item?',
                                                             'method' => 'post',
                                                         ],
                                                     ]) ?>
-                                                </td>
-                                            </tr>
-                                        <?php endforeach; ?>
-                                    </tbody>
-                                </table>
+                                        </td>
+                                    </tr>
+                                    <?php endforeach; ?>
+                                </tbody>
+                            </table>
                             <?php else: ?>
-                                <p>No data.</p>
+                            <p>No data.</p>
                             <?php endif; ?>
                         </div>
                     </div>

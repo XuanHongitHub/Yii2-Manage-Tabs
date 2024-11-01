@@ -93,7 +93,7 @@ function getDataTypeValue($type)
 
                         <div class="table-responsive">
                             <table class="table table-bordered dataTable">
-                                <thead class="table-light">
+                                <thead>
                                     <tr>
                                         <th>Name</th>
                                         <th>Type</th>

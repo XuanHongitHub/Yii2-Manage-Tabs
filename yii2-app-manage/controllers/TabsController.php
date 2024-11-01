@@ -11,6 +11,8 @@ use app\models\TableTab;
 use yii\filters\VerbFilter;
 use yii\filters\AccessControl;
 use yii\db\Exception;
+use yii\data\Pagination;
+use yii\data\ActiveDataProvider;
 
 class TabsController extends Controller
 {
@@ -81,26 +83,17 @@ class TabsController extends Controller
             'tableTabs' => $tableTabs,
         ]);
     }
-
-    /**
-     * Displays Settings Page.
-     *
-     */
-    public function actionSettings()
-    {
-        return $this->render('settings', [
-            'users' => User::find()->all(),
-        ]);
-    }
     /**
      * Load Tab Data Action.
      *
      */
-    public function actionLoadTabData()
+    public function actionLoadTabData($tabId)
     {
-        $tabId = Yii::$app->request->post('tabId');
+        $tab = Tab::findOne($tabId);
+        $userId = Yii::$app->user->id;
 
-        $tab = Tab::find()->where(['id' => $tabId])->one();
+        // Retrieve search keyword if exists
+        $searchTerm = Yii::$app->request->get('search', '');
 
         if ($tab === null) {
             return 'No data';
@@ -114,65 +107,47 @@ class TabsController extends Controller
             $tableName = $tableTab ? $tableTab->table_name : null;
 
             if ($tableName) {
+                // Get column names
                 $columns = Yii::$app->db->schema->getTableSchema($tableName)->columns;
+                $columnNames = array_keys($columns);
 
-                $limit = Yii::$app->request->post('length', 10);
-                $offset = Yii::$app->request->post('start', 0);
+                $query = (new \yii\db\Query())->from($tableName);
 
-                $data = Yii::$app->db->createCommand("SELECT * FROM `$tableName` LIMIT :limit OFFSET :offset")
-                    ->bindValues([':limit' => $limit, ':offset' => $offset])
-                    ->queryAll();
+                // If search term exists, apply search on all columns
+                if (!empty($searchTerm)) {
+                    // Create a condition for each column
+                    $conditions = [];
+                    foreach ($columnNames as $columnName) {
+                        $conditions[] = [$columnName => $searchTerm]; // Create condition for LIKE
+                    }
+                    // Combine all conditions using OR
+                    $query->where(['or', ...array_map(fn($c) => ['like', $c, $searchTerm], $columnNames)]);
+                }
 
-                $totalRecords = Yii::$app->db->createCommand("SELECT COUNT(*) FROM `$tableName`")->queryScalar();
+                // Get total count for pagination
+                $totalCount = $query->count();
+                $pagination = new Pagination([
+                    'defaultPageSize' => 10,
+                    'totalCount' => $totalCount,
+                    'page' => Yii::$app->request->get('page', 0), // Current page
+                ]);
 
-                return $this->asJson([
-                    'draw' => intval(Yii::$app->request->post('draw')),
-                    'recordsTotal' => $totalRecords,
-                    'recordsFiltered' => $totalRecords,
-                    'data' => $data,
+                // Get the data with limit and offset for pagination
+                $data = $query->offset($pagination->offset)
+                    ->limit($pagination->limit)
+                    ->all();
+
+                return $this->renderPartial('_tableData', [
                     'columns' => $columns,
+                    'data' => $data,
+                    'tableName' => $tableName,
+                    'pagination' => $pagination,
                 ]);
             }
-        } elseif ($tabType === 'richtext') {
-            // Richtext Tab
-            $filePath = Yii::getAlias('@runtime/richtext/' . $tabId . '.txt');
-            $content = file_exists($filePath) ? file_get_contents($filePath) : '';
-
-            return $this->renderPartial('_richtextData', [
-                'richtextTab' => $tab,
-                'content' => $content,
-                'filePath' => $filePath,
-            ]);
         }
 
         return 'No data';
     }
-
-    // public function actionGetData()
-    // {
-    //     $tabId = Yii::$app->request->post('tabId');
-    //     $query = User::find()->where(['tab_id' => $tabId]);
-
-    //     // Thực hiện phân trang
-    //     $dataProvider = new ActiveDataProvider([
-    //         'query' => $query,
-    //         'pagination' => [
-    //             'pageSize' => Yii::$app->request->post('length'),
-    //             'page' => (Yii::$app->request->post('start') / Yii::$app->request->post('length')),
-    //         ],
-    //     ]);
-
-    //     $data = $dataProvider->getModels();
-    //     $totalCount = $dataProvider->getTotalCount();
-
-    //     return $this->asJson([
-    //         'draw' => Yii::$app->request->post('draw'),
-    //         'recordsTotal' => $totalCount,
-    //         'recordsFiltered' => $totalCount,
-    //         'data' => $data,
-    //     ]);
-    // }
-
 
     /** 
      * Update RichtextData Action.

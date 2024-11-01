@@ -26,10 +26,10 @@ $isAdmin = User::isUserAdmin(Yii::$app->user->identity->username);
                                 data-bs-toggle="tab" href="#addRichtextTab">Add New Richtext</a>
                         </li>
                         <?php if ($isAdmin): ?>
-                            <li class="nav-item">
-                                <a class="nav-link <?= $activeTab === 'userManagementTab' ? 'active' : '' ?>"
-                                    data-bs-toggle="tab" href="#userManagementTab">Manage Users </a>
-                            </li>
+                        <li class="nav-item">
+                            <a class="nav-link <?= $activeTab === 'userManagementTab' ? 'active' : '' ?>"
+                                data-bs-toggle="tab" href="#userManagementTab">Manage Users </a>
+                        </li>
                         <?php endif; ?>
 
                     </ul>
@@ -76,7 +76,7 @@ $isAdmin = User::isUserAdmin(Yii::$app->user->identity->username);
 
                                 <div class="table-responsive">
                                     <table class="table table-bordered dataTable">
-                                        <thead class="table-light">
+                                        <thead>
                                             <tr>
                                                 <th>Name</th>
                                                 <th>Type</th>
@@ -174,58 +174,58 @@ $isAdmin = User::isUserAdmin(Yii::$app->user->identity->username);
                         </div>
 
                         <?php if ($isAdmin): ?>
-                            <!-- Tab Manage users -->
-                            <div class="tab-pane fade <?= $activeTab === 'userManagementTab' ? 'show active' : '' ?>"
-                                id="userManagementTab">
-                                <h5>Manage users</h5>
-                                <div class="table-responsive">
-                                    <table class="table">
-                                        <thead>
-                                            <tr>
-                                                <th>ID</th>
-                                                <th>Username</th>
-                                                <th>Email</th>
-                                                <th style="text-align: center;">Status</th>
-                                                <th>Role</th>
-                                                <th>Actions</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            <?php foreach ($users as $user): ?>
-                                                <tr>
-                                                    <td><?= Html::encode($user->id) ?></td>
-                                                    <td><?= Html::encode($user->username) ?></td>
-                                                    <td><?= Html::encode($user->email) ?></td>
-                                                    <td style="text-align: center;">
-                                                        <span
-                                                            class="btn <?= $user->status == 10 ? 'btn-success' : 'btn-danger' ?>">
-                                                            <?= $user->status == 10 ? '<i class="fa-solid fa-circle-check"></i>' : '<i class="fa-solid fa-circle-xmark"></i>' ?>
-                                                        </span>
-                                                    </td>
-                                                    <td>
-                                                        <form
-                                                            action="<?= \yii\helpers\Url::to(['users/update-role', 'id' => $user->id]) ?>"
-                                                            method="post">
-                                                            <?= Html::hiddenInput(Yii::$app->request->csrfParam, Yii::$app->request->csrfToken) ?>
+                        <!-- Tab Manage users -->
+                        <div class="tab-pane fade <?= $activeTab === 'userManagementTab' ? 'show active' : '' ?>"
+                            id="userManagementTab">
+                            <h5>Manage users</h5>
+                            <div class="table-responsive">
+                                <table class="table">
+                                    <thead>
+                                        <tr>
+                                            <th>ID</th>
+                                            <th>Username</th>
+                                            <th>Email</th>
+                                            <th style="text-align: center;">Status</th>
+                                            <th>Role</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <?php foreach ($users as $user): ?>
+                                        <tr>
+                                            <td><?= Html::encode($user->id) ?></td>
+                                            <td><?= Html::encode($user->username) ?></td>
+                                            <td><?= Html::encode($user->email) ?></td>
+                                            <td style="text-align: center;">
+                                                <span
+                                                    class="btn <?= $user->status == 10 ? 'btn-success' : 'btn-danger' ?>">
+                                                    <?= $user->status == 10 ? '<i class="fa-solid fa-circle-check"></i>' : '<i class="fa-solid fa-circle-xmark"></i>' ?>
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <form
+                                                    action="<?= \yii\helpers\Url::to(['users/update-role', 'id' => $user->id]) ?>"
+                                                    method="post">
+                                                    <?= Html::hiddenInput(Yii::$app->request->csrfParam, Yii::$app->request->csrfToken) ?>
 
-                                                            <select class="form-control" name="role">
-                                                                <option value="10" <?= $user->role == 10 ? 'selected' : '' ?>>
-                                                                    User</option>
-                                                                <option value="20" <?= $user->role == 20 ? 'selected' : '' ?>>
-                                                                    Admin</option>
-                                                            </select>
+                                                    <select class="form-control" name="role">
+                                                        <option value="10" <?= $user->role == 10 ? 'selected' : '' ?>>
+                                                            User</option>
+                                                        <option value="20" <?= $user->role == 20 ? 'selected' : '' ?>>
+                                                            Admin</option>
+                                                    </select>
 
-                                                    </td>
-                                                    <td>
-                                                        <button type="submit" class="btn btn-primary">Update</button>
-                                                        </form>
-                                                    </td>
-                                                </tr>
-                                            <?php endforeach; ?>
-                                        </tbody>
-                                    </table>
-                                </div>
+                                            </td>
+                                            <td>
+                                                <button type="submit" class="btn btn-primary">Update</button>
+                                                </form>
+                                            </td>
+                                        </tr>
+                                        <?php endforeach; ?>
+                                    </tbody>
+                                </table>
                             </div>
+                        </div>
                         <?php endif; ?>
                     </div>
                 </div>
@@ -235,24 +235,24 @@ $isAdmin = User::isUserAdmin(Yii::$app->user->identity->username);
 </div>
 
 <script>
-    document.getElementById('richtextForm').addEventListener('submit', function (event) {
-        const richTextArea = document.querySelector('.richtext-area');
-        const contentInput = document.getElementById('content');
-        contentInput.value = richTextArea.innerHTML;
-    });
+document.getElementById('richtextForm').addEventListener('submit', function(event) {
+    const richTextArea = document.querySelector('.richtext-area');
+    const contentInput = document.getElementById('content');
+    contentInput.value = richTextArea.innerHTML;
+});
 
 
-    document.getElementById('characterSet').addEventListener('change', function () {
-        const selectedOption = this.options[this.selectedIndex];
-        const collation = selectedOption.getAttribute('data-collation');
-        document.getElementById('collationField').value = collation;
-    });
+document.getElementById('characterSet').addEventListener('change', function() {
+    const selectedOption = this.options[this.selectedIndex];
+    const collation = selectedOption.getAttribute('data-collation');
+    document.getElementById('collationField').value = collation;
+});
 
-    function addColumn() {
-        const columnsContainer = document.getElementById('columnsContainer');
-        const inputGroup = document.createElement('tr');
-        inputGroup.innerHTML =
-            `<td><input type="text" name="columns[]" class="form-control" required></td>
+function addColumn() {
+    const columnsContainer = document.getElementById('columnsContainer');
+    const inputGroup = document.createElement('tr');
+    inputGroup.innerHTML =
+        `<td><input type="text" name="columns[]" class="form-control" required></td>
          <td>
              <select name="data_types[]" class="form-select" required>
                 <option value="INT">INT</option>
@@ -287,22 +287,22 @@ $isAdmin = User::isUserAdmin(Yii::$app->user->identity->username);
                 class="form-check-input" onchange="togglePrimaryKey(this)">
         </td>
          <td><button type="button" class="btn btn-danger" onclick="removeColumn(this)"><i class="fa-solid fa-minus"></i></button></td>`;
-        columnsContainer.appendChild(inputGroup);
-    }
+    columnsContainer.appendChild(inputGroup);
+}
 
-    function removeColumn(button) {
-        const row = button.closest('tr');
-        row.remove();
-    }
+function removeColumn(button) {
+    const row = button.closest('tr');
+    row.remove();
+}
 
-    function togglePrimaryKey(primaryCheckbox) {
-        const notNullCheckbox = primaryCheckbox.closest('tr').querySelector('input[name="is_not_null[]"]');
+function togglePrimaryKey(primaryCheckbox) {
+    const notNullCheckbox = primaryCheckbox.closest('tr').querySelector('input[name="is_not_null[]"]');
 
-        if (primaryCheckbox.checked) {
-            notNullCheckbox.checked = true;
-            notNullCheckbox.disabled = true
-        } else {
-            notNullCheckbox.disabled = false;
-        }
+    if (primaryCheckbox.checked) {
+        notNullCheckbox.checked = true;
+        notNullCheckbox.disabled = true
+    } else {
+        notNullCheckbox.disabled = false;
     }
+}
 </script>

@@ -92,7 +92,7 @@ $this->title = 'Manage Tabs';
             <div class="modal-body">
                 <p>Select the tab you want to restore or delete completely:</p>
                 <table class="table table-bordered table-hover table-ui">
-                    <thead class="table-light">
+                    <thead>
                         <tr>
                             <th>Tab name</th>
                             <th>Action</th>

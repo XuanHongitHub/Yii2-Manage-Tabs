@@ -221,17 +221,6 @@ class User extends ActiveRecord implements IdentityInterface
         return $this->status === 'active';
     }
 
-    public function getAuthAssignments()
-    {
-        return Yii::$app->authManager->getAssignments($this->id);
-    }
-
-    public function isAdmin()
-    {
-        $assignments = $this->getAuthAssignments();
-        return isset($assignments['admin']);
-    }
-
     public static function isUserAdmin($username)
     {
         if (static::findOne(['username' => $username, 'role' => self::ROLE_ADMIN])) {

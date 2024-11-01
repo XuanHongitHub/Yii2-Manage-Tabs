@@ -36,14 +36,37 @@ class TableTabsController extends Controller
             $isNotNull = Yii::$app->request->post('is_not_null', []);
             $defaultValues = Yii::$app->request->post('default_values', []);
             $isPrimary = Yii::$app->request->post('is_primary', []);
-            $characterSet = Yii::$app->request->post('character_set', 'utf8mb4');
-            $collation = Yii::$app->request->post('collation');
-            $transaction = Yii::$app->db->beginTransaction();
 
-            if (!preg_match('/^[a-zA-Z0-9_]+$/', $tableName)) {
-                Yii::$app->session->setFlash('error', 'Table names can only contain letters, numbers and underscores');
-                return $this->redirect(['tabs/settings']);
+            // Perform validations
+            $validationResult = $this->validateTableCreation($tableName, $columns, $dataTypes);
+
+            if ($validationResult !== true) {
+                $errorMessages = [];
+
+                foreach ($validationResult as $error) {
+                    $errorMessages[] = $error['message'];
+                }
+
+                // Join all messages into a single string with line breaks
+                $formattedMessages = implode('<br>', $errorMessages);
+                Yii::$app->session->setFlash('error', $formattedMessages);
+
+                // Optionally set which field had the error
+                // This can be adjusted based on your needs
+                Yii::$app->session->setFlash('errorFields', $error['field']);
+                Yii::$app->session->setFlash('tableCreationData', [
+                    'tableName' => $tableName,
+                    'columns' => $columns,
+                    'data_types' => $dataTypes,
+                    'data_sizes' => $dataSizes,
+                    'is_not_null' => $isNotNull,
+                    'default_values' => $defaultValues,
+                    'is_primary' => $isPrimary,
+                ]);
+
+                return $this->redirect(['table-tabs/index']);
             }
+            $transaction = Yii::$app->db->beginTransaction();
 
             try {
                 $tab = new Tab();
@@ -55,7 +78,6 @@ class TableTabsController extends Controller
                 $tab->updated_at = date('Y-m-d H:i:s');
 
                 if ($tab->save()) {
-
                     foreach ($columns as $index => $column) {
                         $dataType = $dataTypes[$index];
                         $tableTab = new TableTab();
@@ -68,7 +90,7 @@ class TableTabsController extends Controller
 
                         if (!$tableTab->save()) {
                             Yii::$app->session->setFlash('error', 'Không thể lưu vào bảng table_tab.');
-                            return $this->redirect(['tabs/settings']);
+                            return $this->redirect(['table-tabs/index']);
                         }
                     }
 
@@ -78,7 +100,6 @@ class TableTabsController extends Controller
                     if (!empty($columns)) {
                         $createTableQuery .= " (";
                         foreach ($columns as $index => $column) {
-
                             $dataType = $dataTypes[$index];
                             $dataSize = isset($dataSizes[$index]) ? $dataSizes[$index] : null;
                             $isNotNullColumn = isset($isNotNull[$index]) ? 'NOT NULL' : 'NULL';
@@ -110,31 +131,63 @@ class TableTabsController extends Controller
                         $createTableQuery .= implode(', ', $columnDefs) . ")";
                     }
 
-                    if ($characterSet) {
-                        $createTableQuery .= " CHARACTER SET $characterSet";
-                    }
-                    if ($collation) {
-                        $createTableQuery .= " COLLATE $collation";
-                    }
+                    $createTableQuery .= " CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci";
 
                     Yii::$app->db->createCommand($createTableQuery)->execute();
 
                     $transaction->commit();
-                    Yii::$app->session->setFlash('success', 'Role update successful.');
-                    return $this->redirect(['tabs/settings']);
+
+                    // Redirect to detail page after successful creation
+                    return $this->redirect(['table-tabs/_detail', 'id' => $tab->id]);
                 } else {
                     Yii::$app->session->setFlash('error', 'Có lỗi xảy ra khi lưu tab.');
-                    return $this->redirect(['tabs/settings']);
+                    return $this->redirect(['table-tabs/index']);
                 }
             } catch (\Exception $e) {
                 $transaction->rollBack();
                 Yii::$app->session->setFlash('error', $e->getMessage());
-                return $this->redirect(['tabs/settings']);
+                return $this->redirect(['table-tabs/index']);
             }
         }
 
-        return $this->redirect(['tabs/settings']);
+        return $this->redirect(['table-tabs/index']);
     }
+
+    /**
+     * Validate the table creation inputs.
+     *
+     * @param string $tableName
+     * @param array $columns
+     * @param array $dataTypes
+     * @return array|string
+     */
+    protected function validateTableCreation($tableName, $columns, $dataTypes)
+    {
+        $errors = [];
+
+        // Validate table name
+        if (empty($tableName) || !preg_match('/^[a-zA-Z0-9_]+$/', $tableName)) {
+            $errors[] = ['message' => 'Table names can only contain letters, numbers, and underscores.', 'field' => 'tableName'];
+        }
+
+        // Validate columns and data types
+        if (empty($columns) || empty($dataTypes)) {
+            $errors[] = ['message' => 'Columns and data types cannot be empty.', 'field' => 'columns'];
+        }
+
+        if (count($columns) !== count($dataTypes)) {
+            $errors[] = ['message' => 'Each column must have a corresponding data type.', 'field' => 'data_types'];
+        }
+
+        foreach ($columns as $index => $column) {
+            if (empty($column) || !preg_match('/^[a-zA-Z0-9_]+$/', $column)) {
+                $errors[] = ['message' => 'Column names can only contain letters, numbers, and underscores, and cannot be empty.', 'field' => "columns[$index]"];
+            }
+        }
+
+        return empty($errors) ? true : $errors; // Return true if no errors, otherwise return the errors
+    }
+
     public function actionDetail($id)
     {
         $table = Tab::find()->where(['id' => $id])->one();

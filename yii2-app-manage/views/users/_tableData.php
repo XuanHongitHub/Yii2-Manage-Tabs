@@ -73,7 +73,7 @@ $tabId = $_GET['tab_id'];
 
 <?php if (!empty($data)): ?>
 <table class="display border dataTable dataTable">
-    <thead class="table-light">
+    <thead>
         <tr>
             <th class="sorting_disabled" scope="col"><input type="checkbox" id="select-all"></th>
             <?php foreach ($columns as $column): ?>
@@ -124,7 +124,7 @@ $tabId = $_GET['tab_id'];
 </table>
 <?php else: ?>
 <table class="table table-bordered table-hover dataTable">
-    <thead class="table-light">
+    <thead>
         <tr>
             <th class="sorting_disabled" scope="col"><input type="checkbox" id="select-all"></th>
             <?php foreach ($columns as $column): ?>
@@ -179,8 +179,8 @@ $tabId = $_GET['tab_id'];
 <script>
 var tabId = <?= json_encode($tabId) ?>;
 var columns = <?= json_encode(array_map(function ($column) {
-        return htmlspecialchars($column->name);
-    }, $columns)) ?>;
+    return htmlspecialchars($column->name);
+}, $columns)) ?>;
 var tabtype = 'table';
 // Data Table
 $(document).ready(function() {

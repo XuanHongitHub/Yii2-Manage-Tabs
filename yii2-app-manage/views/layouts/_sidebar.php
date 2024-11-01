@@ -1,15 +1,12 @@
-<?php
-/** @var yii\web\View $this */
-/** @var string $content */
-
-use app\assets\AppAsset;
+<?php /** @var yii\web\View $this */ /** @var string $content */ use app\assets\AppAsset;
 use app\widgets\Alert;
-use yii\bootstrap5\Breadcrumbs;
+use
+yii\bootstrap5\Breadcrumbs;
 use yii\bootstrap5\Html;
 use yii\bootstrap5\Nav;
 use yii\bootstrap5\NavBar;
-use app\models\User;
-
+use
+app\models\User;
 $isAdmin = User::isUserAdmin(Yii::$app->user->identity->username);
 
 ?>
@@ -45,9 +42,10 @@ $isAdmin = User::isUserAdmin(Yii::$app->user->identity->username);
 
                 <li class="profile-nav onhover-dropdown p-0">
                     <div class="d-flex align-items-center profile-media">
+                        <?php if (!Yii::$app->user->isGuest): ?>
+
                         <img class="b-r-10 img-40" src="<?= Yii::getAlias('@web') ?>/images/profile.svg" alt="">
                         <div class="flex-grow-1">
-                            <?php if (!Yii::$app->user->isGuest): ?>
                             <span><?= Html::encode(Yii::$app->user->identity->username) ?></span>
                             <p class="mb-0">
                                 <?php if (Yii::$app->user->identity->role == 10): ?>
@@ -67,7 +65,7 @@ $isAdmin = User::isUserAdmin(Yii::$app->user->identity->username);
                             <form action="<?= Html::encode(Yii::$app->urlManager->createUrl(['site/logout'])) ?>"
                                 method="post" style="display:inline;">
                                 <input type="hidden" name="_csrf" value="<?= Yii::$app->request->csrfToken; ?>">
-                                <a href="#" class="" onclick="this.closest('form').submit(); return false;">
+                                <a href="#" onclick="this.closest('form').submit(); return false;">
                                     <i data-feather="log-out" class="me-2"></i> <span>Logout</span>
                                 </a>
                             </form>
@@ -84,6 +82,7 @@ $isAdmin = User::isUserAdmin(Yii::$app->user->identity->username);
                         </a>
                     </div>
                     <?php endif; ?>
+                </li>
         </div>
 
         <script class="result-template" type="text/x-handlebars-template">
@@ -139,10 +138,12 @@ $isAdmin = User::isUserAdmin(Yii::$app->user->identity->username);
                             <a class="sidebar-link sidebar-title link-nav"
                                 href="<?= \yii\helpers\Url::to(['site/index']) ?>">
                                 <svg class="stroke-icon">
-                                    <use href="<?= Yii::getAlias('@web') ?>/images/icon-sprite.svg#stroke-table"></use>
+                                    <use href="<?= Yii::getAlias('@web') ?>/images/icon-sprite.svg#stroke-table">
+                                    </use>
                                 </svg>
                                 <svg class="fill-icon">
-                                    <use href="<?= Yii::getAlias('@web') ?>/images/icon-sprite.svg#fill-table"></use>
+                                    <use href="<?= Yii::getAlias('@web') ?>/images/icon-sprite.svg#fill-table">
+                                    </use>
 
                                 </svg><span> Tabs</span>
                                 <div class="according-menu"><i class="fa fa-angle-right"></i>
@@ -151,10 +152,12 @@ $isAdmin = User::isUserAdmin(Yii::$app->user->identity->username);
                         </li>
                         <li class="sidebar-list"><a class="sidebar-link sidebar-title" href="#">
                                 <svg class="stroke-icon">
-                                    <use href="<?= Yii::getAlias('@web') ?>/images/icon-sprite.svg#stroke-social"></use>
+                                    <use href="<?= Yii::getAlias('@web') ?>/images/icon-sprite.svg#stroke-social">
+                                    </use>
                                 </svg>
                                 <svg class="fill-icon">
-                                    <use href="<?= Yii::getAlias('@web') ?>/images/icon-sprite.svg#fill-social"></use>
+                                    <use href="<?= Yii::getAlias('@web') ?>/images/icon-sprite.svg#fill-social">
+                                    </use>
                                 </svg><span>Table Tab</span>
                                 <div class="according-menu"><i class="fa fa-angle-right"></i></div>
                             </a>
@@ -177,7 +180,8 @@ $isAdmin = User::isUserAdmin(Yii::$app->user->identity->username);
                                     </use>
                                 </svg>
                                 <svg class="fill-icon">
-                                    <use href="<?= Yii::getAlias('@web') ?>/images/icon-sprite.svg#fill-editors"></use>
+                                    <use href="<?= Yii::getAlias('@web') ?>/images/icon-sprite.svg#fill-editors">
+                                    </use>
                                 </svg><span>Richtext Tab</span>
                                 <div class="according-menu"><i class="fa fa-angle-right"></i></div>
                             </a>

@@ -2,8 +2,8 @@
  * -------------------------- */
 @font-face {
   font-family: "themify";
-  src: url("../fonts/themify_1.eot");
-  src: url("../fonts/themify.eot#iefix-fvbane") format("embedded-opentype"), url("../fonts/themify.woff") format("woff"), url("../fonts/themify.ttf") format("truetype"), url("../images/themify.svg#themify") format("svg");
+  src: url("../fonts/themify.eot");
+  src: url("../fonts/themify_1.eot#iefix-fvbane") format("embedded-opentype"), url("../fonts/themify.woff") format("woff"), url("../fonts/themify.ttf") format("truetype"), url("../images/themify.svg#themify") format("svg");
   font-weight: normal;
   font-style: normal;
 }

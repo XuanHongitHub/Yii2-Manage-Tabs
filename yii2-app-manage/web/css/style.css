@@ -7693,6 +7693,32 @@ div.dataTables_wrapper div.dataTables_length select {
   margin: 0;
 }
 
+.current>.paginate_button {
+  background: #4171cb;
+  color: #fff !important;
+  -webkit-box-shadow: none;
+  box-shadow: none;
+  border: 1px solid #4171cb;
+}
+
+span>.paginate_button {
+  box-sizing: border-box;
+  display: inline-block;
+  min-width: 1.5em;
+  padding: 0.5em 1em;
+  margin-left: 2px;
+  text-align: center;
+  text-decoration: none !important;
+  cursor: pointer;
+  color: #333 !important;
+  border: 1px solid transparent;
+  border-radius: 2px;
+}
+
+.dark-only .paginate_button {
+  color: rgba(255, 255, 255, 0.6) !important;
+}
+
 .dataTables_wrapper .dataTables_paginate .paginate_button.current,
 .dataTables_wrapper .dataTables_paginate .paginate_button:active {
   background: #4171cb;
@@ -10600,6 +10626,18 @@ btn-group .dropdown-wrapper .input-group .input-group-text {
   -ms-flex-align: center;
   align-items: center;
   margin-bottom: 0;
+}
+
+.search-tab {
+  border: 1px solid rgba(106, 113, 133, 0.3);
+  padding: 0 20px;
+  border-radius: 5px;
+}
+
+.search-tab i {
+  padding-right: 10px;
+  color: #9B9B9B;
+  line-height: 3;
 }
 
 .form-inline .col-form-label {

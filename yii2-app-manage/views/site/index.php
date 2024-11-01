@@ -35,7 +35,7 @@ $this->title = 'Manage Tabs';
                             <?php if ($tab->deleted == 0): ?>
                             <li class="nav-item">
                                 <a class="nav-link <?= $index === 0 ? 'active' : '' ?>" href="#"
-                                    data-id="<?= $tab->id ?>">
+                                    data-id="<?= $tab->id ?>" onclick="loadTabData(<?= $tab->id ?>, this, null)">
                                     <?= htmlspecialchars($tab->tab_name) ?>
                                 </a>
                             </li>
@@ -50,7 +50,7 @@ $this->title = 'Manage Tabs';
                         <div class="tab-content">
                             <div class="tab-pane fade show active" id="tab-data-current">
                                 <div class="table-responsive" id="table-data-current">
-                                    <!-- Dữ liệu sẽ được tải vào đây -->
+                                    <!-- Data Loading -->
                                 </div>
                             </div>
                         </div>
@@ -63,6 +63,51 @@ $this->title = 'Manage Tabs';
     <!-- Container-fluid Ends-->
 </div>
 
+<script>
+$(document).ready(function() {
+    var firstTabId = <?= $tabs[0]->id ?>;
+    var firstTabElement = $('.nav-link.active')[0];
+    loadTabData(firstTabId, firstTabElement);
+
+    function loadTabData(tabId, element, page) { // Thêm tham số page
+        console.log("🚀 ~ loadData ~ tabId:", tabId);
+
+        $.ajax({
+            url: "<?= \yii\helpers\Url::to(['tabs/load-tab-data']) ?>",
+            type: "GET",
+            data: {
+                tabId: tabId,
+                page: page // Gửi tham số page
+            },
+            success: function(data) {
+                $('#table-data-current').html(data);
+                $('.tab-pane').removeClass('show active');
+                $('#tab-data-current').addClass('show active');
+
+                $('.nav-link').removeClass('active');
+                $('.nav-item').removeClass('active');
+                $(element).addClass('active');
+                $(element).closest('.nav-item').addClass('active');
+            },
+            error: function(xhr, status, error) {
+                console.error('Error:', error);
+                alert('An error occurred while loading data. Please try again later.');
+            }
+        });
+    }
+
+    $(document).on('click', '.pagination .paginate_button', function(e) {
+        e.preventDefault(); // Ngăn chặn hành vi mặc định
+        var page = $(this).data('page'); // Lấy số trang từ nút bấm
+        loadTabData(firstTabId, firstTabElement, page); // Gọi lại hàm với trang mới
+    });
+
+});
+</script>
+
+
+
+
 <!-- Modal Trash Bin -->
 <div class="modal fade" id="trashBinModal" tabindex="-1" aria-labelledby="trashBinModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg">
@@ -74,7 +119,7 @@ $this->title = 'Manage Tabs';
             <div class="modal-body">
                 <p>Select the tab you want to restore or delete completely:</p>
                 <table class="table table-bordered table-hover table-ui">
-                    <thead class="table-light">
+                    <thead>
                         <tr>
                             <th>Tab name</th>
                             <th>Action</th>
@@ -309,51 +354,4 @@ $(document).ready(function() {
     });
 
 });
-</script>
-
-<script>
-$(document).ready(function() {
-    var firstTabId = <?= isset($tabs[0]) ? $tabs[0]->id : 'null'; ?>;
-    loadTabData(firstTabId, $('.nav-link.active'));
-
-    $('#tab-list').on('click', '.nav-link', function(e) {
-        e.preventDefault();
-        var tabId = $(this).data('id');
-
-        $('.nav-link').removeClass('active');
-        $(this).addClass('active');
-
-        loadTabData(tabId, $(this));
-    });
-});
-
-function loadTabData(tabId, element) {
-    $.ajax({
-        url: "<?= \yii\helpers\Url::to(['tabs/load-tab-data']) ?>",
-        type: "POST", // Thay đổi từ GET sang POST
-        headers: {
-            'X-CSRF-Token': $('meta[name="csrf-token"]').attr('content')
-        },
-        data: {
-            tabId: tabId,
-            length: 10,
-            start: 0
-        },
-        success: function(data) {
-            if (data.data) {
-                $('#table-data-current').html(data.data);
-                $('.tab-pane').removeClass('show active');
-                $('#tab-data-current').addClass('show active');
-            }
-            //else {
-            //     $('#table-data-current').html(
-            //         'No data available'); 
-            // }
-        },
-        error: function(xhr, status, error) {
-            console.error('Error:', error);
-            alert('An error occurred while loading data. Please try again later.');
-        }
-    });
-}
 </script>

@@ -26,9 +26,7 @@ class LoginForm extends Model
     public function rules()
     {
         return [
-            // username and password are both required
             [['username', 'password'], 'required'],
-            // rememberMe must be a boolean value
             ['rememberMe', 'boolean'],
             // password is validated by validatePassword()
             ['password', 'validatePassword'],
@@ -61,13 +59,8 @@ class LoginForm extends Model
     {
         if ($this->validate()) {
             $user = $this->getUser();
-
-            if ($user->isAdmin()) {
-                Yii::$app->user->login($user, $this->rememberMe ? 3600 * 24 * 30 : 0);
-                return true;
-            } else {
-                Yii::$app->user->login($user, $this->rememberMe ? 3600 * 24 * 30 : 0);
-                return true;
+            if ($user) {
+                return Yii::$app->user->login($user, $this->rememberMe ? 3600 * 24 * 30 : 0);
             }
         }
         return false;

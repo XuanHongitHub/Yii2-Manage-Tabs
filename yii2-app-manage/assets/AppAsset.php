@@ -55,6 +55,7 @@ class AppAsset extends AssetBundle
         'js/datatable.custom1.js',
         'js/handlebars.js',
 
+        'js/custom-notify.js',
         'js/script.js',
         'js/jquery-ui.js',
         // 'https://code.jquery.com/ui/1.12.1/jquery-ui.min.js',
