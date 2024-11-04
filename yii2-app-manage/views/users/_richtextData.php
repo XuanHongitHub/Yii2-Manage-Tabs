@@ -75,7 +75,7 @@ $tabId = $_GET['tab_id'];
 <div class="d-flex justify-content-between mb-3">
     <a href="<?= \yii\helpers\Url::to(['tabs/download', 'tab_id' => $tabId]) ?>" class="btn btn-primary"
         target="_blank">
-        Download .txt
+        Download .rtf
     </a>
     <button type="button" class="btn btn-success" id="save-button" data-tab-id="<?= $tabId ?>">Save</button>
 </div>
@@ -105,76 +105,47 @@ $tabId = $_GET['tab_id'];
 
 
 <script>
-document.getElementById('save-button').addEventListener('click', function() {
-    var content = document.getElementById('editor').value;
-    const tabId = $(this).data('tab-id');
-
-    $.ajax({
-        url: "<?= \yii\helpers\Url::to(['tabs/save-richtext']) ?>",
-        type: "POST",
-        data: {
-            tabId: tabId,
-            content: content
-        },
-
-        success: function(response) {
-            var toastElementSuccess = document.getElementById('liveToastSuccess');
-            var toastBodySuccess = toastElementSuccess.querySelector('.toast-body');
-            toastBodySuccess.innerText = "The content was saved successfully!";
-
-            var toastSuccess = new bootstrap.Toast(toastElementSuccess, {
-                delay: 3000
-            });
-            toastSuccess.show();
-        },
-        error: function(xhr, status, error) {
-            alert('An error occurred while saving the content. Please try again later.');
-        }
-    });
-});
-$(document).ready(function() {
-    $('#confirm-delete-btn').on('click', function() {
+    document.getElementById('save-button').addEventListener('click', function () {
+        var content = document.getElementById('editor').value;
         const tabId = $(this).data('tab-id');
 
         $.ajax({
-            url: '<?= \yii\helpers\Url::to(['tabs/delete-tab']) ?>',
-            method: 'POST',
-            headers: {
-                'X-CSRF-Token': $('meta[name="csrf-token"]').attr('content')
-            },
+            url: "<?= \yii\helpers\Url::to(['tabs/save-richtext']) ?>",
+            type: "POST",
             data: {
                 tabId: tabId,
+                content: content
             },
-            success: function(response) {
-                if (response.success) {
-                    location.reload();
-                    $('#deleteModal').modal('hide');
-                } else {
-                    alert(response.message || "Deleting table failed.");
-                }
+
+            success: function (response) {
+                var toastElementSuccess = document.getElementById('liveToastSuccess');
+                var toastBodySuccess = toastElementSuccess.querySelector('.toast-body');
+                toastBodySuccess.innerText = "The content was saved successfully!";
+
+                var toastSuccess = new bootstrap.Toast(toastElementSuccess, {
+                    delay: 3000
+                });
+                toastSuccess.show();
             },
-            error: function(error) {
-                alert("An error occurred while deleting table.");
+            error: function (xhr, status, error) {
+                alert('An error occurred while saving the content. Please try again later.');
             }
         });
     });
+    $(document).ready(function () {
+        $('#confirm-delete-btn').on('click', function () {
+            const tabId = $(this).data('tab-id');
 
-    $('#confirm-delete-permanently-btn').on('click', function() {
-        const tabId = $(this).data('tab-id');
-        var tableName = '<?= $tableName ?>';
-
-        if (confirm("Are you sure you want to delete permanenttly?")) {
             $.ajax({
-                url: '<?= \yii\helpers\Url::to(['tabs/delete-permanently-tab']) ?>',
+                url: '<?= \yii\helpers\Url::to(['tabs/delete-tab']) ?>',
                 method: 'POST',
                 headers: {
                     'X-CSRF-Token': $('meta[name="csrf-token"]').attr('content')
                 },
                 data: {
                     tabId: tabId,
-                    tableName: tableName,
                 },
-                success: function(response) {
+                success: function (response) {
                     if (response.success) {
                         location.reload();
                         $('#deleteModal').modal('hide');
@@ -182,11 +153,40 @@ $(document).ready(function() {
                         alert(response.message || "Deleting table failed.");
                     }
                 },
-                error: function(error) {
+                error: function (error) {
                     alert("An error occurred while deleting table.");
                 }
             });
-        }
+        });
+
+        $('#confirm-delete-permanently-btn').on('click', function () {
+            const tabId = $(this).data('tab-id');
+            var tableName = '<?= $tableName ?>';
+
+            if (confirm("Are you sure you want to delete permanenttly?")) {
+                $.ajax({
+                    url: '<?= \yii\helpers\Url::to(['tabs/delete-permanently-tab']) ?>',
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-Token': $('meta[name="csrf-token"]').attr('content')
+                    },
+                    data: {
+                        tabId: tabId,
+                        tableName: tableName,
+                    },
+                    success: function (response) {
+                        if (response.success) {
+                            location.reload();
+                            $('#deleteModal').modal('hide');
+                        } else {
+                            alert(response.message || "Deleting table failed.");
+                        }
+                    },
+                    error: function (error) {
+                        alert("An error occurred while deleting table.");
+                    }
+                });
+            }
+        });
     });
-});
 </script>

@@ -6,15 +6,8 @@ use yii\helpers\Html;
 /** @var app\models\TableTab[] $tableTabs */
 $tableCreationData = Yii::$app->session->getFlash('tableCreationData', []);
 
-$this->title = 'Table Tabs';
+$this->title = 'List Tabs';
 
-  // Loop through columns from session data or initialize empty
-  $columns = $tableCreationData['columns'] ?? [];
-  $dataTypes = $tableCreationData['data_types'] ?? [];
-  $dataSizes = $tableCreationData['data_sizes'] ?? [];
-  $defaultValues = $tableCreationData['default_values'] ?? [];
-  $isNotNull = $tableCreationData['is_not_null'] ?? [];
-  $isPrimary = $tableCreationData['is_primary'] ?? [];
 ?>
 <?php include Yii::getAlias('@app/views/layouts/_sidebar.php'); ?>
 

@@ -8,7 +8,7 @@ use app\models\User;
 
 $this->title = 'Manage Tabs';
 ?>
-<?php include Yii::getAlias('@app/views/layouts/_sidebar.php'); ?>
+<?php include Yii::getAlias('@app/views/layouts/_nav.php'); ?>
 
 <div class="page-body">
     <div class="container-fluid">
@@ -22,6 +22,45 @@ $this->title = 'Manage Tabs';
     <div class="container-fluid">
         <div class="row">
             <div class="col-sm-12">
+                <div class="d-flex settings ">
+                    <div class="btn-group-ellipsis ms-auto m-2">
+                        <button type="button" class="btn btn-outline-secondary" data-bs-toggle="dropdown"
+                            aria-expanded="false">
+                            <i class="fa-solid fa-ellipsis"></i>
+                        </button>
+                        <ul class="dropdown-menu">
+                            <li>
+                                <a class="dropdown-item fw-medium text-light-emphasis" href="#" data-bs-toggle="modal"
+                                    data-bs-target="#hideModal">
+                                    <i class="fas fa-eye me-1"></i> Show/Hidden Tab
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item fw-medium text-light-emphasis" href="#" data-bs-toggle="modal"
+                                    data-bs-target="#sortModal">
+                                    <i class="fas fa-sort-amount-down me-1"></i> Sort Order Tab
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item fw-medium text-light-emphasis" href="#" data-bs-toggle="modal"
+                                    data-bs-target="#deleteModal">
+                                    <i class="fas fa-trash-alt me-1"></i> Delete Tab
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item fw-medium text-light-emphasis" href="#" data-bs-toggle="modal"
+                                    data-bs-target="#trashBinModal">
+                                    <i class="fas fa-trash me-1"></i> Trash Bin
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="my-2">
+                        <a class="btn btn-secondary" href="<?= \yii\helpers\Url::to(['tabs/settings']) ?>">
+                            <i class="fa-solid fa-gear"></i>
+                        </a>
+                    </div>
+                </div>
                 <div class="card">
                     <div class="card-header card-no-border pb-0">
                         <h4>Manage Tabs</h4>
@@ -35,7 +74,7 @@ $this->title = 'Manage Tabs';
                             <?php if ($tab->deleted == 0): ?>
                             <li class="nav-item">
                                 <a class="nav-link <?= $index === 0 ? 'active' : '' ?>" href="#"
-                                    data-id="<?= $tab->id ?>" onclick="loadTabData(<?= $tab->id ?>, this, null)">
+                                    data-id="<?= $tab->id ?>" onclick="loadTabData(<?= $tab->id ?>, null)">
                                     <?= htmlspecialchars($tab->tab_name) ?>
                                 </a>
                             </li>
@@ -66,28 +105,25 @@ $this->title = 'Manage Tabs';
 <script>
 $(document).ready(function() {
     var firstTabId = <?= $tabs[0]->id ?>;
-    var firstTabElement = $('.nav-link.active')[0];
-    loadTabData(firstTabId, firstTabElement);
+    loadTabData(firstTabId);
 
-    function loadTabData(tabId, element, page) { // Thêm tham số page
-        console.log("🚀 ~ loadData ~ tabId:", tabId);
+    function loadTabData(tabId, page) {
+        console.log("🚀 ~ loadTabData ~ tabId:", tabId);
 
         $.ajax({
             url: "<?= \yii\helpers\Url::to(['tabs/load-tab-data']) ?>",
             type: "GET",
             data: {
                 tabId: tabId,
-                page: page // Gửi tham số page
+                page: page
             },
             success: function(data) {
                 $('#table-data-current').html(data);
-                $('.tab-pane').removeClass('show active');
-                $('#tab-data-current').addClass('show active');
-
+                // Cập nhật trạng thái của tab hiện tại
                 $('.nav-link').removeClass('active');
                 $('.nav-item').removeClass('active');
-                $(element).addClass('active');
-                $(element).closest('.nav-item').addClass('active');
+                $(`[data-id="${tabId}"]`).addClass('active');
+                $(`[data-id="${tabId}"]`).closest('.nav-item').addClass('active');
             },
             error: function(xhr, status, error) {
                 console.error('Error:', error);
@@ -95,16 +131,16 @@ $(document).ready(function() {
             }
         });
     }
-
     $(document).on('click', '.pagination .paginate_button', function(e) {
-        e.preventDefault(); // Ngăn chặn hành vi mặc định
-        var page = $(this).data('page'); // Lấy số trang từ nút bấm
-        loadTabData(firstTabId, firstTabElement, page); // Gọi lại hàm với trang mới
-    });
+        e.preventDefault();
+        var page = $(this).data('page');
+        var tabId = $('.nav-link.active').data('id');
+        console.log("🚀 ~ $ ~ tabId:", tabId);
 
+        loadTabData(tabId, page);
+    });
 });
 </script>
-
 
 
 
@@ -251,6 +287,9 @@ $(document).ready(function() {
         $.ajax({
             url: '<?= \yii\helpers\Url::to(['tabs/update-hide-status']) ?>',
             method: 'POST',
+            headers: {
+                'X-CSRF-Token': $('meta[name="csrf-token"]').attr('content')
+            },
             data: {
                 hideStatus: hideStatus
             },
@@ -281,6 +320,9 @@ $(document).ready(function() {
         $.ajax({
             url: '/tabs/update-sort-order',
             method: 'POST',
+            headers: {
+                'X-CSRF-Token': $('meta[name="csrf-token"]').attr('content')
+            },
             data: {
                 tabs: sortedData
             },

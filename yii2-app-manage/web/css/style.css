@@ -47936,6 +47936,16 @@ footer p .footer-icon {
   width: calc(100% - 246px);
 }
 
+.page-wrapper.compact-wrapper .hide-sidebar {
+  margin-left: 0px !important;
+  width: calc(100%) !important;
+}
+
+.page-wrapper.compact-wrapper .page-header {
+  margin-left: 246px;
+  width: calc(100% - 246px);
+}
+
 .page-wrapper.compact-wrapper .page-header.close_icon {
   margin-left: 71px;
   width: calc(100% - 71px);
@@ -48464,6 +48474,13 @@ footer p .footer-icon {
   min-height: calc(100vh - 80px);
   margin-top: 75px;
   margin-left: 246px;
+}
+
+.page-wrapper.compact-wrapper .page-body-wrapper-nav .page-body {
+  min-height: calc(100vh - 80px);
+  margin-top: 90px;
+  margin-left: 0px;
+  padding: 0px 120px;
 }
 
 .page-wrapper.compact-wrapper.dark-sidebar .sidebar-main-title h6 {

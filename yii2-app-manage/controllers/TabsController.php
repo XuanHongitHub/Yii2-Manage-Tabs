@@ -92,7 +92,7 @@ class TabsController extends Controller
         $tab = Tab::findOne($tabId);
         $userId = Yii::$app->user->id;
 
-        // Retrieve search keyword if exists
+        // Retrieve search keyword if it exists
         $searchTerm = Yii::$app->request->get('search', '');
 
         if ($tab === null) {
@@ -115,12 +115,6 @@ class TabsController extends Controller
 
                 // If search term exists, apply search on all columns
                 if (!empty($searchTerm)) {
-                    // Create a condition for each column
-                    $conditions = [];
-                    foreach ($columnNames as $columnName) {
-                        $conditions[] = [$columnName => $searchTerm]; // Create condition for LIKE
-                    }
-                    // Combine all conditions using OR
                     $query->where(['or', ...array_map(fn($c) => ['like', $c, $searchTerm], $columnNames)]);
                 }
 
@@ -144,10 +138,21 @@ class TabsController extends Controller
                     'pagination' => $pagination,
                 ]);
             }
+        } elseif ($tabType === 'richtext') {
+            // Richtext Tab
+            $filePath = Yii::getAlias('@runtime/richtext/' . $tabId . '.rtf');
+            $content = file_exists($filePath) ? file_get_contents($filePath) : '';
+
+            return $this->renderPartial('_richtextData', [
+                'richtextTab' => $tab,
+                'content' => $content,
+                'filePath' => $filePath,
+            ]);
         }
 
         return 'No data';
     }
+
 
     /** 
      * Update RichtextData Action.
@@ -159,7 +164,7 @@ class TabsController extends Controller
             $tabId = Yii::$app->request->post('tabId');
             $content = Yii::$app->request->post('content');
 
-            $filePath = Yii::getAlias('@runtime/richtext/' . $tabId . '.txt');
+            $filePath = Yii::getAlias('@runtime/richtext/' . $tabId . '.rtf');
             try {
                 file_put_contents($filePath, $content);
                 return json_encode(['status' => 'success', 'message' => 'Content has been updated successfully.']);
@@ -175,7 +180,7 @@ class TabsController extends Controller
      */
     public function actionDownload($tab_id)
     {
-        $filePath = Yii::getAlias('@runtime/richtext/' . $tab_id . '.txt');
+        $filePath = Yii::getAlias('@runtime/richtext/' . $tab_id . '.rtf');
 
         if (file_exists($filePath)) {
             return Yii::$app->response->sendFile($filePath);
@@ -408,7 +413,7 @@ class TabsController extends Controller
             }
         } elseif ($tab->tab_type == 'richtext') {
             try {
-                $filePath = Yii::getAlias('@runtime/richtext/' . $tabId . '.txt');
+                $filePath = Yii::getAlias('@runtime/richtext/' . $tabId . '.rtf');
 
                 if (file_exists($filePath)) {
                     unlink($filePath);

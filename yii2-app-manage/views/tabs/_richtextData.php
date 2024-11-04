@@ -4,7 +4,7 @@ use app\models\User;
 
 $isAdmin = User::isUserAdmin(Yii::$app->user->identity->username);
 
-$tabId = $_GET['tab_id'];
+$tabId = $_GET['tabId'];
 
 ?>
 <div class="toast-container position-fixed top-0 end-0 mt-5 p-3">
@@ -30,52 +30,15 @@ $tabId = $_GET['tab_id'];
     </div>
 </div>
 
-<div class="d-flex mb-3">
-    <div class="btn-group-ellipsis me-2">
-        <button type="button" class="btn btn-outline-secondary" data-bs-toggle="dropdown" aria-expanded="false">
-            <i class="fa-solid fa-ellipsis"></i>
-        </button>
-        <ul class="dropdown-menu">
-            <li>
-                <a class="dropdown-item fw-medium text-light-emphasis" href="#" data-bs-toggle="modal"
-                    data-bs-target="#hideModal">
-                    <i class="fas fa-eye me-1"></i> Show/Hidden Tab
-                </a>
-            </li>
-            <li>
-                <a class="dropdown-item fw-medium text-light-emphasis" href="#" data-bs-toggle="modal"
-                    data-bs-target="#sortModal">
-                    <i class="fas fa-sort-amount-down me-1"></i> Sort Order Tab
-                </a>
-            </li>
-            <li>
-                <a class="dropdown-item fw-medium text-light-emphasis" href="#" data-bs-toggle="modal"
-                    data-bs-target="#deleteModal">
-                    <i class="fas fa-trash-alt me-1"></i> Delete Tab
-                </a>
-            </li>
-            <li>
-                <a class="dropdown-item fw-medium text-light-emphasis" href="#" data-bs-toggle="modal"
-                    data-bs-target="#trashBinModal">
-                    <i class="fas fa-trash me-1"></i> Trash Bin
-                </a>
-            </li>
-        </ul>
+<div class="form-group my-3">
+    <div name="content" id="div_editor1">
+        <?= $content ?>
     </div>
-    <div class="ms-auto">
-        <div class="btn btn-outline-secondary">
-            <span class="fw-medium"><?= $richtextTab->tab_name ?></span> | <span class="fw-bold">Richtext</span>
-        </div>
-    </div>
-</div>
-
-<div class="form-group">
-    <textarea id="editor" name="content" class="form-control" rows="10"><?= $content ?></textarea>
 </div>
 <div class="d-flex justify-content-between mb-3">
     <a href="<?= \yii\helpers\Url::to(['tabs/download', 'tab_id' => $tabId]) ?>" class="btn btn-primary"
         target="_blank">
-        Download .txt
+        Download .rtf
     </a>
     <button type="button" class="btn btn-success" id="save-button" data-tab-id="<?= $tabId ?>">Save</button>
 </div>
@@ -105,34 +68,66 @@ $tabId = $_GET['tab_id'];
 
 
 <script>
-document.getElementById('save-button').addEventListener('click', function() {
-    var content = document.getElementById('editor').value;
-    const tabId = $(this).data('tab-id');
+function loadTabData(tabId, page) {
+    console.log("🚀 ~ rrrrr loadTabData ~ tabId:", tabId);
 
     $.ajax({
-        url: "<?= \yii\helpers\Url::to(['tabs/save-richtext']) ?>",
-        type: "POST",
+        url: "<?= \yii\helpers\Url::to(['tabs/load-tab-data']) ?>",
+        type: "GET",
         data: {
             tabId: tabId,
-            content: content
+            page: page
         },
-
-        success: function(response) {
-            var toastElementSuccess = document.getElementById('liveToastSuccess');
-            var toastBodySuccess = toastElementSuccess.querySelector('.toast-body');
-            toastBodySuccess.innerText = "The content was saved successfully!";
-
-            var toastSuccess = new bootstrap.Toast(toastElementSuccess, {
-                delay: 3000
-            });
-            toastSuccess.show();
+        success: function(data) {
+            $('#table-data-current').html(data);
+            // Cập nhật trạng thái của tab hiện tại
+            $('.nav-link').removeClass('active');
+            $('.nav-item').removeClass('active');
+            $(`[data-id="${tabId}"]`).addClass('active');
+            $(`[data-id="${tabId}"]`).closest('.nav-item').addClass('active');
         },
         error: function(xhr, status, error) {
-            alert('An error occurred while saving the content. Please try again later.');
+            console.error('Error:', error);
+            alert('An error occurred while loading data. Please try again later.');
         }
     });
-});
+}
 $(document).ready(function() {
+    var editor1 = new RichTextEditor("#div_editor1");
+    //editor1.setHTMLCode("Use inline HTML or setHTMLCode to init the default content.");
+    document.getElementById('save-button').addEventListener('click', function() {
+        var content = editor1.getHTMLCode(); // Correctly retrieve content from editor
+        const tabId = $(this).data('tab-id');
+
+        $.ajax({
+            url: "<?= \yii\helpers\Url::to(['tabs/save-richtext']) ?>",
+            type: "POST",
+            headers: {
+                'X-CSRF-Token': $('meta[name="csrf-token"]').attr('content')
+            },
+            data: {
+                tabId: tabId,
+                content: content
+            },
+            success: function(response) {
+                var toastElementSuccess = document.getElementById('liveToastSuccess');
+                var toastBodySuccess = toastElementSuccess.querySelector('.toast-body');
+                toastBodySuccess.innerText = "The content was saved successfully!";
+
+                var toastSuccess = new bootstrap.Toast(toastElementSuccess, {
+                    delay: 3000
+                });
+                toastSuccess.show();
+            },
+            error: function(xhr, status, error) {
+                var toastElementError = document.getElementById('liveToastError');
+                var toastError = new bootstrap.Toast(toastElementError, {
+                    delay: 3000
+                });
+                toastError.show();
+            }
+        });
+    });
     $('#confirm-delete-btn').on('click', function() {
         const tabId = $(this).data('tab-id');
 

@@ -158,7 +158,7 @@ $isAdmin = User::isUserAdmin(Yii::$app->user->identity->username);
                                 <svg class="fill-icon">
                                     <use href="<?= Yii::getAlias('@web') ?>/images/icon-sprite.svg#fill-social">
                                     </use>
-                                </svg><span>Table Tab</span>
+                                </svg><span>Manage Tabs</span>
                                 <div class="according-menu"><i class="fa fa-angle-right"></i></div>
                             </a>
                             <ul class="sidebar-submenu" style="display: none;">
@@ -166,12 +166,12 @@ $isAdmin = User::isUserAdmin(Yii::$app->user->identity->username);
                                         <svg class="svg-menu">
                                             <use href="<?= Yii::getAlias('@web') ?>/images/icon-sprite.svg#right-3">
                                             </use>
-                                        </svg>Create</a></li>
-                                <li><a href="<?= \yii\helpers\Url::to(['table-tabs/index']) ?>">
+                                        </svg>List</a></li>
+                                <li><a href="<?= \yii\helpers\Url::to(['table-tabs/create']) ?>">
                                         <svg class="svg-menu">
                                             <use href="<?= Yii::getAlias('@web') ?>/images/icon-sprite.svg#right-3">
                                             </use>
-                                        </svg>List</a></li>
+                                        </svg>Create</a></li>
                             </ul>
                         </li>
                         <li class="sidebar-list"><a class="sidebar-link sidebar-title" href="#">

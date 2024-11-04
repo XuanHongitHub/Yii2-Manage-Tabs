@@ -43,7 +43,7 @@ $tabId = $_GET['id'];
                     <div class="d-flex justify-content-between mb-3">
                         <a href="<?= \yii\helpers\Url::to(['tabs/download', 'tab_id' => $tabId]) ?>"
                             class="btn btn-primary ms-2" target="_blank">
-                            Download .txt
+                            Download .rtf
                         </a>
                         <button type="button" class="btn btn-success" id="save-button">Lưu</button>
 
@@ -57,23 +57,23 @@ $tabId = $_GET['id'];
 
 
 <script>
-document.getElementById('save-button').addEventListener('click', function() {
-    var content = document.getElementById('editor').value;
+    document.getElementById('save-button').addEventListener('click', function () {
+        var content = document.getElementById('editor').value;
 
-    $.ajax({
-        url: "<?= \yii\helpers\Url::to(['tabs/save-richtext']) ?>",
-        type: "POST",
-        data: {
-            tab_id: <?= $tabId ?>,
-            content: content
-        },
-        success: function(response) {
-            alert('Nội dung đã được lưu thành công!');
-        },
-        error: function(xhr, status, error) {
-            console.error('Error:', error);
-            alert('Có lỗi xảy ra khi lưu nội dung. Vui lòng thử lại sau.');
-        }
+        $.ajax({
+            url: "<?= \yii\helpers\Url::to(['tabs/save-richtext']) ?>",
+            type: "POST",
+            data: {
+                tab_id: <?= $tabId ?>,
+                content: content
+            },
+            success: function (response) {
+                alert('Nội dung đã được lưu thành công!');
+            },
+            error: function (xhr, status, error) {
+                console.error('Error:', error);
+                alert('Có lỗi xảy ra khi lưu nội dung. Vui lòng thử lại sau.');
+            }
+        });
     });
-});
 </script>

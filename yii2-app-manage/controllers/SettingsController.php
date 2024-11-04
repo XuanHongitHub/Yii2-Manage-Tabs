@@ -12,28 +12,24 @@ use yii\web\NotFoundHttpException;
 use yii\web\Exception;
 
 
-class TableTabsController extends Controller
+class SettingsController extends Controller
 {
     public function actionIndex()
     {
         $userId = Yii::$app->user->id;
-        $tableTabs = Tab::find()->where(['tab_type' => 'table'])
+        $tabs = Tab::find()
             ->where(['user_id' => $userId])
             ->all();
 
         return $this->render('index', [
-            'tableTabs' => $tableTabs,
+            'tabs' => $tabs,
         ]);
     }
     public function actionCreate()
     {
-        $userId = Yii::$app->user->id;
-        $tableTabs = Tab::find()->where(['tab_type' => 'table'])
-            ->where(['user_id' => $userId])
-            ->all();
 
         return $this->render('create', [
-            'tableTabs' => $tableTabs,
+
         ]);
     }
     public function actionCreateTab()
