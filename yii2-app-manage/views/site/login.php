@@ -15,14 +15,13 @@ $this->title = 'Login';
 <div class="container-fluid p-0">
     <div class="row m-0">
         <div ss="col-12 p-0">
-            <div class="login-card login-dark">
+            <div class="login-card">
                 <div>
                     <div>
                         <a class="logo" href="<?= \yii\helpers\Url::to(['/']) ?>">
                             <img class="img-fluid for-light" width="32px"
                                 src="<?= Yii::getAlias('@web') ?>/images/logo-icon.png" alt="logo">
-                            <img class="img-fluid for-dark" width="32px"
-                                src="<?= Yii::getAlias('@web') ?>/images/logo-icon.png" alt="logo">
+
                         </a>
                     </div>
                     <div class="login-main">

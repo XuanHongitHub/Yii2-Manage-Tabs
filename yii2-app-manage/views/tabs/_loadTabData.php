@@ -96,7 +96,17 @@ $this->title = 'Manage Tabs';
                         <div class="tab-content">
                             <div class="tab-pane fade show active" id="tab-data-current">
                                 <div class="table-responsive" id="table-data-current">
-                                    <!-- Data Loading -->
+                                    <?php
+                                    
+                                        // Hiển thị phần dữ liệu
+                                        echo $this->render('_tableData', [
+                                            'columns' => $columns,
+                                            'data' => $data,
+                                            'tableName' => $tableName,
+                                            'pagination' => $pagination,
+                                        ]); 
+                                    
+                                    ?>
                                 </div>
                             </div>
                         </div>

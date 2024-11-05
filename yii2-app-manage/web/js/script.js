@@ -128,29 +128,7 @@
       $("body").removeClass("offcanvas");
     }
   });
-  $(".mode").on("click", function () {
-    const bodyModeDark = $("body").hasClass("dark-only");
-    if (!bodyModeDark) {
-      $(".mode").addClass("active");
-      localStorage.setItem("mode-Tokyo", "dark-only");
-      $("body").addClass("dark-only");
-      $("body").removeClass("light");
-    }
-    if (bodyModeDark) {
-      $(".mode").removeClass("active");
-      localStorage.setItem("mode-Tokyo", "light");
-      $("body").removeClass("dark-only");
-      $("body").addClass("light");
-    }
-  });
-  $("body").addClass(
-    localStorage.getItem("mode-Tokyo")
-      ? localStorage.getItem("mode-Tokyo")
-      : "light"
-  );
-  $(".mode").addClass(
-    localStorage.getItem("mode-Tokyo") === "dark-only" ? "active" : " "
-  );
+
   // sidebar filter
   $(".md-sidebar .md-sidebar-toggle ").on("click", function (e) {
     $(".md-sidebar .md-sidebar-aside ").toggleClass("open");

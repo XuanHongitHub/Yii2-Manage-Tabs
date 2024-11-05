@@ -17,8 +17,7 @@ $isAdmin = User::isUserAdmin(Yii::$app->user->identity->username);
         <div class="header-logo-wrapper col-auto p-0">
             <div class="logo-wrapper"><a href="<?= \yii\helpers\Url::to(['/']) ?>"><img
                         class="img-fluid logo-cs for-light" src="<?= Yii::getAlias('@web') ?>/images/logo-1.png"
-                        alt=""><img class="img-fluid logo-cs for-dark"
-                        src="<?= Yii::getAlias('@web') ?>/images/logo.png" alt=""></a>
+                        alt=""></a>
             </div>
             <div class="toggle-sidebar">
                 <svg class="sidebar-toggle">
@@ -30,21 +29,15 @@ $isAdmin = User::isUserAdmin(Yii::$app->user->identity->username);
 
         </div>
         <div
-            class="nav-right col-xxl-7 col-xl-6 col-auto box-col-6 pull-right right-header p-0 ms-auto d-flex align-items-center">
+            class="nav-right col-xxl-7 col-xl-6 col-auto box-col-6 pull-right right-header p-0 ms-auto d-flex align-items-center me-5">
             <ul class="nav-menus">
-                <li>
-                    <div class="mode">
-                        <svg>
-                            <use href="<?= Yii::getAlias('@web') ?>/images/icon-sprite.svg#moon"></use>
-                        </svg>
-                    </div>
-                </li>
 
                 <li class="profile-nav onhover-dropdown p-0">
                     <div class="d-flex align-items-center profile-media">
                         <?php if (!Yii::$app->user->isGuest): ?>
-
-                        <img class="b-r-10 img-40" src="<?= Yii::getAlias('@web') ?>/images/profile.svg" alt="">
+                        <svg style="margin-bottom: -5px; width: 30px !important; height: 30px !important;">
+                            <use href="<?= Yii::getAlias('@web') ?>/images/icon-sprite.svg#fill-user"></use>
+                        </svg>
                         <div class="flex-grow-1">
                             <span><?= Html::encode(Yii::$app->user->identity->username) ?></span>
                             <p class="mb-0">
@@ -63,10 +56,10 @@ $isAdmin = User::isUserAdmin(Yii::$app->user->identity->username);
                     <ul class="profile-dropdown onhover-show-div">
                         <li>
                             <form action="<?= Html::encode(Yii::$app->urlManager->createUrl(['site/logout'])) ?>"
-                                method="post" style="display:inline;">
+                                method="post">
                                 <input type="hidden" name="_csrf" value="<?= Yii::$app->request->csrfToken; ?>">
-                                <a href="#" onclick="this.closest('form').submit(); return false;">
-                                    <i data-feather="log-out" class="me-2"></i> <span>Logout</span>
+                                <a class="d-inline" href="#" onclick="this.closest('form').submit(); return false;">
+                                    <span><i class="fa-solid fa-right-to-bracket me-2"></i> Logout</span>
                                 </a>
                             </form>
                         </li>
@@ -109,8 +102,6 @@ $isAdmin = User::isUserAdmin(Yii::$app->user->identity->username);
                 <a href="<?= \yii\helpers\Url::to(['/']) ?>">
                     <img class="img-fluid for-light" src="<?= Yii::getAlias('@web') ?>/images/logo-1.png"
                         style="width: 141px !important; padding-top: 7px;" alt="">
-                    <img class="img-fluid for-dark" src="<?= Yii::getAlias('@web') ?>/images/logo.png"
-                        style="width: 141px !important; padding-top: 7px;" alt="">
                 </a>
                 <div class="toggle-sidebar">
                     <i class="fa-solid fa-bars-staggered font-primary fs-4"></i>
@@ -150,7 +141,8 @@ $isAdmin = User::isUserAdmin(Yii::$app->user->identity->username);
                                 </div>
                             </a>
                         </li>
-                        <li class="sidebar-list"><a class="sidebar-link sidebar-title" href="#">
+                        <li class="sidebar-list"><a class="sidebar-link sidebar-title link-nav"
+                                href="<?= \yii\helpers\Url::to(['settings/index']) ?>">
                                 <svg class="stroke-icon">
                                     <use href="<?= Yii::getAlias('@web') ?>/images/icon-sprite.svg#stroke-social">
                                     </use>
@@ -159,22 +151,10 @@ $isAdmin = User::isUserAdmin(Yii::$app->user->identity->username);
                                     <use href="<?= Yii::getAlias('@web') ?>/images/icon-sprite.svg#fill-social">
                                     </use>
                                 </svg><span>Manage Tabs</span>
-                                <div class="according-menu"><i class="fa fa-angle-right"></i></div>
                             </a>
-                            <ul class="sidebar-submenu" style="display: none;">
-                                <li><a href="<?= \yii\helpers\Url::to(['table-tabs/index']) ?>">
-                                        <svg class="svg-menu">
-                                            <use href="<?= Yii::getAlias('@web') ?>/images/icon-sprite.svg#right-3">
-                                            </use>
-                                        </svg>List</a></li>
-                                <li><a href="<?= \yii\helpers\Url::to(['table-tabs/create']) ?>">
-                                        <svg class="svg-menu">
-                                            <use href="<?= Yii::getAlias('@web') ?>/images/icon-sprite.svg#right-3">
-                                            </use>
-                                        </svg>Create</a></li>
-                            </ul>
                         </li>
-                        <li class="sidebar-list"><a class="sidebar-link sidebar-title" href="#">
+                        <li class="sidebar-list"><a class="sidebar-link sidebar-title link-nav"
+                                href="<?= \yii\helpers\Url::to(['settings/create']) ?>">
                                 <svg class="stroke-icon">
                                     <use href="<?= Yii::getAlias('@web') ?>/images/icon-sprite.svg#stroke-editors">
                                     </use>
@@ -182,21 +162,8 @@ $isAdmin = User::isUserAdmin(Yii::$app->user->identity->username);
                                 <svg class="fill-icon">
                                     <use href="<?= Yii::getAlias('@web') ?>/images/icon-sprite.svg#fill-editors">
                                     </use>
-                                </svg><span>Richtext Tab</span>
-                                <div class="according-menu"><i class="fa fa-angle-right"></i></div>
+                                </svg><span>Create Tab</span>
                             </a>
-                            <ul class="sidebar-submenu" style="display: none;">
-                                <li><a href="<?= \yii\helpers\Url::to(['richtext-tabs/index']) ?>">
-                                        <svg class="svg-menu">
-                                            <use href="<?= Yii::getAlias('@web') ?>/images/icon-sprite.svg#right-3">
-                                            </use>
-                                        </svg>Create</a></li>
-                                <li><a href="<?= \yii\helpers\Url::to(['richtext-tabs/index']) ?>">
-                                        <svg class="svg-menu">
-                                            <use href="<?= Yii::getAlias('@web') ?>/images/icon-sprite.svg#right-3">
-                                            </use>
-                                        </svg>List</a></li>
-                            </ul>
                         </li>
                         <?php if ($isAdmin): ?>
                         <li class="sidebar-list"><a class="sidebar-link sidebar-title link-nav"

@@ -235,32 +235,44 @@ class TabsController extends Controller
     {
         $tableName = Yii::$app->request->post('table');
         $data = Yii::$app->request->post('data');
-
+    
         $validData = [];
         foreach ($data as $column => $value) {
             if (preg_match('/^[a-zA-Z_][a-zA-Z0-9_]*$/', $column) || is_numeric($column)) {
                 $validData[$column] = $value === '' ? null : $value;
             }
         }
-
+    
         if (empty($validData)) {
             return $this->asJson(['success' => false, 'message' => 'Không có cột hợp lệ để thêm dữ liệu.']);
         }
-
+    
         $sql = "INSERT INTO `$tableName` (`" . implode("`, `", array_keys($validData)) . "`) VALUES (:" . implode(", :", array_keys($validData)) . ")";
         $command = Yii::$app->db->createCommand($sql);
-
+    
         foreach ($validData as $column => $value) {
             $command->bindValue(":$column", $value);
         }
-
+    
         try {
             $command->execute();
-            return $this->asJson(['success' => true, 'redirect' => '/tabs']);
+    
+            $countSql = "SELECT COUNT(*) FROM `$tableName`";
+            $totalRecords = Yii::$app->db->createCommand($countSql)->queryScalar();
+    
+            $pageSize = 10;
+            $totalPages = ceil($totalRecords / $pageSize);
+    
+            return $this->asJson([
+                'success' => true,
+                'totalPages' => $totalPages,
+                'redirect' => '/tabs',
+            ]);
         } catch (\Exception $e) {
             return $this->asJson(['success' => false, 'message' => $e->getMessage()]);
         }
     }
+    
     /** 
      * Delete TableData Action.
      *

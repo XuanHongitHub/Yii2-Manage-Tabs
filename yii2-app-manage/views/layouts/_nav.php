@@ -14,73 +14,55 @@ $isAdmin = User::isUserAdmin(Yii::$app->user->identity->username);
 <!-- Page Header Start-->
 <div class="page-header hide-sidebar">
     <div class="header-wrapper row m-0">
-        <div class="header-logo-wrapper col-auto p-0">
-            <div class="logo-wrapper"><a href="<?= \yii\helpers\Url::to(['/']) ?>"><img
-                        class="img-fluid logo-cs for-light" src="<?= Yii::getAlias('@web') ?>/images/logo-1.png"
-                        alt=""><img class="img-fluid logo-cs for-dark"
-                        src="<?= Yii::getAlias('@web') ?>/images/logo.png" alt=""></a>
-            </div>
-            <div class="toggle-sidebar">
-                <svg class="sidebar-toggle">
-                    <use href="<?= Yii::getAlias('@web') ?>/images/icon-sprite.svg#fill-animation"></use>
-                </svg>
-            </div>
-        </div>
+
         <div class="left-header col-xxl-5 col-xl-6 col-auto box-col-4 horizontal-wrapper p-0">
 
         </div>
         <div
-            class="nav-right col-xxl-7 col-xl-6 col-auto box-col-6 pull-right right-header p-0 ms-auto d-flex align-items-center">
+            class="nav-right col-xxl-7 col-xl-6 col-auto box-col-6 pull-right right-header p-0 ms-auto d-flex align-items-center me-5">
             <ul class="nav-menus">
-                <li>
-                    <div class="mode">
-                        <svg>
-                            <use href="<?= Yii::getAlias('@web') ?>/images/icon-sprite.svg#moon"></use>
-                        </svg>
-                    </div>
-                </li>
-
                 <li class="profile-nav onhover-dropdown p-0">
                     <div class="d-flex align-items-center profile-media">
                         <?php if (!Yii::$app->user->isGuest): ?>
+                        <svg style="margin-bottom: -5px; width: 30px !important; height: 30px !important;">
+                            <use href="<?= Yii::getAlias('@web') ?>/images/icon-sprite.svg#fill-user"></use>
+                        </svg>
+                        <div class="flex-grow-1">
+                            <span><?= Html::encode(Yii::$app->user->identity->username) ?></span>
+                            <p class="mb-0">
+                                <?php if (Yii::$app->user->identity->role == 10): ?>
+                                User
+                                <?php elseif (Yii::$app->user->identity->role == 20): ?>
+                                Admin
+                                <?php else: ?>
+                                <?= Html::encode(Yii::$app->user->identity->role) ?>
+                                <?php endif; ?>
+                                <i class="middle fa fa-angle-down"></i>
+                            </p>
 
-                            <img class="b-r-10 img-40" src="<?= Yii::getAlias('@web') ?>/images/profile.svg" alt="">
-                            <div class="flex-grow-1">
-                                <span><?= Html::encode(Yii::$app->user->identity->username) ?></span>
-                                <p class="mb-0">
-                                    <?php if (Yii::$app->user->identity->role == 10): ?>
-                                        User
-                                    <?php elseif (Yii::$app->user->identity->role == 20): ?>
-                                        Admin
-                                    <?php else: ?>
-                                        <?= Html::encode(Yii::$app->user->identity->role) ?>
-                                    <?php endif; ?>
-                                    <i class="middle fa fa-angle-down"></i>
-                                </p>
-
-                            </div>
                         </div>
-                        <ul class="profile-dropdown onhover-show-div">
-                            <li>
-                                <form action="<?= Html::encode(Yii::$app->urlManager->createUrl(['site/logout'])) ?>"
-                                    method="post" style="display:inline;">
-                                    <input type="hidden" name="_csrf" value="<?= Yii::$app->request->csrfToken; ?>">
-                                    <a href="#" onclick="this.closest('form').submit(); return false;">
-                                        <i data-feather="log-out" class="me-2"></i> <span>Logout</span>
-                                    </a>
-                                </form>
-                            </li>
-                        </ul>
+                    </div>
+                    <ul class="profile-dropdown onhover-show-div">
+                        <li>
+                            <form action="<?= Html::encode(Yii::$app->urlManager->createUrl(['site/logout'])) ?>"
+                                method="post">
+                                <input type="hidden" name="_csrf" value="<?= Yii::$app->request->csrfToken; ?>">
+                                <a class="d-inline" href="#" onclick="this.closest('form').submit(); return false;">
+                                    <span><i class="fa-solid fa-right-to-bracket me-2"></i> Logout</span>
+                                </a>
+                            </form>
+                        </li>
+                    </ul>
                     <?php else: ?>
-                        <div class="auth-buttons">
-                            <a href="<?= Yii::$app->urlManager->createUrl(['site/login']) ?>" class="btn btn-primary me-1">
-                                <i class="fa-solid fa-right-to-bracket"></i> Login
-                            </a>
-                            <a href="<?= Yii::$app->urlManager->createUrl(['site/signup']) ?>"
-                                class="btn btn-outline-success">
-                                <i class="fa-solid fa-user-plus"></i> Sign Up
-                            </a>
-                        </div>
+                    <div class="auth-buttons">
+                        <a href="<?= Yii::$app->urlManager->createUrl(['site/login']) ?>" class="btn btn-primary me-1">
+                            <i class="fa-solid fa-right-to-bracket"></i> Login
+                        </a>
+                        <a href="<?= Yii::$app->urlManager->createUrl(['site/signup']) ?>"
+                            class="btn btn-outline-success">
+                            <i class="fa-solid fa-user-plus"></i> Sign Up
+                        </a>
+                    </div>
                     <?php endif; ?>
                 </li>
         </div>
