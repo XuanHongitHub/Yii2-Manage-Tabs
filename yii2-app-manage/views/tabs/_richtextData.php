@@ -43,30 +43,6 @@ $tabId = $_GET['tabId'];
     <button type="button" class="btn btn-success" id="save-button" data-tab-id="<?= $tabId ?>">Save</button>
 </div>
 
-
-<!-- Modal Confirm Delete -->
-<div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="deleteModalLabel">Confirm remove tab</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                Are you sure you want to delete this tab? This action cannot be undone.
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-danger" id="confirm-delete-btn"
-                    data-tab-id="<?= htmlspecialchars($tabId) ?>">Delete</button>
-                <button type="button" class="btn btn-danger" id="confirm-delete-permanently-btn"
-                    data-tab-id="<?= htmlspecialchars($tabId) ?>">Delete permanently</button>
-            </div>
-        </div>
-    </div>
-</div>
-
-
 <script>
 function loadTabData(tabId, page) {
     console.log("🚀 ~ rrrrr loadTabData ~ tabId:", tabId);
@@ -127,61 +103,6 @@ $(document).ready(function() {
                 toastError.show();
             }
         });
-    });
-    $('#confirm-delete-btn').on('click', function() {
-        const tabId = $(this).data('tab-id');
-
-        $.ajax({
-            url: '<?= \yii\helpers\Url::to(['tabs/delete-tab']) ?>',
-            method: 'POST',
-            headers: {
-                'X-CSRF-Token': $('meta[name="csrf-token"]').attr('content')
-            },
-            data: {
-                tabId: tabId,
-            },
-            success: function(response) {
-                if (response.success) {
-                    location.reload();
-                    $('#deleteModal').modal('hide');
-                } else {
-                    alert(response.message || "Deleting table failed.");
-                }
-            },
-            error: function(error) {
-                alert("An error occurred while deleting table.");
-            }
-        });
-    });
-
-    $('#confirm-delete-permanently-btn').on('click', function() {
-        const tabId = $(this).data('tab-id');
-        var tableName = '<?= $tableName ?>';
-
-        if (confirm("Are you sure you want to delete permanenttly?")) {
-            $.ajax({
-                url: '<?= \yii\helpers\Url::to(['tabs/delete-permanently-tab']) ?>',
-                method: 'POST',
-                headers: {
-                    'X-CSRF-Token': $('meta[name="csrf-token"]').attr('content')
-                },
-                data: {
-                    tabId: tabId,
-                    tableName: tableName,
-                },
-                success: function(response) {
-                    if (response.success) {
-                        location.reload();
-                        $('#deleteModal').modal('hide');
-                    } else {
-                        alert(response.message || "Deleting table failed.");
-                    }
-                },
-                error: function(error) {
-                    alert("An error occurred while deleting table.");
-                }
-            });
-        }
     });
 });
 </script>

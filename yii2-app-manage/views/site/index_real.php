@@ -6,71 +6,92 @@ use app\models\User;
 /** @var app\models\TableTab[] $tableTabs */
 /** @var app\models\Tab[] $tabs */
 
-$this->title = 'Manage Tabs';
-
+$this->title = 'Tabs Data';
 ?>
-<!-- <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script> -->
+<?php include Yii::getAlias('@app/views/layouts/_nav.php'); ?>
 
-<div class="content-body">
-    <div class="row">
-        <div class="col-md-12">
-            <div class="d-flex my-2">
+<div class="page-body">
+    <div class="container-fluid">
+        <div class="page-title">
+            <div class="row">
 
-                <div class="btn-group-ellipsis ms-auto">
-                    <button type="button" class="btn btn-outline-secondary" data-bs-toggle="dropdown"
-                        aria-expanded="false">
-                        <i class="fa-solid fa-ellipsis"></i>
-                    </button>
-                    <ul class="dropdown-menu">
-                        <li><a class="dropdown-item fw-medium text-light-emphasis" href="#" data-bs-toggle="modal"
-                                data-bs-target="#hideModal"><i class="fas fa-eye me-1"></i> Show/Hidden Tab</a></li>
-                        <li><a class="dropdown-item fw-medium text-light-emphasis" href="#" data-bs-toggle="modal"
-                                data-bs-target="#sortModal"><i class="fas fa-sort-amount-down me-1"></i> Sort Order
-                                Tab</a>
-                        </li>
-                        <li><a class="dropdown-item fw-medium text-light-emphasis" href="#" data-bs-toggle="modal"
-                                data-bs-target="#deleteModal"><i class="fas fa-trash-alt me-1"></i> Delete Tab</a>
-                        </li>
-                        <li><a class="dropdown-item fw-medium text-light-emphasis" href="#" data-bs-toggle="modal"
-                                data-bs-target="#trashBinModal"> <i class="fas fa-trash me-1"></i> Trash Bin</a>
-                        </li>
-                    </ul>
-                </div>
-                <div class="settings ms-2">
-                    <a class="btn btn-secondary" href="<?= \yii\helpers\Url::to(['tabs/settings']) ?>"
-                        style="color: white; text-decoration: none;">
-                        <i class="fa-solid fa-gear"></i>
-                    </a>
-                </div>
             </div>
-            <div class="card">
-                <div class="card-header">
-                    <ul class="nav nav-tabs" id="tab-list">
-                        <?php if (!empty($tabs)): ?>
-                        <?php foreach ($tabs as $index => $tab): ?>
-                        <?php if ($tab->deleted == 0): ?>
-                        <li class="nav-item">
-                            <a class="nav-link <?= $index === 0 ? 'active' : '' ?>" href="#" data-id="<?= $tab->id ?>">
-                                <?= htmlspecialchars($tab->tab_name) ?>
-                            </a>
-                        </li>
-                        <?php endif; ?>
-                        <?php endforeach; ?>
-                        <?php else: ?>
-                        <div class="align-items-center m-2">
-                            <a class="btn btn-primary" href="<?= \yii\helpers\Url::to(['tabs/settings']) ?>">
-                                Click here to add a new tab.
-                            </a>
-                        </div>
-                        <?php endif; ?>
-                    </ul>
-
+        </div>
+    </div>
+    <!-- Container-fluid starts -->
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-sm-12">
+                <div class="d-flex settings ">
+                    <div class="btn-group-ellipsis ms-auto m-2">
+                        <button type="button" class="btn btn-outline-secondary" data-bs-toggle="dropdown"
+                            aria-expanded="false">
+                            <i class="fa-solid fa-ellipsis"></i>
+                        </button>
+                        <ul class="dropdown-menu">
+                            <li>
+                                <a class="dropdown-item fw-medium text-light-emphasis" href="#" data-bs-toggle="modal"
+                                    data-bs-target="#hideModal">
+                                    <i class="fas fa-eye me-1"></i> Show/Hidden Tab
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item fw-medium text-light-emphasis" href="#" data-bs-toggle="modal"
+                                    data-bs-target="#sortModal">
+                                    <i class="fas fa-sort-amount-down me-1"></i> Sort Order Tab
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item fw-medium text-light-emphasis" href="#" data-bs-toggle="modal"
+                                    data-bs-target="#trashBinModal">
+                                    <i class="fas fa-trash me-1"></i> Trash Bin
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="my-2">
+                        <a class="btn btn-secondary" href="<?= \yii\helpers\Url::to(['settings/index']) ?>">
+                            <i class="fa-solid fa-gear"></i>
+                        </a>
+                    </div>
                 </div>
-                <div class="card-body pt-0">
-                    <div class="tab-content">
-                        <div class="tab-pane fade show active" id="tab-data-current">
-                            <div class="table-responsive" id="table-data-current">
-                                <!-- Dữ liệu sẽ được tải vào đây -->
+                <div class="card">
+                    <div class="card-header card-no-border pb-0">
+                        <h4>Tabs Data</h4>
+                        <p class="mt-1 f-m-light"><code>Table Tabs</code> | <code>Richtext Tabs </code></p>
+                    </div>
+                    <div class="card-body">
+                        <ul class="simple-wrapper nav nav-tabs" id="tab-list">
+                            <?php if (!empty($tabs)): ?>
+                            <?php $hasValidTabs = false; ?>
+                            <?php foreach ($tabs as $index => $tab): ?>
+                            <?php if ($tab->deleted == 0): ?>
+                            <?php $hasValidTabs = true; ?>
+                            <li class="nav-item">
+                                <a class="nav-link <?= $index === 0 ? 'active' : '' ?>" href="#"
+                                    data-id="<?= $tab->id ?>" onclick="loadTabData(<?= $tab->id ?>, null)">
+                                    <?= htmlspecialchars($tab->tab_name) ?>
+                                </a>
+                            </li>
+                            <?php endif; ?>
+                            <?php endforeach; ?>
+
+                            <?php if (!$hasValidTabs): ?>
+                            <div class="align-items-center m-2">
+                                No Tabs Available. Please create a new tab in the settings.
+                            </div>
+                            <?php endif; ?>
+                            <?php else: ?>
+                            <div class="align-items-center m-2">
+                                No Data
+                            </div>
+                            <?php endif; ?>
+                        </ul>
+                        <div class="tab-content">
+                            <div class="tab-pane fade show active" id="tab-data-current">
+                                <div class="table-responsive" id="table-data-current">
+                                    <!-- Data Loading -->
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -79,7 +100,65 @@ $this->title = 'Manage Tabs';
 
         </div>
     </div>
+    <!-- Container-fluid Ends-->
 </div>
+<?php
+
+$firstTabId = null;
+foreach($tabs as $tab) {
+    if ($tab -> deleted == 0) {
+        $firstTabId = $tab -> id; 
+        break;
+    }
+}
+
+?>
+<script async>
+$(document).ready(function() {
+
+    var firstTabId = <?= !empty($firstTabId) ? $tabs[0]->id : 'null' ?>;
+    if (firstTabId !== null) {
+        loadTabData(firstTabId);
+    } else {
+        console.log("No tabs available to load data.");
+    }
+
+    function loadTabData(tabId, page) {
+        console.log("🚀 ~ loadTabData ~ tabId:", tabId);
+
+        $.ajax({
+            url: "<?= \yii\helpers\Url::to(['tabs/load-tab-data']) ?>",
+            type: "GET",
+            data: {
+                tabId: tabId,
+                page: page
+            },
+            success: function(data) {
+                $('#table-data-current').html(data);
+                // Cập nhật trạng thái của tab hiện tại
+                $('.nav-link').removeClass('active');
+                $('.nav-item').removeClass('active');
+                $(`[data-id="${tabId}"]`).addClass('active');
+                $(`[data-id="${tabId}"]`).closest('.nav-item').addClass('active');
+            },
+            error: function(xhr, status, error) {
+                console.error('Error:', error);
+                alert('An error occurred while loading data. Please try again later.');
+            }
+        });
+    }
+    $(document).on('click', '.pagination .paginate_button', function(e) {
+        e.preventDefault();
+        var page = $(this).data('page');
+        var tabId = $('.nav-link.active').data('id');
+        console.log("🚀 ~ $ ~ tabId:", tabId);
+
+        loadTabData(tabId, page);
+    });
+});
+</script>
+
+
 
 <!-- Modal Trash Bin -->
 <div class="modal fade" id="trashBinModal" tabindex="-1" aria-labelledby="trashBinModalLabel" aria-hidden="true">
@@ -142,7 +221,7 @@ $this->title = 'Manage Tabs';
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title" id="hideModalLabel">Show/Hidden Tab</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cancel"></button>
             </div>
             <div class="modal-body">
                 <p>Select the tab you want to hide or show:</p>
@@ -187,7 +266,7 @@ $this->title = 'Manage Tabs';
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title" id="sortModalLabel">Sort Tabs</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cancel"></button>
             </div>
             <div class="modal-body">
                 <p>Kéo và thả để sắp xếp các tab.</p>
@@ -208,7 +287,7 @@ $this->title = 'Manage Tabs';
         </div>
     </div>
 </div>
-
+<?php include Yii::getAlias('@app/views/layouts/_footer.php'); ?>
 
 <script>
 $(document).ready(function() {
@@ -224,6 +303,9 @@ $(document).ready(function() {
         $.ajax({
             url: '<?= \yii\helpers\Url::to(['tabs/update-hide-status']) ?>',
             method: 'POST',
+            headers: {
+                'X-CSRF-Token': $('meta[name="csrf-token"]').attr('content')
+            },
             data: {
                 hideStatus: hideStatus
             },
@@ -254,6 +336,9 @@ $(document).ready(function() {
         $.ajax({
             url: '/tabs/update-sort-order',
             method: 'POST',
+            headers: {
+                'X-CSRF-Token': $('meta[name="csrf-token"]').attr('content')
+            },
             data: {
                 tabs: sortedData
             },
@@ -327,42 +412,4 @@ $(document).ready(function() {
     });
 
 });
-</script>
-
-<script>
-$(document).ready(function() {
-    var firstTabId = <?= $tabs[0]->id ?>;
-    loadTabData(firstTabId, $('.nav-link.active'));
-
-    $('#tab-list').on('click', '.nav-link', function(e) {
-        e.preventDefault();
-        var tabId = $(this).data('id');
-
-        $('.nav-link').removeClass('active');
-        $(this).addClass('active');
-
-        loadTabData(tabId, $(this));
-    });
-});
-
-function loadTabData(tabId, element) {
-    console.log("🚀 ~ loadData ~ tabId:", tabId);
-
-    $.ajax({
-        url: "<?= \yii\helpers\Url::to(['tabs/load-tab-data']) ?>",
-        type: "GET",
-        data: {
-            tabId: tabId,
-        },
-        success: function(data) {
-            $('#table-data-current').html(data);
-            $('.tab-pane').removeClass('show active');
-            $('#tab-data-current').addClass('show active');
-        },
-        error: function(xhr, status, error) {
-            console.error('Error:', error);
-            alert('An error occurred while loading data. Please try again later.');
-        }
-    });
-}
 </script>

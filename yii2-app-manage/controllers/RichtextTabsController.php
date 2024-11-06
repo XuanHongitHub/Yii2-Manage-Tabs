@@ -8,11 +8,31 @@ use yii\web\Response;
 use yii\web\Controller;
 use app\models\Tab;
 use app\models\TableTab;
+use yii\filters\AccessControl;
 
 
 
 class RichtextTabsController extends Controller
 {
+    public function behaviors()
+    {
+        return [
+            'access' => [
+                'class' => AccessControl::className(),
+                'rules' => [
+                    [
+                        'allow' => true,
+                        'roles' => ['@'],  // Yêu cầu người dùng đã đăng nhập
+                    ],
+                    [
+                        'allow' => false,
+                        'roles' => ['?'],  // Từ chối người dùng chưa đăng nhập
+                    ],
+                ],
+            ],
+        ];
+    }
+
     public function actionIndex()
     {
         $userId = Yii::$app->user->id;

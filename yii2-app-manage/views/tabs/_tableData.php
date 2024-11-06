@@ -14,11 +14,23 @@ $tabId = $_GET['tabId'];
         <div class="d-md-flex d-sm-block">
             <button class="btn btn-primary mb-2 me-2" id="add-data-btn" href="#" data-bs-toggle="modal"
                 data-bs-target="#addDataModal">
-                <i class="fa-solid fa-plus"></i> Thêm Dữ Liệu
+                <i class="fa-solid fa-plus"></i> Insert data
             </button>
 
-            <button class="btn btn-danger mb-2 me-auto" id="delete-selected-btn">
+            <button class="btn btn-danger mb-2 me-2" id="delete-selected-btn">
                 <i class="fa-regular fa-trash-can"></i> Delete selected
+            </button>
+
+            <!-- Import Excel Button -->
+            <button class="btn btn-info mb-2 me-2" id="import-data-btn" href="#" data-bs-toggle="modal"
+                data-bs-target="#importExelModal">
+                <i class="fa-solid fa-download"></i> Import Excel
+            </button>
+
+            <!-- Export Excel Button -->
+            <button class="btn btn-warning mb-2 me-auto" id="import-excel-btn" href="#" data-bs-toggle="modal"
+                data-bs-target="#exportExcelModal">
+                <i class="fa-solid fa-file-export"></i></i> Export Excel
             </button>
         </div>
         <!-- Search Form -->
@@ -42,7 +54,7 @@ $tabId = $_GET['tabId'];
             </tr>
         </thead>
         <?php if (!empty($data)): ?>
-        <tbody>
+        <tbody id="tbodyData">
             <?php foreach ($data as $rowIndex => $row): ?>
             <tr>
                 <td class="p-0"><input type="checkbox" class="row-checkbox p-0" data-row="<?= $rowIndex ?>"
@@ -50,8 +62,8 @@ $tabId = $_GET['tabId'];
                 <?php foreach ($columns as $column): ?>
                 <td><?= htmlspecialchars($row[$column->name]) ?></td>
                 <?php endforeach; ?>
-                <td style="white-space: nowrap">
-                    <button class="btn btn-success btn-sm save-row-btn"
+                <td class="text-nowrap">
+                    <button class="btn btn-secondary btn-sm save-row-btn"
                         onclick="openEdit(<?= $rowIndex ?>, '<?= $tableName ?>')"><i
                             class="fa-solid fa-pen-to-square"></i></button>
                     <button class="btn btn-danger btn-sm" onclick="deleteRow(<?= $rowIndex ?>, '<?= $tableName ?>')"><i
@@ -59,25 +71,38 @@ $tabId = $_GET['tabId'];
                 </td>
             </tr>
             <?php endforeach; ?>
+            <script>
+            function getRowData(rowIndex) {
+                const data = <?= json_encode($data) ?>;
+
+                if (rowIndex < 0 || rowIndex >= data.length) {
+                    return undefined;
+                }
+
+                return data[rowIndex];
+            }
+            </script>
         </tbody>
     </table>
 
     <!-- Pagination Links -->
     <div class="dataTables_paginate paging_simple_numbers">
         <?= LinkPager::widget([
-        'pagination' => $pagination,
-        'options' => ['class' => 'pagination justify-content-start'],
-        'linkContainerOptions' => ['tag' => 'span'],
-        'linkOptions' => [
-            'class' => 'paginate_button',
-            'data-page' => function($page) { return $page; }, // Bắt đầu từ trang 1 thay vì 0
-        ],
-        'activePageCssClass' => 'current',
-        'disabledPageCssClass' => 'disabled',
-        'disabledListItemSubTagOptions' => ['tag' => 'span', 'class' => 'paginate_button'],
-        'prevPageLabel' => 'Previous',
-        'nextPageLabel' => 'Next',
-    ]) ?>
+                'pagination' => $pagination,
+                'options' => ['class' => 'pagination justify-content-start'],
+                'linkContainerOptions' => ['tag' => 'span'],
+                'linkOptions' => [
+                    'class' => 'paginate_button',
+                    'data-page' => function ($page) {
+                                    return $page;
+                                },
+                ],
+                'activePageCssClass' => 'current',
+                'disabledPageCssClass' => 'disabled',
+                'disabledListItemSubTagOptions' => ['tag' => 'span', 'class' => 'paginate_button'],
+                'prevPageLabel' => 'Previous',
+                'nextPageLabel' => 'Next',
+            ]) ?>
 
     </div>
     <?php endif; ?>
@@ -88,16 +113,16 @@ $tabId = $_GET['tabId'];
         <div class="modal-dialog" role="document">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title" id="editModalLabel">Sửa Dữ Liệu</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
+                    <h5 class="modal-title" id="editModalLabel">Edit Data</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cancel"></button>
                 </div>
                 <div class="modal-body">
                     <form id="editForm"></form> <!-- Để trống và sẽ được điền động -->
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"
-                        aria-label="Đóng">Đóng</button>
-                    <button type="button" class="btn btn-primary" id="save-row-btn">Lưu thay đổi</button>
+                        aria-label="Cancel">Cancel</button>
+                    <button type="button" class="btn btn-primary" id="save-row-btn">Save</button>
                 </div>
             </div>
         </div>
@@ -108,7 +133,7 @@ $tabId = $_GET['tabId'];
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title" id="addDataModalLabel">Thêm Dữ Liệu</h5>
+                    <h5 class="modal-title" id="addDataModalLabel">Insert Data</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
@@ -124,37 +149,64 @@ $tabId = $_GET['tabId'];
                     <?php endforeach; ?>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
-                    <button type="button" id="add-row-btn" class="btn btn-primary">Thêm Dữ Liệu</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" id="add-row-btn" class="btn btn-primary">Add</button>
                 </div>
             </div>
         </div>
     </div>
 
-
-    <!-- Modal Confirm Delete -->
-    <div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+    <!-- Modal for Import Excel -->
+    <div class="modal fade" id="importExelModal" tabindex="-1" aria-labelledby="importExelModalLabel"
+        aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title" id="deleteModalLabel">Confirm remove tab</h5>
+                    <h5 class="modal-title" id="importExelModalLabel">Import Excel</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-                    Are you sure you want to delete this tab? This action cannot be undone.
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="button" class="btn btn-danger" id="confirm-delete-btn"
-                        data-tab-id="<?= htmlspecialchars($tabId) ?>">Delete</button>
-                    <?php if ($isAdmin): ?>
-                    <button type="button" class="btn btn-danger" id="confirm-delete-permanently-btn"
-                        data-tab-id="<?= htmlspecialchars($tabId) ?>">Delete permanently</button>
-                    <?php endif; ?>
+                    <form id="importExcelForm" enctype="multipart/form-data">
+                        <div class="mb-3">
+                            <label for="import-excel-file" class="form-label">Select Excel File</label>
+                            <input class="form-control" type="file" id="import-excel-file" name="import-excel-file"
+                                accept=".xlsx, .xls" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Import Excel</button>
+                    </form>
                 </div>
             </div>
         </div>
     </div>
+
+    <!-- Modal for Export Excel -->
+    <div class="modal fade" id="exportExcelModal" tabindex="-1" aria-labelledby="exportExcelModalLabel"
+        aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="exportExcelModalLabel">Export Excel</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="exportExcelForm">
+                        <div class="mb-3">
+                            <label for="export-format" class="form-label">Choose Export Format</label>
+                            <select class="form-control" id="export-format" name="export-format">
+                                <option value="xlsx">Excel (.xlsx)</option>
+                                <option value="xls">Excel 97-2003 (.xls)</option>
+                            </select>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Export Excel</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+
+    <!-- Toast -->
     <div class="toast-container position-fixed top-0 end-0 p-3">
         <div class="toast fade" id="liveToast" role="alert" aria-live="assertive" aria-atomic="true">
             <div class="toast-header">
@@ -170,12 +222,22 @@ $tabId = $_GET['tabId'];
     <script>
     var tabId = <?= json_encode($tabId) ?>;
     var columns = <?= json_encode(array_map(function ($column) {
-        return htmlspecialchars($column->name);
-    }, $columns)) ?>;
+            return htmlspecialchars($column->name);
+        }, $columns)) ?>;
     var columnsArray = Array.isArray(columns) ? columns : Object.entries(columns).map(([key]) => ({
         name: key,
     }));
     var data = <?= json_encode($data) ?>;
+
+    function getRowData(rowIndex) {
+        const data = <?= json_encode($data) ?>;
+
+        if (rowIndex < 0 || rowIndex >= data.length) {
+            return undefined;
+        }
+
+        return data[rowIndex];
+    }
     console.log("🚀 ~ columns ~ columns:", columns);
 
     $(document).off('click', '#add-row-btn').on('click', '#add-row-btn', function() {
@@ -219,10 +281,6 @@ $tabId = $_GET['tabId'];
             }
         });
     });
-
-
-
-
 
     function openEdit(rowIndex, tableName) {
         let rowData = getRowData(rowIndex);
@@ -271,15 +329,6 @@ $tabId = $_GET['tabId'];
         saveRow(rowIndex, tableName);
     });
 
-
-    function getRowData(rowIndex) {
-        if (rowIndex < 0 || rowIndex >= data.length) {
-            return undefined;
-        }
-
-        return data[rowIndex];
-    }
-
     // Save row
     function saveRow() {
         const saveButton = document.getElementById('save-row-btn');
@@ -319,7 +368,8 @@ $tabId = $_GET['tabId'];
                     Object.keys(updatedData).forEach((column, idx) => {
                         row.cells[idx + 1].innerHTML = htmlspecialchars(updatedData[column]);
                     });
-
+                    let rowData = getRowData(rowIndex);
+                    Object.assign(rowData, updatedData);
                     alert('Data saved successfully!');
                     $('#editModal').modal('hide');
 
@@ -355,20 +405,17 @@ $tabId = $_GET['tabId'];
         var columns = [];
         for (var i = 0; i < columnCount; i++) {
             if (i === 0) {
-                // Cột đầu tiên với độ rộng 8%
                 columns.push({
                     orderable: false,
                     width: '3%',
                     className: 'text-center'
                 });
             } else if (i === columnCount - 1) {
-                // Cột cuối cùng với độ rộng 8%
                 columns.push({
                     orderable: false,
-                    width: '8%' // Đặt độ rộng cột cuối cùng
+                    width: '8%'
                 });
             } else {
-                // Các cột khác không có cấu hình đặc biệt
                 columns.push(null);
             }
         }
@@ -416,20 +463,37 @@ $tabId = $_GET['tabId'];
                 tabId: tabId,
                 search: searchTerm
             },
-            success: function(data) {
-                $('#tableData').empty();
-                $('#tableData').html(data);
+            success: function(responseData) {
 
+                var data = responseData.data;
+
+                $('#tbodyData').html($(responseData).find('#tbodyData').html());
+
+                // $('#tableData').find('.d-flex').replaceWith($(data).find('.d-flex'));
+
+                var table = $('.dataTable').DataTable();
+
+                table.clear();
+
+                var rows = $(responseData).find('#tbodyData tr').toArray().map(function(row) {
+                    var rowData = $(row).children().map(function() {
+                        return $(this).html();
+                    }).get();
+                    return rowData;
+                });
+
+                table.rows.add(rows).draw();
             },
             error: function(xhr, status, error) {
                 const toastLiveExample = document.getElementById('liveToast');
                 toastBody.textContent = `Error: ${xhr.responseText || 'Unknown error'}`;
                 const toast = new bootstrap.Toast(toastLiveExample);
                 toast.show();
-
             }
         });
     }
+
+
 
     function fetchData(tabId, page) {
         console.log("🚀 ~ zzzzz loadTabData ~ tabId:", tabId, "Page: ", page);
@@ -506,37 +570,35 @@ $tabId = $_GET['tabId'];
         }
 
         var tableName = '<?= $tableName ?>';
-        var selectedIds = $('.row-checkbox:checked').map(function() {
-            return $(this).data('value');
-        }).get().filter(Boolean);
-
         var conditions = [];
 
-        $('.row-checkbox:checked').each(function() {
+        selectedCheckboxes.each(function() {
             var rowIndex = $(this).data('row');
-            var inputs = $('input[data-row-index="' + rowIndex + '"]');
+            var rowData = getRowData(rowIndex); // Get the data for the selected row
 
-            if (inputs.length === 0) {
-                return;
+            if (!rowData) return; // If rowData doesn't exist, skip this row
+
+            // Create a dynamic condition object
+            var condition = {};
+
+            // Populate the condition with rowData properties dynamically
+            for (let key in rowData) {
+                if (rowData.hasOwnProperty(key)) {
+                    condition[key] = rowData[key] || null; // If value is empty, set to null
+                }
             }
 
-            var condition = {};
-            inputs.each(function() {
-                let columnName = $(this).data('column');
-                let columnValue = $(this).val();
-
-                if (columnName && columnName !== 'undefined') {
-                    condition[columnName] = columnValue ||
-                        null;
-                }
-            });
-
             if (Object.keys(condition).length > 0) {
-                conditions.push(condition);
-            } else {}
+                conditions.push(condition); // Add the condition for this row
+            }
         });
 
-        if (confirm("Are you sure you want to delete data?")) {
+        if (conditions.length === 0) {
+            alert("No data selected for deletion.");
+            return;
+        }
+
+        if (confirm("Are you sure you want to delete the selected data?")) {
             $.ajax({
                 url: '<?= \yii\helpers\Url::to(['tabs/delete-data']) ?>',
                 method: 'POST',
@@ -545,12 +607,11 @@ $tabId = $_GET['tabId'];
                 },
                 data: {
                     table: tableName,
-                    ids: selectedIds,
                     conditions: conditions
                 },
                 success: function(response) {
                     if (response.success) {
-                        loadTabData(tabId);
+                        loadTabData(tabId); // Reload the data after deletion
                     } else {
                         alert(response.message || "Deleting data failed.");
                     }
@@ -565,14 +626,16 @@ $tabId = $_GET['tabId'];
 
     // Delete row
     function deleteRow(rowIndex, tableName) {
-        var inputs = $('input[data-row-index="' + rowIndex + '"]');
+        const rowData = getRowData(rowIndex);
+        if (!rowData) return;
+
         var condition = {};
 
-        inputs.each(function() {
-            let columnName = $(this).data('column');
-            let columnValue = $(this).val();
-            condition[columnName] = columnValue || null;
-        });
+        for (let key in rowData) {
+            if (rowData.hasOwnProperty(key)) {
+                condition[key] = rowData[key];
+            }
+        }
 
         if (confirm("Are you sure you want to delete data?")) {
             $.ajax({
@@ -600,61 +663,147 @@ $tabId = $_GET['tabId'];
 
     }
 
+    // Import Excel Button Click
+    $(document).off('click', 'import-data-btn').on('click', '#import-data-btn', function() {
+        $('#importExelModal').modal('show');
+    });
 
-    $(document).ready(function() {
-        $('#confirm-delete-btn').on('click', function() {
-            const tabId = $(this).data('tab-id');
+    // Handle Import Excel Form Submission
+    $(document).off('submit', '#importExcelForm').on('submit', '#importExcelForm', function(event) {
 
-            $.ajax({
-                url: '<?= \yii\helpers\Url::to(['tabs/delete-tab']) ?>',
-                method: 'POST',
-                headers: {
-                    'X-CSRF-Token': $('meta[name="csrf-token"]').attr('content')
-                },
-                data: {
-                    tabId: tabId,
-                },
-                success: function(response) {
-                    if (response.success) {
-                        location.reload();
-                        $('#deleteModal').modal('hide');
-                    } else {
-                        alert(response.message || "Deleting table failed.");
+        event.preventDefault();
+        var formData = new FormData(this);
+        var tableName = '<?= $tableName ?>';
+        formData.append('tableName', tableName);
+
+        $.ajax({
+            url: '<?= \yii\helpers\Url::to(['tabs/import-excel']) ?>',
+            type: 'POST',
+            headers: {
+                'X-CSRF-Token': $('meta[name="csrf-token"]').attr('content')
+            },
+            data: formData,
+            processData: false,
+            contentType: false,
+            success: function(response) {
+                if (response.success) {
+                    alert('Excel file imported successfully!');
+                    $('#importExelModal').modal('hide');
+                    loadTabData(tabId);
+                } else if (response.duplicate) {
+                    // Hiển thị thông báo với 2 lựa chọn
+                    if (confirm(response.message +
+                            "\nWant to remove the 'id' column and continue importing?")) {
+                        // Loại bỏ cột 'id' và gửi lại form
+                        formData.append('removeId',
+                            true); // Thêm cờ để server biết cần loại bỏ cột id
+                        $.ajax({
+                            url: '<?= \yii\helpers\Url::to(['tabs/import-excel']) ?>',
+                            type: 'POST',
+                            headers: {
+                                'X-CSRF-Token': $('meta[name="csrf-token"]').attr('content')
+                            },
+                            data: formData,
+                            processData: false,
+                            contentType: false,
+                            success: function(response) {
+                                if (response.success) {
+                                    alert(
+                                        'Excel file imported successfully without IDs!'
+                                    );
+                                    $('#importExelModal').modal('hide');
+                                    loadTabData(tabId);
+                                } else {
+                                    alert('Failed to import Excel file: ' + response
+                                        .message);
+                                }
+                            }
+                        });
                     }
-                },
-                error: function(error) {
-                    alert("An error occurred while deleting table.");
+                } else {
+                    alert('Failed to import Excel file: ' + response.message);
                 }
-            });
+            },
+            error: function(xhr, status, error) {
+                alert('An error occurred while importing Excel.');
+            }
         });
+    });
 
-        $('#confirm-delete-permanently-btn').on('click', function() {
-            const tabId = $(this).data('tab-id');
-            var tableName = '<?= $tableName ?>';
 
-            if (confirm("Are you sure you want to delete permanenttly?")) {
-                $.ajax({
-                    url: '<?= \yii\helpers\Url::to(['tabs/delete-permanently-tab']) ?>',
-                    method: 'POST',
-                    headers: {
-                        'X-CSRF-Token': $('meta[name="csrf-token"]').attr('content')
-                    },
-                    data: {
-                        tabId: tabId,
-                        tableName: tableName,
-                    },
-                    success: function(response) {
-                        if (response.success) {
-                            location.reload();
-                            $('#deleteModal').modal('hide');
-                        } else {
-                            alert(response.message || "Deleting table failed.");
-                        }
-                    },
-                    error: function(error) {
-                        alert("An error occurred while deleting table.");
+
+    // Export Excel Button Click
+    $(document).off('click', '#import-excel-btn').on('click', '#import-excel-btn', function() {
+        $('#exportExcelModal').modal('show');
+    });
+
+    $(document).off('submit', '#exportExcelForm').on('submit', '#exportExcelForm', function(event) {
+        event.preventDefault();
+        var exportFormat = $('#export-format').val();
+        var tableName = '<?= $tableName ?>';
+
+        var loadingSpinner = $(
+            '<a class="loading-spinner badge badge-light-primary" href=""><span class="p-1">Downloading</span></a>'
+        );
+        $('body').append(loadingSpinner);
+        $.ajax({
+            url: '<?= \yii\helpers\Url::to(['tabs/export-excel']) ?>',
+            type: 'GET',
+            headers: {
+                'X-CSRF-Token': $('meta[name="csrf-token"]').attr('content')
+            },
+            data: {
+                format: exportFormat,
+                tableName: tableName,
+            },
+            success: function(response) {
+                loadingSpinner.remove();
+
+                if (response.success) {
+                    if (response.file_url) {
+                        var link = document.createElement('a');
+                        link.href = response.file_url;
+                        link.download = tableName + '.' + exportFormat;
+                        document.body.appendChild(
+                            link);
+                        link.click();
+                        document.body.removeChild(link);
+
+                        $.ajax({
+                            url: '<?= \yii\helpers\Url::to(['tabs/delete-export-file']) ?>',
+                            type: 'POST',
+                            headers: {
+                                'X-CSRF-Token': $('meta[name="csrf-token"]').attr('content')
+                            },
+                            data: {
+                                file_url: response.file_url,
+                            },
+                            success: function(deleteResponse) {
+                                if (deleteResponse.success) {
+                                    console.log('File deleted successfully.');
+                                } else {
+                                    console.error('Failed to delete file.');
+                                }
+                            },
+                            error: function(xhr, status, error) {
+                                console.error(
+                                    'An error occurred while deleting the file.');
+                            }
+                        });
+
+                    } else {
+                        alert('File URL is missing in the response.');
                     }
-                });
+                } else {
+                    alert('Failed to export Excel: ' + response
+                        .message);
+                }
+
+            },
+            error: function(xhr, status, error) {
+                loadingSpinner.remove();
+
+                alert('An error occurred while exporting Excel.');
             }
         });
     });

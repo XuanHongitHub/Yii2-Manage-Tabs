@@ -19,15 +19,17 @@ class SiteController extends Controller
     /**
      * {@inheritdoc}
      */
+
+
     public function behaviors()
     {
         return [
             'access' => [
                 'class' => AccessControl::className(),
-                'only' => ['logout', 'signup', 'about'],
+                'only' => ['login', 'signup'],  // Chỉ áp dụng cho các hành động login, signup
                 'rules' => [
                     [
-                        'actions' => ['signup'],
+                        'actions' => ['login', 'signup'],
                         'allow' => true,
                         'roles' => ['?'],
                     ],
@@ -37,12 +39,8 @@ class SiteController extends Controller
                         'roles' => ['@'],
                     ],
                     [
-                        'actions' => ['about'],
-                        'allow' => true,
-                        'roles' => ['@'],
-                        'matchCallback' => function ($rule, $action) {
-                            return User::isUserAdmin(Yii::$app->user->identity->username);
-                        }
+                        'allow' => false,
+                        'roles' => ['?'],
                     ],
                 ],
             ],

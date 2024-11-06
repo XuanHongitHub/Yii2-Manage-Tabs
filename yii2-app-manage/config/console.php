@@ -30,7 +30,7 @@ $config = [
             'class' => 'yii\rbac\DbManager',
         ],
     ],
-    
+
     'params' => $params,
     /*
     'controllerMap' => [

@@ -17,7 +17,7 @@ $tabId = $_GET['id'];
             <div class="d-flex">
                 <div class="ms-auto">
                     <div class="dropdown dropstart my-2">
-                        <a class="btn btn-secondary" href="<?= \yii\helpers\Url::to(['tabs/settings']) ?>"
+                        <a class="btn btn-secondary" href="<?= \yii\helpers\Url::to(['settings/index']) ?>"
                             style="color: white; text-decoration: none;">
                             <i class="fa-solid fa-gear"></i>
                         </a>

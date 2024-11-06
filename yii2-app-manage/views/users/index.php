@@ -22,26 +22,38 @@ $this->title = 'Manage Users';
         <div class="row">
             <div class="col-sm-12">
                 <div class="card">
-                    <div class="table-responsive">
-                        <table class="table">
-                            <thead>
-                                <tr>
-                                    <th>ID</th>
-                                    <th>Username</th>
-                                    <th>Email</th>
-                                    <th style="text-align: center;">Status</th>
-                                    <th>Role</th>
-                                    <th>Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <?php foreach ($users as $user): ?>
+                    <div class="card-header card-no-border pb-0">
+                        <div class="d-flex">
+                            <div class="me-auto">
+                                <h4>Manage Users</h4>
+                                <p class="mt-1 f-m-light">Administering user accounts.</p>
+                            </div>
+
+
+                        </div>
+                    </div>
+                    <div class="card-body pt-0">
+                        <div class="table-responsive">
+                            <table class="display border table-bordered dataTable no-footer">
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Username</th>
+                                        <th>Email</th>
+                                        <th style="text-align: center;">Status</th>
+                                        <th>Role</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <?php foreach ($users as $user): ?>
                                     <tr>
                                         <td><?= Html::encode($user->id) ?></td>
                                         <td><?= Html::encode($user->username) ?></td>
                                         <td><?= Html::encode($user->email) ?></td>
                                         <td style="text-align: center;">
-                                            <span class="btn <?= $user->status == 10 ? 'btn-success' : 'btn-danger' ?>">
+                                            <span
+                                                class="btn <?= $user->status == 10 ? 'badge badge-light-success' : 'badge badge-light-danger' ?>">
                                                 <?= $user->status == 10 ? '<i class="fa-solid fa-circle-check"></i>' : '<i class="fa-solid fa-circle-xmark"></i>' ?>
                                             </span>
                                         </td>
@@ -64,16 +76,38 @@ $this->title = 'Manage Users';
                                             </form>
                                         </td>
                                     </tr>
-                                <?php endforeach; ?>
-                            </tbody>
-                        </table>
+                                    <?php endforeach; ?>
+                                </tbody>
+
+                            </table>
+                        </div>
+
                     </div>
                 </div>
             </div>
-
         </div>
     </div>
+
     <!-- Container-fluid Ends-->
 </div>
 
 <?php include Yii::getAlias('@app/views/layouts/_footer.php'); ?>
+
+<script>
+$(document).ready(function() {
+    $('.dataTable').DataTable({
+        order: [],
+        columnDefs: [{
+            orderable: false,
+            targets: -1
+        }],
+        "lengthChange": false,
+        "autoWidth": false,
+        "responsive": true,
+        "paging": true,
+        "searching": true,
+        "ordering": true,
+
+    });
+});
+</script>

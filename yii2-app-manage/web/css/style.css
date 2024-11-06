@@ -39889,7 +39889,7 @@ footer p .footer-icon {
   min-height: calc(100vh - 80px);
   margin-top: 70px;
   margin-left: 0px;
-  padding: 0px 10px !important;
+  padding: 0px 70px;
 }
 
 .page-wrapper.compact-wrapper.dark-sidebar .sidebar-main-title h6 {
@@ -41822,6 +41822,13 @@ footer p .footer-icon {
     padding: 12px 15px;
   }
 
+  footer p {
+    color: #363636;
+    font-weight: 500;
+    /* margin-left: 20px; */
+    text-align: center;
+  }
+
   .page-wrapper .page-header .header-wrapper .nav-right .notification {
     top: 10px;
   }
@@ -43410,6 +43417,12 @@ footer p .footer-icon {
 @media only screen and (max-width: 575.98px) {
   .page-wrapper .page-header .header-wrapper {
     padding: 12px 15px !important;
+  }
+
+  footer p {
+    color: #363636;
+    font-weight: 500;
+    margin-left: 0px;
   }
 
   .page-wrapper .page-header .header-wrapper .nav-right>ul {
@@ -45173,4 +45186,14 @@ footer p .footer-icon {
 /**=====================
      62. Responsive CSS Ends
 ==========================**/
-/*# sourceMappingURL=style.css.map */
+
+.loading-spinner {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 9999;
+  padding: 10px 20px;
+  background-color: #fff;
+  font-weight: 600;
+}

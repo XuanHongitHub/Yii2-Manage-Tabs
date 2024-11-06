@@ -7,9 +7,29 @@ use app\models\User;
 use yii\web\Response;
 use yii\web\Controller;
 use yii\web\NotFoundHttpException;
+use yii\filters\AccessControl;
 
 class UsersController extends Controller
 {
+    public function behaviors()
+    {
+        return [
+            'access' => [
+                'class' => AccessControl::className(),
+                'rules' => [
+                    [
+                        'allow' => true,
+                        'roles' => ['@'],  // Yêu cầu người dùng đã đăng nhập
+                    ],
+                    [
+                        'allow' => false,
+                        'roles' => ['?'],  // Từ chối người dùng chưa đăng nhập
+                    ],
+                ],
+            ],
+        ];
+    }
+
     public function actionIndex()
     {
         return $this->render('index', [

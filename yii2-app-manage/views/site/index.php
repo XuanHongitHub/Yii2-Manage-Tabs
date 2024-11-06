@@ -6,7 +6,7 @@ use app\models\User;
 /** @var app\models\TableTab[] $tableTabs */
 /** @var app\models\Tab[] $tabs */
 
-$this->title = 'Manage Tabs';
+$this->title = 'Tabs Data';
 ?>
 <?php include Yii::getAlias('@app/views/layouts/_nav.php'); ?>
 
@@ -43,12 +43,6 @@ $this->title = 'Manage Tabs';
                             </li>
                             <li>
                                 <a class="dropdown-item fw-medium text-light-emphasis" href="#" data-bs-toggle="modal"
-                                    data-bs-target="#deleteModal">
-                                    <i class="fas fa-trash-alt me-1"></i> Delete Tab
-                                </a>
-                            </li>
-                            <li>
-                                <a class="dropdown-item fw-medium text-light-emphasis" href="#" data-bs-toggle="modal"
                                     data-bs-target="#trashBinModal">
                                     <i class="fas fa-trash me-1"></i> Trash Bin
                                 </a>
@@ -56,14 +50,14 @@ $this->title = 'Manage Tabs';
                         </ul>
                     </div>
                     <div class="my-2">
-                        <a class="btn btn-secondary" href="<?= \yii\helpers\Url::to(['tabs/settings']) ?>">
+                        <a class="btn btn-secondary" href="<?= \yii\helpers\Url::to(['settings/index']) ?>">
                             <i class="fa-solid fa-gear"></i>
                         </a>
                     </div>
                 </div>
                 <div class="card">
                     <div class="card-header card-no-border pb-0">
-                        <h4>Manage Tabs</h4>
+                        <h4>Tabs Data</h4>
                         <p class="mt-1 f-m-light"><code>Table Tabs</code> | <code>Richtext Tabs </code></p>
                     </div>
                     <div class="card-body">
@@ -227,7 +221,7 @@ $(document).ready(function() {
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title" id="hideModalLabel">Show/Hidden Tab</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cancel"></button>
             </div>
             <div class="modal-body">
                 <p>Select the tab you want to hide or show:</p>
@@ -272,7 +266,7 @@ $(document).ready(function() {
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title" id="sortModalLabel">Sort Tabs</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cancel"></button>
             </div>
             <div class="modal-body">
                 <p>Kéo và thả để sắp xếp các tab.</p>

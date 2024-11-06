@@ -60,7 +60,7 @@ function getDataTypeValue($type)
             <div class="d-flex">
                 <div class="ms-auto">
                     <div class="dropdown dropstart my-2">
-                        <a class="btn btn-secondary" href="<?= \yii\helpers\Url::to(['tabs/settings']) ?>"
+                        <a class="btn btn-secondary" href="<?= \yii\helpers\Url::to(['settings/index']) ?>"
                             style="color: white; text-decoration: none;">
                             <i class="fa-solid fa-gear"></i>
                         </a>
@@ -105,14 +105,14 @@ function getDataTypeValue($type)
                                 </thead>
                                 <tbody>
                                     <?php foreach ($columns as $columnName => $column): ?>
-                                    <tr>
-                                        <td><?= Html::encode($columnName) ?></td>
-                                        <td><?= getDataTypeValue($column->type) ?></td>
-                                        <td><?= Html::encode($column->size) ?></td>
-                                        <td><?= Html::encode($column->defaultValue) ?></td>
-                                        <td><?= $column->allowNull ? 'No' : 'Yes' ?></td>
-                                        <td><?= $column->isPrimaryKey ? 'Yes' : 'No' ?></td>
-                                    </tr>
+                                        <tr>
+                                            <td><?= Html::encode($columnName) ?></td>
+                                            <td><?= getDataTypeValue($column->type) ?></td>
+                                            <td><?= Html::encode($column->size) ?></td>
+                                            <td><?= Html::encode($column->defaultValue) ?></td>
+                                            <td><?= $column->allowNull ? 'No' : 'Yes' ?></td>
+                                            <td><?= $column->isPrimaryKey ? 'Yes' : 'No' ?></td>
+                                        </tr>
                                     <?php endforeach; ?>
                                 </tbody>
                             </table>

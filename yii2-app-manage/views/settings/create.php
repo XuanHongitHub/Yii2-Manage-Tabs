@@ -65,8 +65,8 @@ document.addEventListener('DOMContentLoaded', function() {
             <div class="col-sm-12">
                 <div class="card">
                     <div class="card-header card-no-border pb-0">
-                        <h4>Table Tabs</h4>
-                        <p class="mt-1 f-m-light">Create table tab</p>
+                        <h4>Create Tab</h4>
+                        <p class="mt-1 f-m-light">Create Table Tab | Richtext Tab</p>
                     </div>
                     <div class="card-body">
                         <form action="<?= \yii\helpers\Url::to(['create-tab']) ?>" method="post">
@@ -102,8 +102,8 @@ document.addEventListener('DOMContentLoaded', function() {
                                                 <th>Name</th>
                                                 <th>Type</th>
                                                 <th>Length/Value</th>
-                                                <th style="text-align: center;">Not_Null</th>
-                                                <th style="text-align: center;">A_I</th>
+                                                <th class="text-center">Not_Null</th>
+                                                <th class="text-center">A_I</th>
                                                 <th></th>
                                             </tr>
                                         </thead>
@@ -152,7 +152,7 @@ document.addEventListener('DOMContentLoaded', function() {
                                                     <?php endif; ?>
                                                 </td>
 
-                                                <td style="text-align: center;">
+                                                <td class="text-center">
                                                     <input type="checkbox" name="is_not_null[]" value="1"
                                                         class="form-check-input"
                                                         <?= (isset($isNotNull[$index]) && $isNotNull[$index] == '1') ? 'checked' : '' ?>>
@@ -162,7 +162,7 @@ document.addEventListener('DOMContentLoaded', function() {
                                                     </div>
                                                     <?php endif; ?>
                                                 </td>
-                                                <td style="text-align: center;">
+                                                <td class="text-center">
                                                     <input type="checkbox" name="is_primary[]" value="1"
                                                         class="form-check-input" onchange="togglePrimaryKey(this)"
                                                         <?= (isset($isPrimary[$index]) && $isPrimary[$index] == '1') ? 'checked' : '' ?>>
@@ -239,10 +239,10 @@ function addColumn() {
         </td>
         <td><input type="number" name="data_sizes[]" class="form-control" placeholder="Length"></td>
 
-        <td>
+        <td class="text-center">
             <input type="checkbox" name="is_not_null[]" value="1" class="form-check-input">
         </td>
-        <td>
+        <td class="text-center">
             <input type="checkbox" name="is_primary[]" value="1" class="form-check-input" onchange="togglePrimaryKey(this)">
         </td>
         <td><i class="fa-solid fa-square-minus text-danger fs-3" style="cursor: pointer;" onclick="removeColumn(this)"></i></td>`;
