@@ -82,6 +82,7 @@ class TabsController extends Controller
         // Retrieve search keyword if it exists
 
         $searchTerm = Yii::$app->request->get('search', '');
+        $pageSize = Yii::$app->request->get('pageSize', 10);
 
         if ($tab === null) {
             return 'No data';
@@ -108,23 +109,31 @@ class TabsController extends Controller
 
                 // Get total count for pagination
                 $totalCount = $query->count();
+                // Yii::error("totalCount: " . $totalCount);
 
                 $pagination = new Pagination([
-                    'defaultPageSize' => 10,
+                    'defaultPageSize' => $pageSize,
+                    'pageSize' => $pageSize,
                     'totalCount' => $totalCount,
                     'page' => Yii::$app->request->get('page', 0)
                 ]);
-
-                // Get the data with limit and offset for pagination
+                
+                $query->offset($page * $pageSize)
+                ->limit($pageSize);
+                
                 $data = $query->offset($pagination->offset)
                     ->limit($pagination->limit)
                     ->all();
+
+                    Yii::error('Fetched data count: ' . count($data), __METHOD__);
 
                 return $this->renderPartial('_tableData', [
                     'columns' => $columns,
                     'data' => $data,
                     'tableName' => $tableName,
                     'pagination' => $pagination,
+                    'totalCount' => $totalCount,
+                    'pageSize' => $pageSize,
                 ]);
             }
         } elseif ($tabType === 'richtext') {

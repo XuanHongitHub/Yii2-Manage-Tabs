@@ -123,9 +123,9 @@ $(document).ready(function() {
         console.log("No tabs available to load data.");
     }
 
-    function loadTabData(tabId, page, search) {
+    function loadTabData(tabId, page, search, pageSize) {
         console.log("🚀 ~ loadTabData ~ tabId:", tabId);
-        localStorage.clear(); 
+        localStorage.clear();
 
         $.ajax({
             url: "<?= \yii\helpers\Url::to(['tabs/load-tab-data']) ?>",
@@ -134,6 +134,7 @@ $(document).ready(function() {
                 tabId: tabId,
                 page: page,
                 search: search,
+                pageSize: pageSize,
             },
             success: function(data) {
                 $('#table-data-current').html(data);
@@ -164,23 +165,20 @@ $(document).ready(function() {
             var page = $(this).data('page');
             var tabId = $('.nav-link.active').data('id');
             var search = $('input[name="search"]').val();
+            var pageSize = $('#pageSize').val(); // Lấy giá trị pageSize từ select
 
             if (search && typeof search === 'string') {
                 search = search.trim();
-            } else {
-                console.log('Search term is empty or undefined.');
             }
 
-            console.log("🚀 ~ $ ~ tabId | PAGE:", page);
-            console.log("🚀 ~ $ ~ tabId | SEARCH:", search);
-
-            // Pass searchTerm instead of the undefined search
-            loadData(tabId, page, search);
+            loadData(tabId, page, search, pageSize); // Truyền pageSize vào loadData
         });
+
     $(document).off('click', '#goToPageButton').on('click', '#goToPageButton', function() {
         var page = $('#goToPageInput').val();
         var tabId = $('.nav-link.active').data('id');
         var search = $('input[name="search"]').val();
+        var pageSize = $('#pageSize').val(); // Lấy giá trị pageSize từ select
 
         if (search && typeof search === 'string') {
             search = search.trim();
@@ -188,14 +186,35 @@ $(document).ready(function() {
 
         if (page && !isNaN(page)) {
             page = parseInt(page) - 1; // Chuyển thành chỉ số page (0-based)
-            loadData(tabId, page, search);
+            loadData(tabId, page, search, pageSize); // Truyền pageSize vào loadData
         } else {
             console.log('Invalid page number.');
         }
     });
 
+
     $(document).off('click', '#lastPageButton').on('click', '#lastPageButton', function(e) {
-        e.preventDefault(); // Ngăn chặn hành vi mặc định của link
+        e.preventDefault();
+
+        var page = $(this).data('page');
+        var tabId = $('.nav-link.active').data('id');
+        var search = $('input[name="search"]').val();
+        var pageSize = $('#pageSize').val(); // Lấy giá trị pageSize từ select
+        var totalCount = $('#totalCount').val();
+
+        if (search && typeof search === 'string') {
+            search = search.trim();
+        }
+
+        var lastPage = Math.ceil(totalCount / pageSize) - 1;
+        loadData(tabId, lastPage, search, pageSize);
+    });
+
+
+    $(document).off('change', '#pageSize').on('change', '#pageSize', function() {
+        var pageSize = $(this).val();
+        console.log('page size: ', pageSize);
+
         var tabId = $('.nav-link.active').data('id');
         var search = $('input[name="search"]').val();
 
@@ -203,8 +222,11 @@ $(document).ready(function() {
             search = search.trim();
         }
 
-        var lastPage = $(this).data('page');
-        loadData(tabId, lastPage, search);
+        if (pageSize && (pageSize === 'all' || !isNaN(pageSize))) {
+            loadData(tabId, 0, search, pageSize);
+        } else {
+            console.log('Invalid page size.');
+        }
     });
 
 

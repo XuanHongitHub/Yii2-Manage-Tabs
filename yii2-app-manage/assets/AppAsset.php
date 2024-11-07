@@ -25,7 +25,7 @@ class AppAsset extends AssetBundle
         'https://fonts.googleapis.com/css?family=Righteous&display=swap',
         'https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,500,500i,700,700i,900&amp;display=swap',
         'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css',
-        'css/font-awesome.css',
+        // 'css/font-awesome.css',
         // 'css/site.css',
         // 'css/jquery.dataTables.min.css',
         'css/rte_theme_default.css',
