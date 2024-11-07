@@ -7,6 +7,10 @@ use app\models\User;
 /** @var app\models\Tab[] $tabs */
 
 $this->title = 'Tabs Data';
+
+
+
+
 ?>
 <?php include Yii::getAlias('@app/views/layouts/_nav.php'); ?>
 
@@ -68,8 +72,8 @@ $this->title = 'Tabs Data';
                             <?php if ($tab->deleted == 0): ?>
                             <?php $hasValidTabs = true; ?>
                             <li class="nav-item">
-                                <a class="nav-link <?= $index === 0 ? 'active' : '' ?>" href="#"
-                                    data-id="<?= $tab->id ?>" onclick="loadTabData(<?= $tab->id ?>, null)">
+                                <a class="nav-link"
+                                    href="<?= \yii\helpers\Url::to(['tabs/load-tab-data', 'tabId' => $tab->id, 'page' => '1']) ?>">
                                     <?= htmlspecialchars($tab->tab_name) ?>
                                 </a>
                             </li>
@@ -87,6 +91,7 @@ $this->title = 'Tabs Data';
                             </div>
                             <?php endif; ?>
                         </ul>
+
                         <div class="tab-content">
                             <div class="tab-pane fade show active" id="tab-data-current">
                                 <div class="table-responsive" id="table-data-current">
@@ -113,7 +118,7 @@ foreach($tabs as $tab) {
 }
 
 ?>
-<script async>
+<script>
 $(document).ready(function() {
 
     var firstTabId = <?= !empty($firstTabId) ? $tabs[0]->id : 'null' ?>;
@@ -134,12 +139,7 @@ $(document).ready(function() {
                 page: page
             },
             success: function(data) {
-                $('#table-data-current').html(data);
-                // Cập nhật trạng thái của tab hiện tại
-                $('.nav-link').removeClass('active');
-                $('.nav-item').removeClass('active');
-                $(`[data-id="${tabId}"]`).addClass('active');
-                $(`[data-id="${tabId}"]`).closest('.nav-item').addClass('active');
+                // $('body').html(data);
             },
             error: function(xhr, status, error) {
                 console.error('Error:', error);
@@ -147,14 +147,7 @@ $(document).ready(function() {
             }
         });
     }
-    $(document).on('click', '.pagination .paginate_button', function(e) {
-        e.preventDefault();
-        var page = $(this).data('page');
-        var tabId = $('.nav-link.active').data('id');
-        console.log("🚀 ~ $ ~ tabId:", tabId);
 
-        loadTabData(tabId, page);
-    });
 });
 </script>
 
@@ -174,7 +167,8 @@ $(document).ready(function() {
                     <thead>
                         <tr>
                             <th>Tab name</th>
-                            <th>Action</th>
+                            <th style="width: 20%; text-align: center;">Type</th>
+                            <th style="width: 20%; text-align: center;">Action</th>
                         </tr>
                     </thead>
                     <tbody id="trash-bin-list">
@@ -184,7 +178,14 @@ $(document).ready(function() {
                         <?php $hasDeletedTabs = true; ?>
                         <tr>
                             <td><?= htmlspecialchars($tab->tab_name) ?></td>
-                            <td>
+                            <td class="text-center">
+                                <?php if ($tab->tab_type == 'table'): ?>
+                                <span class="badge badge-light-primary">Table</span>
+                                <?php else: ?>
+                                <span class="badge badge-light-danger">Richtext</span>
+                                <?php endif; ?>
+                            </td>
+                            <td class="text-nowrap">
                                 <button type="button" class="btn btn-warning restore-tab-btn" id="confirm-restore-btn"
                                     data-tab-id="<?= htmlspecialchars($tab->id) ?>">
                                     <i class="fa-solid fa-rotate-left"></i>

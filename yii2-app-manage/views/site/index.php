@@ -123,15 +123,17 @@ $(document).ready(function() {
         console.log("No tabs available to load data.");
     }
 
-    function loadTabData(tabId, page) {
+    function loadTabData(tabId, page, search) {
         console.log("🚀 ~ loadTabData ~ tabId:", tabId);
+        localStorage.clear(); 
 
         $.ajax({
             url: "<?= \yii\helpers\Url::to(['tabs/load-tab-data']) ?>",
             type: "GET",
             data: {
                 tabId: tabId,
-                page: page
+                page: page,
+                search: search,
             },
             success: function(data) {
                 $('#table-data-current').html(data);
@@ -147,14 +149,65 @@ $(document).ready(function() {
             }
         });
     }
-    $(document).on('click', '.pagination .paginate_button', function(e) {
-        e.preventDefault();
-        var page = $(this).data('page');
-        var tabId = $('.nav-link.active').data('id');
-        console.log("🚀 ~ $ ~ tabId:", tabId);
 
-        loadTabData(tabId, page);
+
+    $(document).off('keydown', '#goToPageInput').on('keydown', '#goToPageInput',
+        function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                $('#goToPageButton').click();
+            }
+        });
+    $(document).off('click', '.pagination .paginate_button').on('click', '.pagination .paginate_button',
+        function(e) {
+            e.preventDefault();
+            var page = $(this).data('page');
+            var tabId = $('.nav-link.active').data('id');
+            var search = $('input[name="search"]').val();
+
+            if (search && typeof search === 'string') {
+                search = search.trim();
+            } else {
+                console.log('Search term is empty or undefined.');
+            }
+
+            console.log("🚀 ~ $ ~ tabId | PAGE:", page);
+            console.log("🚀 ~ $ ~ tabId | SEARCH:", search);
+
+            // Pass searchTerm instead of the undefined search
+            loadData(tabId, page, search);
+        });
+    $(document).off('click', '#goToPageButton').on('click', '#goToPageButton', function() {
+        var page = $('#goToPageInput').val();
+        var tabId = $('.nav-link.active').data('id');
+        var search = $('input[name="search"]').val();
+
+        if (search && typeof search === 'string') {
+            search = search.trim();
+        }
+
+        if (page && !isNaN(page)) {
+            page = parseInt(page) - 1; // Chuyển thành chỉ số page (0-based)
+            loadData(tabId, page, search);
+        } else {
+            console.log('Invalid page number.');
+        }
     });
+
+    $(document).off('click', '#lastPageButton').on('click', '#lastPageButton', function(e) {
+        e.preventDefault(); // Ngăn chặn hành vi mặc định của link
+        var tabId = $('.nav-link.active').data('id');
+        var search = $('input[name="search"]').val();
+
+        if (search && typeof search === 'string') {
+            search = search.trim();
+        }
+
+        var lastPage = $(this).data('page');
+        loadData(tabId, lastPage, search);
+    });
+
+
 });
 </script>
 

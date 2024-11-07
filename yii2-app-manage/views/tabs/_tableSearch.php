@@ -24,7 +24,7 @@ $tabs = Tab::find()
     ])
     ->all();
 
-$searchTerm = $_GET['search'];
+
 ?>
 <?php include Yii::getAlias('@app/views/layouts/_nav.php'); ?>
 
@@ -86,8 +86,9 @@ $searchTerm = $_GET['search'];
                             <?php if ($tab->deleted == 0): ?>
                             <?php $hasValidTabs = true; ?>
                             <li class="nav-item">
-                                <a class="nav-link <?= $index === 0 ? 'active' : '' ?>" href="#"
-                                    data-id="<?= $tab->id ?>" onclick="loadTabData(<?= $tab->id ?>, null)">
+                                <a class="nav-link <?= $tab->id == $tabId ? 'active' : '' ?>"
+                                    href="<?= \yii\helpers\Url::to(['tabs/load-tab-data', 'tabId' => $tab->id, 'page' => '1']) ?>"
+                                    data-id="<?= $tab->id ?>">
                                     <?= htmlspecialchars($tab->tab_name) ?>
                                 </a>
                             </li>
@@ -106,7 +107,38 @@ $searchTerm = $_GET['search'];
                             <?php endif; ?>
                         </ul>
 
+                        <script>
+                        document.addEventListener("DOMContentLoaded", function() {
+                            const tabs = document.querySelectorAll('#tab-list .nav-link');
 
+                            tabs.forEach(tab => {
+                                tab.addEventListener('click', function() {
+                                    // Xóa lớp 'active' khỏi tất cả các tab
+                                    tabs.forEach(t => t.classList.remove('active'));
+
+                                    // Thêm lớp 'active' vào tab được nhấn
+                                    tab.classList.add('active');
+                                });
+                            });
+                        });
+                        </script>
+
+
+                        <script>
+                        document.addEventListener("DOMContentLoaded", function() {
+                            const tabs = document.querySelectorAll('#tab-list .nav-link');
+
+                            tabs.forEach(tab => {
+                                tab.addEventListener('click', function() {
+                                    // Xóa lớp 'active' khỏi tất cả các tab
+                                    tabs.forEach(t => t.classList.remove('active'));
+
+                                    // Thêm lớp 'active' vào tab được nhấn
+                                    tab.classList.add('active');
+                                });
+                            });
+                        });
+                        </script>
                         <div class="tab-content">
 
                             <div class="table-responsive" id="table-data-current">
@@ -140,13 +172,13 @@ $searchTerm = $_GET['search'];
                                         action="<?= \yii\helpers\Url::to(['tabs/load-tab-data']) ?>" method="get">
                                         <div class="form-group d-flex align-items-center mb-0">
                                             <i class="fa fa-search"></i>
+                                            <!-- Thêm input ẩn để gửi tabId cùng với từ khóa tìm kiếm -->
                                             <input type="hidden" name="tabId" value="<?= $tabId ?>">
-                                            <input type="hidden" name="page" value="1">
+                                            <!-- TabId ở đây -->
                                             <input class="form-control-plaintext" type="text" name="search"
                                                 placeholder="Search...">
                                         </div>
                                     </form>
-
                                 </div>
                                 <table class="display border table-bordered dataTable">
                                     <thead>
@@ -222,60 +254,6 @@ $searchTerm = $_GET['search'];
     </div>
     <!-- Container-fluid Ends-->
 </div>
-
-<?php
-
-$firstTabId = null;
-foreach ($tabs as $tab) {
-    if ($tab->deleted == 0) {
-        $firstTabId = $tab->id;
-        break;
-    }
-}
-
-?>
-<script>
-$(document).ready(function() {
-    $(document).on('click', '.pagination .paginate_button', function(e) {
-        e.preventDefault();
-        var page = $(this).data('page');
-        var tabId = $('.nav-link.active').data('id');
-        var search = <?= $searchTerm ?>;
-        console.log("🚀 ~ $ ~ tabId | PAGE + SEARCH:", tabId);
-
-        loadTabData(tabId, page, search);
-    });
-});
-
-function loadTabData(tabId, page, search) {
-    console.log("🚀 ~ loadTabData ~ tabId:", tabId);
-
-    $.ajax({
-        url: "<?= \yii\helpers\Url::to(['tabs/load-tab-data']) ?>",
-        type: "GET",
-        data: {
-            tabId: tabId,
-            page: page,
-            search: search,
-        },
-        success: function(data) {
-            $('#table-data-current').html(data);
-            // Cập nhật trạng thái của tab hiện tại
-            $('.nav-link').removeClass('active');
-            $('.nav-item').removeClass('active');
-            $(`[data-id="${tabId}"]`).addClass('active');
-            $(`[data-id="${tabId}"]`).closest('.nav-item').addClass('active');
-        },
-        error: function(xhr, status, error) {
-            console.error('Error:', error);
-            alert('An error occurred while loading data. Please try again later.');
-        }
-    });
-}
-</script>
-
-
-
 <!-- Modal Trash Bin -->
 <div class="modal fade" id="trashBinModal" tabindex="-1" aria-labelledby="trashBinModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg">
@@ -290,8 +268,7 @@ function loadTabData(tabId, page, search) {
                     <thead>
                         <tr>
                             <th>Tab name</th>
-                            <th style="width: 20%; text-align: center;">Type</th>
-                            <th style="width: 20%; text-align: center;">Action</th>
+                            <th>Action</th>
                         </tr>
                     </thead>
                     <tbody id="trash-bin-list">
@@ -301,14 +278,7 @@ function loadTabData(tabId, page, search) {
                         <?php $hasDeletedTabs = true; ?>
                         <tr>
                             <td><?= htmlspecialchars($tab->tab_name) ?></td>
-                            <td class="text-center">
-                                <?php if ($tab->tab_type == 'table'): ?>
-                                <span class="badge badge-light-primary">Table</span>
-                                <?php else: ?>
-                                <span class="badge badge-light-danger">Richtext</span>
-                                <?php endif; ?>
-                            </td>
-                            <td class="text-nowrap">
+                            <td>
                                 <button type="button" class="btn btn-warning restore-tab-btn" id="confirm-restore-btn"
                                     data-tab-id="<?= htmlspecialchars($tab->id) ?>">
                                     <i class="fa-solid fa-rotate-left"></i>
@@ -722,6 +692,44 @@ function generateColumnsConfig(columnCount) {
     return columns;
 }
 
+function fetchData(tabId, page) {
+    console.log("🚀 ~ zzzzz loadTabData ~ tabId:", tabId, "Page: ", page);
+
+    $.ajax({
+        url: "<?= \yii\helpers\Url::to(['tabs/load-tab-data']) ?>",
+        type: "GET",
+        data: {
+            tabId: tabId,
+            page: page
+        },
+        success: function(data) {
+            $('#tableData').empty();
+            $('#tableData').html(data);
+
+            const newPagination = $(data).find(
+                    '.dataTables_paginate')
+                .html(); // Lấy nội dung phân trang
+            $('.dataTables_paginate').html(newPagination);
+
+            currentPage = page; // Cập nhật biến currentPage
+            updatePagination(currentPage);
+        },
+        error: function(xhr, status, error) {
+            console.error('Error:', error);
+            alert(
+                'An error occurred while loading data. Please try again later.'
+            );
+        }
+    });
+}
+
+function updatePagination(currentPage) {
+    console.log("🚀 ~ zzzzz page ~ : ", currentPage);
+
+    $('.dataTables_paginate .current').removeClass('current');
+    $(`.dataTables_paginate .paginate_button[data-page="${currentPage}"]`)
+        .parent().addClass('current');
+}
 
 // Selected all checkbox + Add data
 $(document).ready(function() {
@@ -909,13 +917,7 @@ $(document).off('submit', '#importExcelForm').on('submit', '#importExcelForm',
                 if (response.success) {
                     alert('Excel file imported successfully!');
                     $('#importExelModal').modal('hide');
-                    var currentPage = new URLSearchParams(window.location.search).get('page') || 1;
-
-                    var url =
-                        "<?= \yii\helpers\Url::to(['tabs/load-tab-data']) ?>" +
-                        "?tabId=" + tabId + "&page=" + currentPage;
-
-                    window.location.href = url;
+                    loadTabData(tabId);
                 } else if (response.duplicate) {
                     // Hiển thị thông báo với 2 lựa chọn
                     if (confirm(response.message +
@@ -947,14 +949,8 @@ $(document).off('submit', '#importExcelForm').on('submit', '#importExcelForm',
                                     $('#importExelModal')
                                         .modal(
                                             'hide');
-                                    var currentPage = new URLSearchParams(window.location
-                                        .search).get('page') || 1;
-
-                                    var url =
-                                        "<?= \yii\helpers\Url::to(['tabs/load-tab-data']) ?>" +
-                                        "?tabId=" + tabId + "&page=" + currentPage;
-
-                                    window.location.href = url;
+                                    loadTabData(
+                                        tabId);
                                 } else {
                                     alert('Failed to import Excel file: ' +
                                         response
@@ -1076,6 +1072,42 @@ $(document).off('submit', '#exportExcelForm').on('submit', '#exportExcelForm',
     });
 </script>
 
+<?php
+
+$firstTabId = null;
+foreach ($tabs as $tab) {
+    if ($tab->deleted == 0) {
+        $firstTabId = $tab->id;
+        break;
+    }
+}
+
+?>
+<script>
+$(document).ready(function() {
+
+    function loadTabData(tabId, page) {
+        console.log("🚀 ~ loadTabData ~ tabId:", tabId);
+
+        $.ajax({
+            url: "<?= \yii\helpers\Url::to(['tabs/load-tab-data']) ?>",
+            type: "GET",
+            data: {
+                tabId: tabId,
+                page: page
+            },
+            success: function(data) {
+                $('body').html(data);
+            },
+            error: function(xhr, status, error) {
+                console.error('Error:', error);
+                alert('An error occurred while loading data. Please try again later.');
+            }
+        });
+    }
+
+});
+</script>
 
 <script>
 $(document).ready(function() {

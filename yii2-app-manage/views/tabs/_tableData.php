@@ -7,6 +7,10 @@ $isAdmin = User::isUserAdmin(Yii::$app->user->identity->username);
 
 $tabId = $_GET['tabId'];
 
+$page = isset($_GET['page']) ? (int) $_GET['page'] : 0;  // Ép kiểu thành số nguyên
+$rowsPerPage = 10;
+$globalIndexOffset = $page * $rowsPerPage;
+
 ?>
 
 <div id="tableData">
@@ -34,9 +38,12 @@ $tabId = $_GET['tabId'];
             </button>
         </div>
         <!-- Search Form -->
-        <form class="form-inline search-tab mb-2 me-3" action="#" method="get">
+        <form class="form-inline search-tab mb-2 me-3" action="<?= \yii\helpers\Url::to(['tabs/search-tab-data']) ?>"
+            method="get">
             <div class="form-group d-flex align-items-center mb-0">
                 <i class="fa fa-search"></i>
+                <input type="hidden" name="tabId" value="<?= $tabId ?>">
+                <input type="hidden" name="page" value="1">
                 <input class="form-control-plaintext" type="text" name="search" placeholder="Search...">
             </div>
         </form>
@@ -56,9 +63,15 @@ $tabId = $_GET['tabId'];
         <?php if (!empty($data)): ?>
         <tbody id="tbodyData">
             <?php foreach ($data as $rowIndex => $row): ?>
+            <?php
+                    $globalIndex = $globalIndexOffset + $rowIndex + 1; // Tính toán globalIndex cho mỗi hàng
+                    ?>
             <tr>
-                <td class="p-0"><input type="checkbox" class="row-checkbox p-0" data-row="<?= $rowIndex ?>"
-                        data-table-name="<?= $tableName ?>"></td>
+                <td class="p-0">
+                    <input type="checkbox" class="row-checkbox p-0" data-global-index="<?= $globalIndex ?>"
+                        data-row="<?= $rowIndex ?>" data-tab-id="<?= $tabId ?>" data-table-name="<?= $tableName ?>"
+                        id="checkbox-<?= $tabId ?>-<?= $globalIndex ?>-<?= $tableName ?>">
+                </td>
                 <?php foreach ($columns as $column): ?>
                 <td><?= htmlspecialchars($row[$column->name]) ?></td>
                 <?php endforeach; ?>
@@ -73,38 +86,75 @@ $tabId = $_GET['tabId'];
             <?php endforeach; ?>
             <script>
             function getRowData(rowIndex) {
-                const data = <?= json_encode($data) ?>;
+                const table = document.querySelector('.dataTable tbody');
+                const row = table.rows[rowIndex];
 
-                if (rowIndex < 0 || rowIndex >= data.length) {
+                if (!row) {
+                    console.error("Row not found:", rowIndex);
                     return undefined;
                 }
 
-                return data[rowIndex];
+                const headerCells = document.querySelectorAll('.dataTable thead th');
+                const rowData = {};
+
+                headerCells.forEach((headerCell, idx) => {
+                    if (idx < headerCells.length - 1) {
+                        const columnName = headerCell.innerText.trim();
+                        const cellValue = row.cells[idx].innerText.trim();
+
+                        if (columnName) {
+                            rowData[columnName] = cellValue;
+                        }
+                    }
+                });
+
+                return rowData;
             }
             </script>
         </tbody>
     </table>
 
-    <!-- Pagination Links -->
-    <div class="dataTables_paginate paging_simple_numbers">
-        <?= LinkPager::widget([
-                'pagination' => $pagination,
-                'options' => ['class' => 'pagination justify-content-start'],
-                'linkContainerOptions' => ['tag' => 'span'],
-                'linkOptions' => [
-                    'class' => 'paginate_button',
-                    'data-page' => function ($page) {
-                                    return $page;
-                                },
-                ],
-                'activePageCssClass' => 'current',
-                'disabledPageCssClass' => 'disabled',
-                'disabledListItemSubTagOptions' => ['tag' => 'span', 'class' => 'paginate_button'],
-                'prevPageLabel' => 'Previous',
-                'nextPageLabel' => 'Next',
-            ]) ?>
+    <div class="d-flex align-items-center">
+        <!-- Go to Page input and button -->
+        <div class="go-to-page me-auto">
+            <label for="goToPageInput">Go to page:</label>
+            <input type="number" id="goToPageInput" min="1" max="<?= $pagination->getPageCount() ?>" />
+            <button id=" goToPageButton" class="btn btn-primary btn-sm">Go</button>
+        </div>
+
+        <!-- Pagination Links -->
+        <div class="dataTables_paginate paging_simple_numbers">
+            <?= LinkPager::widget([
+                    'pagination' => $pagination,
+                    'options' => ['class' => 'pagination justify-content-end align-items-center'],
+                    'linkContainerOptions' => ['tag' => 'span'],
+                    'linkOptions' => [
+                        'class' => 'paginate_button',
+                        'data-page' => function ($page) {
+                        return $page + 1;
+                    },
+                    ],
+                    'activePageCssClass' => 'current',
+                    'disabledPageCssClass' => 'disabled',
+                    'disabledListItemSubTagOptions' => ['tag' => 'span', 'class' => 'paginate_button'],
+                    'prevPageLabel' => 'Previous',
+                    'nextPageLabel' => 'Next',
+                    'maxButtonCount' => 5,
+                ]) ?>
+
+
+        </div>
+
+        <!-- Last Page -->
+        <span class="paginate_button">
+            <button id="lastPageButton" class="btn btn-secondary btn-sm"
+                data-page="<?= $pagination->getPageCount() - 1 ?>">
+                Last Page
+            </button>
+        </span>
 
     </div>
+
     <?php endif; ?>
 
     <!-- Modal Edit Data-->
@@ -155,6 +205,7 @@ $tabId = $_GET['tabId'];
             </div>
         </div>
     </div>
+
 
     <!-- Modal for Import Excel -->
     <div class="modal fade" id="importExelModal" tabindex="-1" aria-labelledby="importExelModalLabel"
@@ -227,9 +278,9 @@ $tabId = $_GET['tabId'];
     var columnsArray = Array.isArray(columns) ? columns : Object.entries(columns).map(([key]) => ({
         name: key,
     }));
-    var data = <?= json_encode($data) ?>;
+    var data1 = <?= json_encode($data) ?>;
 
-    function getRowData(rowIndex) {
+    function getRowData1(rowIndex) {
         const data = <?= json_encode($data) ?>;
 
         if (rowIndex < 0 || rowIndex >= data.length) {
@@ -240,47 +291,49 @@ $tabId = $_GET['tabId'];
     }
     console.log("🚀 ~ columns ~ columns:", columns);
 
-    $(document).off('click', '#add-row-btn').on('click', '#add-row-btn', function() {
-        var tableName = '<?= $tableName ?>';
-        var newData = {};
+    $(document).off('click', '#add-row-btn').on('click', '#add-row-btn',
+        function() {
+            var tableName = '<?= $tableName ?>';
+            var newData = {};
+            console.log("🚀 ~ $ ~ tableName:", tableName);
 
-        $('.new-data-input').each(function() {
-            var column = $(this).data('column');
-            var value = $(this).val();
-            newData[column] = value;
-        });
+            $('.new-data-input').each(function() {
+                var column = $(this).data('column');
+                var value = $(this).val();
+                newData[column] = value;
+            });
 
-        $.ajax({
-            url: '<?= \yii\helpers\Url::to(['tabs/add-data']) ?>',
-            method: 'POST',
-            headers: {
-                'X-CSRF-Token': $('meta[name="csrf-token"]').attr('content')
-            },
-            data: {
-                table: tableName,
-                data: newData
-            },
-            success: function(response) {
-                if (response.success) {
-                    // Lấy trang cuối từ phản hồi
-                    var lastPage = response.totalPages - 1;
-                    var tabId = $('.nav-link.active').data('id');
+            $.ajax({
+                url: '<?= \yii\helpers\Url::to(['tabs/add-data']) ?> ',
+                method: 'POST',
+                headers: {
+                    'X-CSRF-Token': $('meta[name="csrf-token"]').attr('content')
+                },
+                data: {
+                    table: tableName,
+                    data: newData
+                },
+                success: function(response) {
+                    if (response.success) {
+                        // Lấy trang cuối từ phản hồi
+                        var lastPage = response.totalPages - 1;
+                        var tabId = $('.nav-link.active').data('id');
 
-                    // Gọi loadTabData với tabId và lastPage
-                    fetchData(tabId, lastPage);
+                        // Gọi loadTabData với tabId và lastPage
+                        loadData(tabId, lastPage, null);
 
-                    alert('Data saved successfully!');
-                    $('#addDataModal').find('input').val('');
-                    $('#addDataModal').modal('hide');
-                } else {
-                    alert('Failed to save data: ' + response.message);
+                        alert('Data saved successfully!');
+                        $('#addDataModal').find('input').val('');
+                        $('#addDataModal').modal('hide');
+                    } else {
+                        alert('Failed to save data: ' + response.message);
+                    }
+                },
+                error: function(error) {
+                    alert("An error occurred while adding data.");
                 }
-            },
-            error: function(error) {
-                alert("An error occurred while adding data.");
-            }
+            });
         });
-    });
 
     function openEdit(rowIndex, tableName) {
         let rowData = getRowData(rowIndex);
@@ -346,7 +399,7 @@ $tabId = $_GET['tabId'];
         });
 
         $.ajax({
-            url: '<?= \yii\helpers\Url::to(['tabs/update-data']) ?>',
+            url: '<?= \yii\helpers\Url::to(['tabs/update-data']) ?> ',
             method: 'POST',
             headers: {
                 'X-CSRF-Token': $('meta[name="csrf-token"]').attr('content')
@@ -357,24 +410,33 @@ $tabId = $_GET['tabId'];
                 originalValues: originalValues
             },
             success: function(response) {
+                console.log("🚀 ~ saveRow ~ response:", updatedData);
                 if (response.success) {
+                    // Cập nhật lại giá trị gốc trong các input
                     inputs.forEach(function(input) {
                         input.setAttribute('data-original-value', input.value);
                     });
 
+                    // Cập nhật bảng
                     const table = document.querySelector('.dataTable tbody');
                     const row = table.rows[rowIndex];
 
+                    // Duyệt qua các cột và cập nhật giá trị
                     Object.keys(updatedData).forEach((column, idx) => {
-                        row.cells[idx + 1].innerHTML = htmlspecialchars(updatedData[column]);
+                        const cell = row.cells[idx +
+                            1]; // Cột đầu tiên là index, cột tiếp theo là dữ liệu
+                        if (cell) {
+                            cell.innerHTML = htmlspecialchars(updatedData[column]);
+                        }
                     });
+
+                    // Cập nhật dữ liệu rowData
                     let rowData = getRowData(rowIndex);
-                    Object.assign(rowData, updatedData);
+                    Object.assign(rowData, updatedData); // Cập nhật dữ liệu rowData
+
                     alert('Data saved successfully!');
                     $('#editModal').modal('hide');
-
                 } else {
-                    // Hiển thị thông báo lỗi
                     alert('Failed to save data: ' + response.message);
                 }
             },
@@ -422,15 +484,16 @@ $tabId = $_GET['tabId'];
         return columns;
     }
 
-    function loadTabData(tabId, page) {
-        console.log("🚀 ~ zzzzz loadTabData ~ tabId:", tabId, "Page: ", page);
+    function loadTabData(tabId, page, search) {
+        console.log("🚀 ~ loadTabData ~ tabId:", tabId);
 
         $.ajax({
             url: "<?= \yii\helpers\Url::to(['tabs/load-tab-data']) ?>",
             type: "GET",
             data: {
                 tabId: tabId,
-                page: page
+                page: page,
+                search: search,
             },
             success: function(data) {
                 $('#table-data-current').html(data);
@@ -447,35 +510,74 @@ $tabId = $_GET['tabId'];
         });
     }
 
+
     //Search Form
-    $(document).off('input', '.search-tab input[type="text"]').on('input', '.search-tab input[type="text"]',
+    function debounce(func, delay) {
+        let debounceTimer;
+        return function(...args) {
+            clearTimeout(debounceTimer);
+            debounceTimer = setTimeout(() => func.apply(this, args), delay);
+        };
+    }
+    $(document).off('input', '.search-tab input[type="text"]').on('input', '.search-tab input[type="text"]', debounce(
         function() {
-            const searchTerm = $(this).val();
-            loadData(searchTerm);
+            const search = $(this).val().trim();
+            const tabId = $('.nav-link.active').data('id'); // Ensure tabId is defined here or passed
+            const page = 0; // Default to the first page when searching
+
+            // Call the loadData function with the search term
+            loadData(tabId, page, search);
+        }, 300));
+
+    var tabId = <?= json_encode($tabId) ?>;
+    var checkboxState = {};
+    // Handle select-all checkbox change
+    $('#select-all').on('change', function() {
+        const isChecked = $(this).is(':checked');
+        $('.row-checkbox').prop('checked', isChecked);
+    });
+
+    // Lưu trạng thái checkbox khi người dùng chọn
+    $(document).on('change', '.row-checkbox'),
+        function()({
+
+            var tabId = $(this).data('tab-id');
+            var globalIndex = $(this).data('global-index');
+            var key = 'checkbox-' + tabId + '-' + globalIndex;
+
+            if ($(this).prop('checked')) {
+                // Nếu checkbox được chọn, lưu trạng thái 'true'
+                localStorage.setItem(key, true);
+            } else {
+                // Nếu checkbox bị bỏ chọn, lưu trạng thái 'false'
+                localStorage.setItem(key, false);
+            }
+            console.log(`Checkbox state saved for ${key}: ${localStorage.getItem(key)}`);
+
         });
 
 
-    function loadData(searchTerm) {
+    function loadData(tabId, page, search) {
+
         $.ajax({
             url: "<?= \yii\helpers\Url::to(['tabs/load-tab-data']) ?>",
             type: "GET",
             data: {
                 tabId: tabId,
-                search: searchTerm
+                page: page,
+                search: search,
             },
             success: function(responseData) {
 
                 var data = responseData.data;
 
-                $('#tbodyData').html($(responseData).find('#tbodyData').html());
-
-                // $('#tableData').find('.d-flex').replaceWith($(data).find('.d-flex'));
+                $('tbody').html($(responseData).find('tbody').html());
 
                 var table = $('.dataTable').DataTable();
 
                 table.clear();
 
-                var rows = $(responseData).find('#tbodyData tr').toArray().map(function(row) {
+                var rows = $(responseData).find('tbody tr').toArray().map(function(row) {
                     var rowData = $(row).children().map(function() {
                         return $(this).html();
                     }).get();
@@ -483,6 +585,25 @@ $tabId = $_GET['tabId'];
                 });
 
                 table.rows.add(rows).draw();
+
+                var paginationHtml = $(responseData).find('.dataTables_paginate').html();
+                $('.dataTables_paginate').html(paginationHtml);
+
+                // Tái áp dụng trạng thái checkbox đã chọn từ localStorage
+                $('input.row-checkbox').each(function() {
+                    var tabId = $(this).data('tab-id');
+                    var globalIndex = $(this).data('global-index');
+                    var key = 'checkbox-' + tabId + '-' + globalIndex;
+                    var storedState = localStorage.getItem(key);
+                    console.log(`Checkbox key: ${key}, Stored state: ${storedState}`);
+
+                    if (localStorage.getItem(key) === 'true') {
+                        $(this).prop('checked', true); // Áp dụng trạng thái đã lưu
+                    } else {
+                        $(this).prop('checked',
+                            false); // Đảm bảo checkbox không được chọn nếu trạng thái là false
+                    }
+                });
             },
             error: function(xhr, status, error) {
                 const toastLiveExample = document.getElementById('liveToast');
@@ -492,53 +613,6 @@ $tabId = $_GET['tabId'];
             }
         });
     }
-
-
-
-    function fetchData(tabId, page) {
-        console.log("🚀 ~ zzzzz loadTabData ~ tabId:", tabId, "Page: ", page);
-
-        $.ajax({
-            url: "<?= \yii\helpers\Url::to(['tabs/load-tab-data']) ?>",
-            type: "GET",
-            data: {
-                tabId: tabId,
-                page: page
-            },
-            success: function(data) {
-                $('#tableData').empty();
-                $('#tableData').html(data);
-
-                const newPagination = $(data).find('.dataTables_paginate')
-                    .html(); // Lấy nội dung phân trang
-                $('.dataTables_paginate').html(newPagination);
-
-                currentPage = page; // Cập nhật biến currentPage
-                updatePagination(currentPage);
-            },
-            error: function(xhr, status, error) {
-                console.error('Error:', error);
-                alert('An error occurred while loading data. Please try again later.');
-            }
-        });
-    }
-
-    function updatePagination(currentPage) {
-        console.log("🚀 ~ zzzzz page ~ : ", currentPage);
-
-        $('.dataTables_paginate .current').removeClass('current');
-        $(`.dataTables_paginate .paginate_button[data-page="${currentPage}"]`).parent().addClass('current');
-    }
-
-    // Selected all checkbox + Add data
-    $(document).ready(function() {
-        var tabId = <?= json_encode($tabId) ?>;
-        $('#select-all').on('change', function() {
-            const isChecked = $(this).is(':checked');
-            $('.row-checkbox').prop('checked', isChecked);
-        });
-
-    });
 
     function htmlspecialchars(str) {
         return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(
@@ -572,24 +646,26 @@ $tabId = $_GET['tabId'];
         var tableName = '<?= $tableName ?>';
         var conditions = [];
 
-        selectedCheckboxes.each(function() {
-            var rowIndex = $(this).data('row');
-            var rowData = getRowData(rowIndex); // Get the data for the selected row
+        // Lặp qua tất cả các checkbox đã chọn, kể cả khi đã chuyển trang
+        $('input.row-checkbox').each(function() {
+            var tabId = $(this).data('tab-id');
+            var globalIndex = $(this).data('global-index');
+            var key = 'checkbox-' + tabId + '-' + globalIndex;
 
-            if (!rowData) return; // If rowData doesn't exist, skip this row
+            if (localStorage.getItem(key) === 'true') { // Kiểm tra nếu checkbox đã được chọn
+                var rowData = getRowData(globalIndex); // Lấy dữ liệu của hàng
 
-            // Create a dynamic condition object
-            var condition = {};
-
-            // Populate the condition with rowData properties dynamically
-            for (let key in rowData) {
-                if (rowData.hasOwnProperty(key)) {
-                    condition[key] = rowData[key] || null; // If value is empty, set to null
+                if (rowData) {
+                    var condition = {};
+                    for (let key in rowData) {
+                        if (rowData.hasOwnProperty(key)) {
+                            condition[key] = rowData[key] || null;
+                        }
+                    }
+                    if (Object.keys(condition).length > 0) {
+                        conditions.push(condition);
+                    }
                 }
-            }
-
-            if (Object.keys(condition).length > 0) {
-                conditions.push(condition); // Add the condition for this row
             }
         });
 
@@ -692,8 +768,8 @@ $tabId = $_GET['tabId'];
                     loadTabData(tabId);
                 } else if (response.duplicate) {
                     // Hiển thị thông báo với 2 lựa chọn
-                    if (confirm(response.message +
-                            "\nWant to remove the 'id' column and continue importing?")) {
+                    if (confirm("Remove the 'id' column and continue importing?\n" + response
+                            .message)) {
                         // Loại bỏ cột 'id' và gửi lại form
                         formData.append('removeId',
                             true); // Thêm cờ để server biết cần loại bỏ cột id

@@ -74,10 +74,13 @@ class TabsController extends Controller
      */
     public function actionLoadTabData($tabId)
     {
+        $tabId = Yii::$app->request->get('tabId');
+
         $tab = Tab::findOne($tabId);
         $userId = Yii::$app->user->id;
 
         // Retrieve search keyword if it exists
+
         $searchTerm = Yii::$app->request->get('search', '');
 
         if ($tab === null) {
@@ -105,10 +108,11 @@ class TabsController extends Controller
 
                 // Get total count for pagination
                 $totalCount = $query->count();
+
                 $pagination = new Pagination([
                     'defaultPageSize' => 10,
                     'totalCount' => $totalCount,
-                    'page' => Yii::$app->request->get('page', 0), // Current page
+                    'page' => Yii::$app->request->get('page', 0)
                 ]);
 
                 // Get the data with limit and offset for pagination
@@ -137,8 +141,75 @@ class TabsController extends Controller
 
         return 'No data';
     }
+    public function actionSearchTabData($tabId)
+    {
+        $tabId = Yii::$app->request->get('tabId');
 
+        $tab = Tab::findOne($tabId);
+        $userId = Yii::$app->user->id;
 
+        // Retrieve search keyword if it exists
+
+        $searchTerm = Yii::$app->request->get('search', '');
+
+        if ($tab === null) {
+            return 'No data';
+        }
+
+        $tabType = $tab->tab_type;
+
+        if ($tabType === 'table') {
+            // Table Tab
+            $tableTab = TableTab::find()->where(['tab_id' => $tabId])->one();
+            $tableName = $tableTab ? $tableTab->table_name : null;
+
+            if ($tableName) {
+                // Get column names
+                $columns = Yii::$app->db->schema->getTableSchema($tableName)->columns;
+                $columnNames = array_keys($columns);
+
+                $query = (new \yii\db\Query())->from($tableName);
+
+                // If search term exists, apply search on all columns
+                if (!empty($searchTerm)) {
+                    $query->where(['or', ...array_map(fn($c) => ['like', $c, $searchTerm], $columnNames)]);
+                }
+
+                // Get total count for pagination
+                $totalCount = $query->count();
+
+                $pagination = new Pagination([
+                    'defaultPageSize' => 10,
+                    'totalCount' => $totalCount,
+                    'page' => Yii::$app->request->get('page', 1) - 1,
+                ]);
+
+                // Get the data with limit and offset for pagination
+                $data = $query->offset($pagination->offset)
+                    ->limit($pagination->limit)
+                    ->all();
+
+                return $this->render('_tablePage', [
+                    'columns' => $columns,
+                    'data' => $data,
+                    'tableName' => $tableName,
+                    'pagination' => $pagination,
+                ]);
+            }
+        } elseif ($tabType === 'richtext') {
+            // Richtext Tab
+            $filePath = Yii::getAlias('@runtime/richtext/' . $tabId . '.rtf');
+            $content = file_exists($filePath) ? file_get_contents($filePath) : '';
+
+            return $this->renderPartial('_richtextData', [
+                'richtextTab' => $tab,
+                'content' => $content,
+                'filePath' => $filePath,
+            ]);
+        }
+
+        return 'No data';
+    }
     /** 
      * Update RichtextData Action.
      *
@@ -221,6 +292,8 @@ class TabsController extends Controller
         $tableName = Yii::$app->request->post('table');
         $data = Yii::$app->request->post('data');
 
+
+        Yii::error("Data: " . $data);
         $validData = [];
         foreach ($data as $column => $value) {
             if (preg_match('/^[a-zA-Z_][a-zA-Z0-9_]*$/', $column) || is_numeric($column)) {

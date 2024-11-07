@@ -169,7 +169,8 @@ document.addEventListener('DOMContentLoaded', function() {
                     <thead>
                         <tr>
                             <th>Tab name</th>
-                            <th>Action</th>
+                            <th style="width: 20%; text-align: center;">Type</th>
+                            <th style="width: 20%; text-align: center;">Action</th>
                         </tr>
                     </thead>
                     <tbody id="trash-bin-list">
@@ -179,7 +180,14 @@ document.addEventListener('DOMContentLoaded', function() {
                         <?php $hasDeletedTabs = true; ?>
                         <tr>
                             <td><?= htmlspecialchars($tab->tab_name) ?></td>
-                            <td>
+                            <td class="text-center">
+                                <?php if ($tab->tab_type == 'table'): ?>
+                                <span class="badge badge-light-primary">Table</span>
+                                <?php else: ?>
+                                <span class="badge badge-light-danger">Richtext</span>
+                                <?php endif; ?>
+                            </td>
+                            <td class="text-nowrap">
                                 <button type="button" class="btn btn-warning restore-tab-btn" id="confirm-restore-btn"
                                     data-tab-id="<?= htmlspecialchars($tab->id) ?>">
                                     <i class="fa-solid fa-rotate-left"></i>

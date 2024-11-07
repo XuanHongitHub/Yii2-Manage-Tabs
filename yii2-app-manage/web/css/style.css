@@ -45197,3 +45197,18 @@ footer p .footer-icon {
   background-color: #fff;
   font-weight: 600;
 }
+
+.prev.disabled .paginate_button {
+  box-sizing: border-box;
+  display: inline-block;
+  min-width: 1.5em;
+  padding: 0.4rem 1rem !important;
+  margin: 10px;
+  margin-left: 2px;
+  text-align: center;
+  text-decoration: none !important;
+  cursor: pointer;
+  color: #333 !important;
+  border: 1px solid transparent;
+  border-radius: 2px;
+}
