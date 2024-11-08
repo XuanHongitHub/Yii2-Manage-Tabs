@@ -22,7 +22,8 @@ $this->title = $name;
         <div class="error-wrapper">
             <div class="container">
                 <div class="error">
-                    <img src="<?= Yii::getAlias('@web') ?>/images/error/4.png" alt="Error Image" class="error-image" />
+                    <i class="fa-solid fa-triangle-exclamation fw-900 text-primary error-image"
+                        style="font-size: 6.5rem !important;"></i>
                     <div class="error__title"><?= Html::encode($this->title) ?></div>
                     <div class="error__subtitle">Hmmm...</div>
                     <div class="error__description"><?= nl2br(Html::encode($message)) ?></div>

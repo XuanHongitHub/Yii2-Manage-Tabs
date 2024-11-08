@@ -44,15 +44,18 @@ $tabId = $_GET['tabId'];
 </div>
 
 <script>
-function loadTabData(tabId, page) {
-    console.log("🚀 ~ rrrrr loadTabData ~ tabId:", tabId);
+function loadTabData(tabId, page, search, pageSize) {
+    console.log("🚀 ~ loadTabData ~ tabId:", tabId);
+    localStorage.clear();
 
     $.ajax({
         url: "<?= \yii\helpers\Url::to(['tabs/load-tab-data']) ?>",
         type: "GET",
         data: {
             tabId: tabId,
-            page: page
+            page: page,
+            search: search,
+            pageSize: pageSize,
         },
         success: function(data) {
             $('#table-data-current').html(data);

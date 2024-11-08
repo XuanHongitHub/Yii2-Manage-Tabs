@@ -7,7 +7,7 @@ $isAdmin = User::isUserAdmin(Yii::$app->user->identity->username);
 
 $tabId = $_GET['tabId'];
 
-$page = isset($_GET['page']) ? (int) $_GET['page'] : 0;  // Ép kiểu thành số nguyên
+$page = isset($_GET['page']) ? (int) $_GET['page'] : 0;
 $rowsPerPage = 10;
 $globalIndexOffset = $page * $rowsPerPage;
 
@@ -53,7 +53,7 @@ $globalIndexOffset = $page * $rowsPerPage;
     <table class="display border table-bordered dataTable">
         <thead>
             <tr>
-                <th class="p-0" style="width: 3%;"><input type="checkbox" id="select-all"></th>
+                <th class="px-2 py-0" style="width: 3%;"><input class="" type="checkbox" id="select-all"></th>
                 <?php foreach ($columns as $column): ?>
                 <th><?= htmlspecialchars($column->name) ?></th>
                 <?php endforeach; ?>
@@ -64,11 +64,11 @@ $globalIndexOffset = $page * $rowsPerPage;
         <tbody id="tbodyData">
             <?php foreach ($data as $rowIndex => $row): ?>
             <?php
-                    $globalIndex = $globalIndexOffset + $rowIndex + 1; // Tính toán globalIndex cho mỗi hàng
+                    $globalIndex = $globalIndexOffset + $rowIndex + 1;
                     ?>
             <tr>
-                <td class="p-0"><input type="checkbox" class="row-checkbox p-0" data-row="<?= $rowIndex ?>"
-                        data-table-name="<?= $tableName ?>">
+                <td class="px-2 py-0"><input type="checkbox" class="row-checkbox" data-row="<?= $rowIndex ?>"
+                        id="<?= $rowIndex ?>" data-table-name="<?= $tableName ?>">
                 </td>
                 <?php foreach ($columns as $column): ?>
                 <td><?= htmlspecialchars($row[$column->name]) ?></td>
@@ -128,7 +128,8 @@ $globalIndexOffset = $page * $rowsPerPage;
                 <option value="50" <?= $pageSize == 50 ? 'selected' : '' ?>>50</option>
                 <option value="100" <?= $pageSize == 100 ? 'selected' : '' ?>>100</option>
                 <option value="250" <?= $pageSize == 250 ? 'selected' : '' ?>>250</option>
-                <option value="<?= $totalCount ?>" <?= $pageSize == $totalCount ? 'selected' : '' ?>>All</option>
+                <option value="500" <?= $pageSize == 500 ? 'selected' : '' ?>>500</option>
+                <option value="1000" <?= $pageSize == 1000 ? 'selected' : '' ?>>1000</option>
             </select>
         </div>
         <!-- Pagination Links -->
@@ -154,7 +155,8 @@ $globalIndexOffset = $page * $rowsPerPage;
 
         </div>
 
-        <!-- Last Page -->
+        <!-- Last Page Button -->
+        <?php if ($pagination->getPageCount() > 1): ?>
         <span class="paginate_button">
             <input type="hidden" id="totalCount" value="<?= $totalCount ?>">
             <input type="hidden" id="pageSize" value="<?= $pageSize ?>">
@@ -163,6 +165,7 @@ $globalIndexOffset = $page * $rowsPerPage;
                 Last
             </button>
         </span>
+        <?php endif; ?>
 
     </div>
 
@@ -422,27 +425,23 @@ $globalIndexOffset = $page * $rowsPerPage;
             success: function(response) {
                 console.log("🚀 ~ saveRow ~ response:", updatedData);
                 if (response.success) {
-                    // Cập nhật lại giá trị gốc trong các input
                     inputs.forEach(function(input) {
                         input.setAttribute('data-original-value', input.value);
                     });
 
-                    // Cập nhật bảng
                     const table = document.querySelector('.dataTable tbody');
                     const row = table.rows[rowIndex];
 
-                    // Duyệt qua các cột và cập nhật giá trị
                     Object.keys(updatedData).forEach((column, idx) => {
                         const cell = row.cells[idx +
-                            1]; // Cột đầu tiên là index, cột tiếp theo là dữ liệu
+                            1];
                         if (cell) {
                             cell.innerHTML = htmlspecialchars(updatedData[column]);
                         }
                     });
 
-                    // Cập nhật dữ liệu rowData
                     let rowData = getRowData(rowIndex);
-                    Object.assign(rowData, updatedData); // Cập nhật dữ liệu rowData
+                    Object.assign(rowData, updatedData);
 
                     alert('Data saved successfully!');
                     $('#editModal').modal('hide');
@@ -534,33 +533,22 @@ $globalIndexOffset = $page * $rowsPerPage;
     $(document).off('input', '.search-tab input[type="text"]').on('input', '.search-tab input[type="text"]', debounce(
         function() {
             const search = $(this).val().trim();
-            const tabId = $('.nav-link.active').data('id'); // Ensure tabId is defined here or passed
-            const page = 0; // Default to the first page when searching
+            const tabId = $('.nav-link.active').data('id');
+            const page = 0;
 
-            // Call the loadData function with the search term
-            loadData(tabId, page, search);
+            var pageSize = $('#pageSize').val();
+
+            loadData(tabId, page, search, pageSize);
         }, 300));
-
+    $('.search-tab input[type="text"]').on('keydown', function(event) {
+        if (event.key === 'Enter') {
+            event.preventDefault();
+        }
+    });
     var tabId = <?= json_encode($tabId) ?>;
-    var checkboxState = {};
-    // Handle select-all checkbox change
     $('#select-all').on('change', function() {
         const isChecked = $(this).is(':checked');
         $('.row-checkbox').prop('checked', isChecked);
-    });
-
-    // Lưu trạng thái checkbox khi người dùng chọn
-    $(document).on('change', '.row-checkbox', function() {
-        var tabId = $(this).data('tab-id');
-        var globalIndex = $(this).data('global-index');
-        var key = 'checkbox-' + tabId + '-' + globalIndex;
-
-        if ($(this).prop('checked')) {
-            localStorage.setItem(key, true);
-        } else {
-            localStorage.setItem(key, false);
-        }
-        console.log(`Checkbox state saved for ${key}: ${localStorage.getItem(key)}`);
     });
 
     function loadData(tabId, page, search, pageSize) {
@@ -576,43 +564,33 @@ $globalIndexOffset = $page * $rowsPerPage;
             },
             success: function(responseData) {
 
-                // Lấy dữ liệu từ responseData
                 var data = responseData.data;
 
-                // Cập nhật lại nội dung của tbody mà vẫn giữ nguyên class và các thuộc tính của các phần tử con
                 var newTbodyHtml = $(responseData).find('tbody').html();
                 $('tbody').html(newTbodyHtml);
 
-                // Khởi tạo lại DataTable, xóa dữ liệu hiện tại
                 var table = $('.dataTable').DataTable();
                 table.clear();
 
-                // Lấy nguyên hàng HTML để giữ class
                 var rows = $(responseData).find('tbody tr').toArray().map(function(row) {
-                    return $(row).prop('outerHTML'); // Lấy toàn bộ HTML của mỗi hàng
+                    return $(row).prop('outerHTML');
                 });
 
-                // Thêm hàng vào DataTable
                 table.rows.add($(rows.join(''))).draw();
 
-                // Cập nhật lại phân trang từ responseData
                 var paginationHtml = $(responseData).find('.dataTables_paginate').html();
                 $('.dataTables_paginate').html(paginationHtml);
 
-                $('input.row-checkbox').each(function() {
-                    var tabId = $(this).data('tab-id');
-                    var globalIndex = $(this).data('global-index');
-                    var key = 'checkbox-' + tabId + '-' + globalIndex;
-                    var storedState = localStorage.getItem(key);
-                    console.log(`Checkbox key: ${key}, Stored state: ${storedState}`);
+                var totalCount = $(responseData).find('#totalCount').val();
+                var pageSize = $(responseData).find('#pageSize').val();
+                var lastPage = Math.ceil(totalCount / pageSize) - 1;
 
-                    // Áp dụng lại trạng thái checkbox từ localStorage
-                    if (storedState === 'true') {
-                        $(this).prop('checked', true);
-                    } else {
-                        $(this).prop('checked', false);
-                    }
-                });
+                console.log("🚀 ~ loadData ~ totalCount:", totalCount);
+                console.log("🚀 ~ loadData ~ totalCount:", pageSize);
+
+                console.log("🚀 ~ loadData ~ totalCount:", lastPage);
+
+                $('#lastPageButton').attr('data-last-page', lastPage);
             },
             error: function(xhr, status, error) {
                 const toastLiveExample = document.getElementById('liveToast');
@@ -658,25 +636,23 @@ $globalIndexOffset = $page * $rowsPerPage;
         selectedCheckboxes.each(function() {
             var rowIndex = $(this).data('row');
             var rowData = getRowData(
-                rowIndex); // Get the data for the selected row
+                rowIndex);
 
             if (!rowData)
-                return; // If rowData doesn't exist, skip this row
+                return;
 
-            // Create a dynamic condition object
             var condition = {};
 
-            // Populate the condition with rowData properties dynamically
             for (let key in rowData) {
                 if (rowData.hasOwnProperty(key)) {
                     condition[key] = rowData[key] ||
-                        null; // If value is empty, set to null
+                        null;
                 }
             }
 
             if (Object.keys(condition).length > 0) {
                 conditions.push(
-                    condition); // Add the cdelete-ondition for this row
+                    condition);
             }
         });
 
@@ -699,15 +675,18 @@ $globalIndexOffset = $page * $rowsPerPage;
                 },
                 success: function(response) {
                     if (response.success) {
+                        var page = $('.current .paginate_button').data('id');
+                        var tabId = $('.nav-link.active').data('id');
+                        var search = $('input[name="search"]').val();
+                        var pageSize = $('#pageSize').val();
 
-                        var currentPage = new URLSearchParams(window.location.search).get('page') ||
-                            1;
+                        if (search && typeof search === 'string') {
+                            search = search.trim();
+                        }
 
-                        var url =
-                            "<?= \yii\helpers\Url::to(['tabs/load-tab-data']) ?>" +
-                            "?tabId=" + tabId + "&page=" + currentPage;
+                        loadData(tabId, page, search, pageSize);
+                        $('#select-all').prop('checked', false);
 
-                        window.location.href = url;
                     } else {
                         alert(response.message ||
                             "Deleting data failed.");
@@ -775,6 +754,18 @@ $globalIndexOffset = $page * $rowsPerPage;
         var tableName = '<?= $tableName ?>';
         formData.append('tableName', tableName);
 
+        var loadingSpinner = $(`
+             <div class="loading-overlay">
+                <div class="loading-content">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="sr-only">Loading...</span>
+                    </div>
+                    <span class="ml-2">Importing data, please wait...</span>
+                </div>
+            </div>
+        `);
+        $('body').append(loadingSpinner);
+
         $.ajax({
             url: '<?= \yii\helpers\Url::to(['tabs/import-excel']) ?>',
             type: 'POST',
@@ -785,17 +776,30 @@ $globalIndexOffset = $page * $rowsPerPage;
             processData: false,
             contentType: false,
             success: function(response) {
+                loadingSpinner.remove();
+
                 if (response.success) {
                     alert('Excel file imported successfully!');
                     $('#importExelModal').modal('hide');
                     loadTabData(tabId);
                 } else if (response.duplicate) {
-                    // Hiển thị thông báo với 2 lựa chọn
                     if (confirm("Remove the 'id' column and continue importing?\n" + response
                             .message)) {
-                        // Loại bỏ cột 'id' và gửi lại form
-                        formData.append('removeId',
-                            true); // Thêm cờ để server biết cần loại bỏ cột id
+
+                        var newLoadingSpinner = $(`
+                            <div class="loading-overlay">
+                                <div class="loading-content">
+                                    <div class="spinner-border text-primary" role="status">
+                                        <span class="sr-only">Loading...</span>
+                                    </div>
+                                    <span class="ml-2">Importing data, please wait...</span>
+                                </div>
+                            </div>
+                            `);
+                        $('body').append(newLoadingSpinner);
+
+                        formData.append('removeId', true);
+
                         $.ajax({
                             url: '<?= \yii\helpers\Url::to(['tabs/import-excel']) ?>',
                             type: 'POST',
@@ -806,13 +810,18 @@ $globalIndexOffset = $page * $rowsPerPage;
                             processData: false,
                             contentType: false,
                             success: function(response) {
+                                newLoadingSpinner.remove();
+
                                 if (response.success) {
+
                                     alert(
                                         'Excel file imported successfully without IDs!'
                                     );
                                     $('#importExelModal').modal('hide');
                                     loadTabData(tabId);
                                 } else {
+                                    loadingSpinner.remove();
+
                                     alert('Failed to import Excel file: ' + response
                                         .message);
                                 }
@@ -820,10 +829,14 @@ $globalIndexOffset = $page * $rowsPerPage;
                         });
                     }
                 } else {
+                    loadingSpinner.remove();
+
                     alert('Failed to import Excel file: ' + response.message);
                 }
             },
             error: function(xhr, status, error) {
+                loadingSpinner.remove();
+
                 alert('An error occurred while importing Excel.');
             }
         });

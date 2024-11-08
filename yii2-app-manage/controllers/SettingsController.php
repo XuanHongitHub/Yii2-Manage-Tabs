@@ -23,11 +23,11 @@ class SettingsController extends Controller
                 'rules' => [
                     [
                         'allow' => true,
-                        'roles' => ['@'],  // Yêu cầu người dùng đã đăng nhập
+                        'roles' => ['@'],
                     ],
                     [
                         'allow' => false,
-                        'roles' => ['?'],  // Từ chối người dùng chưa đăng nhập
+                        'roles' => ['?'],
                     ],
                 ],
             ],
@@ -39,6 +39,10 @@ class SettingsController extends Controller
         $userId = Yii::$app->user->id;
         $tabs = Tab::find()
             ->where(['user_id' => $userId])
+            ->orderBy([
+                'position' => SORT_ASC,
+                'id' => SORT_ASC,
+            ])
             ->all();
 
         return $this->render('index', [
@@ -76,7 +80,6 @@ class SettingsController extends Controller
                 $isNotNull = Yii::$app->request->post('is_not_null', []);
                 $isPrimary = Yii::$app->request->post('is_primary', []);
 
-                // Thực hiện xác thực dữ liệu
                 $validationResult = $this->validateTableCreation($tabName, $columns, $dataTypes, $dataSizes, $isNotNull);
                 if ($validationResult !== true) {
                     foreach ($validationResult as $error) {
@@ -94,11 +97,9 @@ class SettingsController extends Controller
                     ]);
                 }
 
-                // Tạo transaction để đảm bảo tạo tab và bảng đi kèm
                 $transaction = Yii::$app->db->beginTransaction();
                 try {
                     if ($tab->save()) {
-                        // Lưu các cột trong bảng TableTab
                         foreach ($columns as $index => $column) {
                             $tableTab = new TableTab([
                                 'tab_id' => $tab->id,
@@ -109,7 +110,7 @@ class SettingsController extends Controller
                                 'updated_at' => date('Y-m-d H:i:s')
                             ]);
                             if (!$tableTab->save()) {
-                                Yii::$app->session->setFlash('error', 'Không thể lưu vào bảng table_tab.');
+                                Yii::$app->session->setFlash('error', 'Cannot save');
                                 return $this->redirect(['table-tabs/create']);
                             }
                         }
@@ -165,7 +166,6 @@ class SettingsController extends Controller
                     return $this->redirect(['table-tabs/create']);
                 }
 
-                // Xử lý nếu loại tab là "richtext"
                 if ($tab->save()) {
                     $filePath = Yii::getAlias('@runtime/richtext/' . $tab->id . '.rtf');
                     try {

@@ -26,7 +26,7 @@ class SiteController extends Controller
         return [
             'access' => [
                 'class' => AccessControl::className(),
-                'only' => ['login', 'signup'],  // Chỉ áp dụng cho các hành động login, signup
+                'only' => ['login', 'signup'],
                 'rules' => [
                     [
                         'actions' => ['login', 'signup'],
@@ -100,22 +100,6 @@ class SiteController extends Controller
      *
      * @return Response|string
      */
-    // public function actionLogin()
-    // {
-    //     if (!Yii::$app->user->isGuest) {
-    //         return $this->goHome();
-    //     }
-
-    //     $model = new LoginForm();
-    //     if ($model->load(Yii::$app->request->post()) && $model->login()) {
-    //         return $this->goBack();
-    //     }
-
-    //     $model->password = '';
-    //     return $this->render('login', [
-    //         'model' => $model,
-    //     ]);
-    // }
     public function actionLogin()
     {
         if (!\Yii::$app->user->isGuest) {

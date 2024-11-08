@@ -17,7 +17,6 @@ class m241029_094019_create_tab_table extends Migration
             'user_id' => $this->integer()->notNull(),
             'tab_name' => $this->string()->defaultValue(null)->unique(),
             'tab_type' => "ENUM('table', 'richtext') NOT NULL",
-            'content' => $this->text()->defaultValue(null),
             'deleted' => $this->tinyInteger()->defaultValue(0),
             'position' => $this->integer()->defaultValue(0),
             'created_at' => $this->timestamp()->notNull()->defaultExpression('CURRENT_TIMESTAMP'),

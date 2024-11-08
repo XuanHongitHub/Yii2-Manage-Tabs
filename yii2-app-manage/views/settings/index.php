@@ -61,35 +61,24 @@ document.addEventListener('DOMContentLoaded', function() {
                                 <h4>List of Tabs</h4>
                                 <p class="mt-1 f-m-light">Table Tab | Richtext Tab</p>
                             </div>
-                            <div class="btn-group-ellipsis me-2">
-                                <button type="button" class="btn btn-outline-secondary" data-bs-toggle="dropdown"
-                                    aria-expanded="false">
-                                    <i class="fa-solid fa-ellipsis"></i>
-                                </button>
-                                <ul class="dropdown-menu">
-                                    <li>
-                                        <a class="dropdown-item fw-medium text-light-emphasis" href="#"
-                                            data-bs-toggle="modal" data-bs-target="#hideModal">
-                                            <i class="fas fa-eye me-1"></i> Show/Hidden Tab
-                                        </a>
-                                    </li>
-                                    <li>
-                                        <a class="dropdown-item fw-medium text-light-emphasis" href="#"
-                                            data-bs-toggle="modal" data-bs-target="#sortModal">
-                                            <i class="fas fa-sort-amount-down me-1"></i> Sort Order Tab
-                                        </a>
-                                    </li>
-                                    <li>
-                                        <a class="dropdown-item fw-medium text-light-emphasis" href="#"
-                                            data-bs-toggle="modal" data-bs-target="#trashBinModal">
-                                            <i class="fas fa-trash me-1"></i> Trash Bin
-                                        </a>
-                                    </li>
-                                </ul>
+                            <div class="d-flex align-items-center me-2">
+                                <a class="btn btn-outline-warning me-2" href="#" data-bs-toggle="modal"
+                                    data-bs-target="#hideModal">
+                                    <i class="fas fa-eye me-1"></i> Show/Hidden Tab
+                                </a>
+                                <a class="btn btn-outline-primary me-2" href="#" data-bs-toggle="modal"
+                                    data-bs-target="#sortModal">
+                                    <i class="fas fa-sort-amount-down me-1"></i> Sort Order Tab
+                                </a>
+                                <a class="btn btn-danger" href="#" data-bs-toggle="modal"
+                                    data-bs-target="#trashBinModal">
+                                    <i class="fas fa-trash me-1"></i> Trash Bin
+                                </a>
                             </div>
                             <div class="text-end">
-                                <a class="btn btn-success"
-                                    href="<?= \yii\helpers\Url::to(['settings/create']) ?>">Create Tab</a>
+                                <a class="btn btn-success" href="<?= \yii\helpers\Url::to(['settings/create']) ?>">
+                                    <i class="fas fa-plus me-1"></i> New Tab
+                                </a>
                             </div>
                         </div>
                     </div>
@@ -130,9 +119,9 @@ document.addEventListener('DOMContentLoaded', function() {
                                         </td>
                                         <td><?= Html::encode($tab->position) ?></td>
                                         <td><?= Html::encode(Yii::$app->formatter->asDate($tab->created_at)) ?></td>
-                                        <td class="d-flex text-nowrap">
-                                            <button class="btn btn-secondary btn-sm save-row-btn me-1"><i
-                                                    class="fa-solid fa-pen-to-square"></i></button>
+                                        <td class="d-flex text-nowrap justify-content-center">
+                                            <!-- <button class="btn btn-secondary btn-sm save-row-btn me-1"><i
+                                                    class="fa-solid fa-pen-to-square"></i></button> -->
                                             <button href="#" data-bs-toggle="modal" data-bs-target="#deleteModal"
                                                 class="btn btn-danger btn-sm delete-btn"
                                                 data-tab-id="<?= htmlspecialchars($tab->id) ?>">

@@ -19,11 +19,11 @@ class UsersController extends Controller
                 'rules' => [
                     [
                         'allow' => true,
-                        'roles' => ['@'],  // Yêu cầu người dùng đã đăng nhập
+                        'roles' => ['@'],
                     ],
                     [
                         'allow' => false,
-                        'roles' => ['?'],  // Từ chối người dùng chưa đăng nhập
+                        'roles' => ['?'],
                     ],
                 ],
             ],
