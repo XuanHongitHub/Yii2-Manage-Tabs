@@ -11,7 +11,6 @@ use Yii;
  * @property int $user_id
  * @property string|null $tab_name
  * @property string $tab_type
- * @property string|null $content
  * @property int|null $deleted
  * @property int|null $position
  * @property string $created_at
@@ -38,7 +37,7 @@ class Tab extends \yii\db\ActiveRecord
         return [
             [['user_id', 'tab_type'], 'required'],
             [['user_id', 'deleted', 'position'], 'integer'],
-            [['tab_type', 'content'], 'string'],
+            [['tab_type'], 'string'],
             [['created_at', 'updated_at'], 'safe'],
             [['tab_name'], 'string', 'max' => 255],
             [['user_id'], 'exist', 'skipOnError' => true, 'targetClass' => User::class, 'targetAttribute' => ['user_id' => 'id']],
@@ -55,7 +54,6 @@ class Tab extends \yii\db\ActiveRecord
             'user_id' => 'User ID',
             'tab_name' => 'Tab Name',
             'tab_type' => 'Tab Type',
-            'content' => 'Content',
             'deleted' => 'Deleted',
             'position' => 'Position',
             'created_at' => 'Created At',

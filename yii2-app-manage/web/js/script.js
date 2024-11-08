@@ -1,10 +1,4 @@
 /*! -----------------------------------------------------------------------------------
-    Template Name: Tokyo Admin
-    Template URI: https://admin.pixelstrap.net/tokyo/template/
-    Description: This is Admin theme
-    Author: Pixelstrap
-    Author URI: https://themeforest.net/user/pixelstrap
------------------------------------------------------------------------------------
         01. password show hide
         02. Background Image js
         03. sidebar filter

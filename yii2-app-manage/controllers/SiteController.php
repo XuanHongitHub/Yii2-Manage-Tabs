@@ -83,7 +83,7 @@ class SiteController extends Controller
             ->where(['user_id' => $userId])
             ->orderBy([
                 'position' => SORT_ASC,
-                'id' => SORT_ASC,
+                'id' => SORT_DESC,
             ])
             ->all();
 

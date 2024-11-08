@@ -12,6 +12,29 @@ $rowsPerPage = 10;
 $globalIndexOffset = $page * $rowsPerPage;
 
 ?>
+<!-- Toast -->
+<div class="toast-container position-fixed top-0 end-0 mt-5 p-3">
+    <div id="liveToastSuccess" class="toast bg-success text-white" role="alert" aria-live="assertive"
+        aria-atomic="true">
+        <div class="toast-header bg-success text-white">
+            <strong class="me-auto">Notification</strong>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast" aria-label="Close"></button>
+        </div>
+        <div class="toast-body">
+            Successfully!
+        </div>
+    </div>
+
+    <div id="liveToastError" class="toast bg-danger text-white" role="alert" aria-live="assertive" aria-atomic="true">
+        <div class="toast-header bg-danger text-white">
+            <strong class="me-auto">Error</strong>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast" aria-label="Close"></button>
+        </div>
+        <div class="toast-body">
+            Error!
+        </div>
+    </div>
+</div>
 
 <div id="tableData">
     <div class="d-flex flex-wrap justify-content-between mt-3">
@@ -271,19 +294,7 @@ $globalIndexOffset = $page * $rowsPerPage;
 
 
 
-    <!-- Toast -->
-    <div class="toast-container position-fixed top-0 end-0 p-3">
-        <div class="toast fade" id="liveToast" role="alert" aria-live="assertive" aria-atomic="true">
-            <div class="toast-header">
-                <strong class="me-auto">Notification</strong>
-                <small class="text-muted">just now</small>
-                <button class="btn-close" type="button" data-bs-dismiss="toast" aria-label="Close"></button>
-            </div>
-            <div class="toast-body">
-                Hello, this is a toast message!
-            </div>
-        </div>
-    </div>
+
     <script>
     var tabId = <?= json_encode($tabId) ?>;
     var columns = <?= json_encode(array_map(function ($column) {
@@ -303,12 +314,10 @@ $globalIndexOffset = $page * $rowsPerPage;
 
         return data[rowIndex];
     }
-    console.log("🚀 ~ columns ~ columns:", columns);
 
     $(document).off('click', '#add-row-btn').on('click', '#add-row-btn', function() {
         var tableName = '<?= $tableName ?>';
         var newData = {};
-        console.log("🚀 ~ $ ~ tableName:", tableName);
 
         $('.new-data-input').each(function() {
             var column = $(this).data('column');
@@ -328,14 +337,19 @@ $globalIndexOffset = $page * $rowsPerPage;
             },
             success: function(response) {
                 if (response.success) {
-                    // Lấy trang cuối từ phản hồi
                     var lastPage = response.totalPages - 1;
                     var tabId = $('.nav-link.active').data('id');
 
-                    // Gọi loadTabData với tabId và lastPage
                     loadData(tabId, lastPage, null);
 
-                    alert('Data saved successfully!');
+                    var toastElementSuccess = document.getElementById('liveToastSuccess');
+                    var toastBodySuccess = toastElementSuccess.querySelector('.toast-body');
+                    toastBodySuccess.innerText = "Add Data successfully!";
+
+                    var toastSuccess = new bootstrap.Toast(toastElementSuccess, {
+                        delay: 3000
+                    });
+                    toastSuccess.show();
                     $('#addDataModal').find('input').val('');
                     $('#addDataModal').modal('hide');
                 } else {
@@ -350,8 +364,6 @@ $globalIndexOffset = $page * $rowsPerPage;
 
     function openEdit(rowIndex, tableName) {
         let rowData = getRowData(rowIndex);
-        console.log(columns); // Kiểm tra cấu trúc của columns
-        console.log(rowData);
 
         if (!rowData) {
             console.error("No data found for index:", rowIndex);
@@ -423,7 +435,6 @@ $globalIndexOffset = $page * $rowsPerPage;
                 originalValues: originalValues
             },
             success: function(response) {
-                console.log("🚀 ~ saveRow ~ response:", updatedData);
                 if (response.success) {
                     inputs.forEach(function(input) {
                         input.setAttribute('data-original-value', input.value);
@@ -442,9 +453,16 @@ $globalIndexOffset = $page * $rowsPerPage;
 
                     let rowData = getRowData(rowIndex);
                     Object.assign(rowData, updatedData);
+                    var toastElementSuccess = document.getElementById('liveToastSuccess');
+                    var toastBodySuccess = toastElementSuccess.querySelector('.toast-body');
+                    toastBodySuccess.innerText = "Data Save successfully!";
 
-                    alert('Data saved successfully!');
+                    var toastSuccess = new bootstrap.Toast(toastElementSuccess, {
+                        delay: 3000
+                    });
+                    toastSuccess.show();
                     $('#editModal').modal('hide');
+
                 } else {
                     alert('Failed to save data: ' + response.message);
                 }
@@ -494,7 +512,6 @@ $globalIndexOffset = $page * $rowsPerPage;
     }
 
     function loadTabData(tabId, page, search, pageSize) {
-        console.log("🚀 ~ loadTabData ~ tabId:", tabId);
         localStorage.clear();
 
         $.ajax({
@@ -584,11 +601,6 @@ $globalIndexOffset = $page * $rowsPerPage;
                 var totalCount = $(responseData).find('#totalCount').val();
                 var pageSize = $(responseData).find('#pageSize').val();
                 var lastPage = Math.ceil(totalCount / pageSize) - 1;
-
-                console.log("🚀 ~ loadData ~ totalCount:", totalCount);
-                console.log("🚀 ~ loadData ~ totalCount:", pageSize);
-
-                console.log("🚀 ~ loadData ~ totalCount:", lastPage);
 
                 $('#lastPageButton').attr('data-last-page', lastPage);
             },

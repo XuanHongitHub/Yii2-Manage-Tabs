@@ -57,7 +57,7 @@ $this->title = 'Tabs Data';
                             <?php endif; ?>
                             <?php else: ?>
                             <div class="align-items-center m-2">
-                                No Data
+                                No Tabs Available. Please create a new tab in the settings.
                             </div>
                             <?php endif; ?>
                         </ul>
@@ -98,7 +98,6 @@ $(document).ready(function() {
     }
 
     function loadTabData(tabId, page, search, pageSize) {
-        console.log("🚀 ~ loadTabData ~ tabId:", tabId);
         localStorage.clear();
 
         $.ajax({
@@ -192,7 +191,6 @@ $(document).ready(function() {
 
     $(document).off('change', '#pageSize').on('change', '#pageSize', function() {
         var pageSize = $(this).val();
-        console.log('page size: ', pageSize);
 
         var tabId = $('.nav-link.active').data('id');
         var search = $('input[name="search"]').val();

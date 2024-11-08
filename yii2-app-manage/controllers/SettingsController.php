@@ -41,7 +41,7 @@ class SettingsController extends Controller
             ->where(['user_id' => $userId])
             ->orderBy([
                 'position' => SORT_ASC,
-                'id' => SORT_ASC,
+                'id' => SORT_DESC,
             ])
             ->all();
 
@@ -63,7 +63,6 @@ class SettingsController extends Controller
             $tabType = Yii::$app->request->post('tab_type');
             $tabName = Yii::$app->request->post('tab_name');
 
-            // Khởi tạo đối tượng Tab
             $tab = new Tab();
             $tab->user_id = $userId;
             $tab->tab_type = $tabType;
@@ -73,7 +72,6 @@ class SettingsController extends Controller
             $tab->updated_at = date('Y-m-d H:i:s');
 
             if ($tabType === 'table') {
-                // Xử lý nếu loại tab là "table"
                 $columns = Yii::$app->request->post('columns', []);
                 $dataTypes = Yii::$app->request->post('data_types', []);
                 $dataSizes = Yii::$app->request->post('data_sizes', []);
@@ -111,7 +109,7 @@ class SettingsController extends Controller
                             ]);
                             if (!$tableTab->save()) {
                                 Yii::$app->session->setFlash('error', 'Cannot save');
-                                return $this->redirect(['table-tabs/create']);
+                                return $this->redirect(['settings/create']);
                             }
                         }
 
@@ -146,24 +144,24 @@ class SettingsController extends Controller
                         Yii::$app->session->setFlash('success', 'Create Successful.');
 
                         $transaction->commit();
-                        return $this->redirect(['table-tabs/create', 'id' => $tab->id]);
+                        return $this->redirect(['settings/create', 'id' => $tab->id]);
                     }
                 } catch (\Exception $e) {
                     $transaction->rollBack();
                     Yii::$app->session->setFlash('error', $e->getMessage());
-                    return $this->redirect(['table-tabs/create']);
+                    return $this->redirect(['settings/create']);
                 }
 
             } elseif ($tabType === 'richtext') {
                 if (empty($tabName)) {
                     Yii::$app->session->setFlash('error', 'Tab name cannot be empty.');
-                    return $this->redirect(['table-tabs/create']);
+                    return $this->redirect(['settings/create']);
                 }
 
                 $existingTab = Tab::findOne(['tab_name' => $tabName, 'tab_type' => 'richtext', 'user_id' => $userId]);
                 if ($existingTab) {
                     Yii::$app->session->setFlash('error', 'Tab name already exists. Please choose a different name.');
-                    return $this->redirect(['table-tabs/create']);
+                    return $this->redirect(['settings/create']);
                 }
 
                 if ($tab->save()) {
@@ -175,10 +173,10 @@ class SettingsController extends Controller
                         Yii::error('Cannot create file: ' . $e->getMessage());
                         Yii::$app->session->setFlash('error', 'An error occurred while saving the file.');
                     }
-                    return $this->redirect(['table-tabs/create']);
+                    return $this->redirect(['settings/create']);
                 } else {
                     Yii::$app->session->setFlash('error', 'An error occurred while creating the tab. Please try again.');
-                    return $this->redirect(['table-tabs/create']);
+                    return $this->redirect(['settings/create']);
                 }
             }
         }
@@ -256,7 +254,7 @@ class SettingsController extends Controller
                     }
                 }
                 if (in_array($dataType, ['TEXT', 'MEDIUMTEXT', 'LONGTEXT', 'DATE', 'DATETIME', 'TIMESTAMP', 'TIME', 'BOOLEAN', 'JSON', 'BLOB'])) {
-                    if ($dataSize !== null) {
+                    if ($dataSize != null) {
                         $errors[] = ['message' => "Column '$column' with data type '$dataType' should not have a size.", 'field' => "data_sizes[$index]"];
                     }
                 }

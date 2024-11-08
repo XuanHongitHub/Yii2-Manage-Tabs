@@ -45,7 +45,6 @@ $tabId = $_GET['tabId'];
 
 <script>
 function loadTabData(tabId, page, search, pageSize) {
-    console.log("🚀 ~ loadTabData ~ tabId:", tabId);
     localStorage.clear();
 
     $.ajax({
