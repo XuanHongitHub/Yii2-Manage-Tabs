@@ -20,6 +20,9 @@ class UsersController extends Controller
                     [
                         'allow' => true,
                         'roles' => ['@'],
+                        'matchCallback' => function ($rule, $action) {
+                            return User::isUserAdmin(Yii::$app->user->identity->username);
+                        }
                     ],
                     [
                         'allow' => false,
@@ -36,7 +39,7 @@ class UsersController extends Controller
             'users' => User::find()->all(),
         ]);
     }
-    public function actionUpdateRole($id)
+    public function actionUpdateUser($id)
     {
         $user = User::findOne($id);
 
@@ -45,20 +48,19 @@ class UsersController extends Controller
         }
 
         if (Yii::$app->request->isPost) {
+            $status = Yii::$app->request->post('status') ? 10 : 9;
+            $user->status = $status;
+
             $user->role = Yii::$app->request->post('role');
 
             if ($user->save()) {
-                Yii::$app->session->setFlash('success', 'Role update successful.');
-                return $this->redirect('index');
+                Yii::$app->session->setFlash('success', 'User updated successfully.');
             } else {
                 Yii::error($user->getErrors());
-                Yii::$app->session->setFlash('error', 'Role update failed. Please try again.');
+                Yii::$app->session->setFlash('error', 'Update failed. Please try again.');
             }
         }
 
-        return $this->render('index', [
-            'user' => $user,
-        ]);
+        return $this->redirect(['index']);
     }
-
 }

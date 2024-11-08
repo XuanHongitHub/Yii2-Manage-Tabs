@@ -52,24 +52,24 @@ $this->title = 'Manage Users';
                                         <td><?= Html::encode($user->username) ?></td>
                                         <td><?= Html::encode($user->email) ?></td>
                                         <td style="text-align: center;">
-                                            <span
-                                                class="btn <?= $user->status == 10 ? 'badge badge-light-success' : 'badge badge-light-danger' ?>">
-                                                <?= $user->status == 10 ? '<i class="fa-solid fa-circle-check"></i>' : '<i class="fa-solid fa-circle-xmark"></i>' ?>
-                                            </span>
-                                        </td>
-                                        <td>
                                             <form
-                                                action="<?= \yii\helpers\Url::to(['users/update-role', 'id' => $user->id]) ?>"
+                                                action="<?= \yii\helpers\Url::to(['users/update-user', 'id' => $user->id]) ?>"
                                                 method="post">
                                                 <?= Html::hiddenInput(Yii::$app->request->csrfParam, Yii::$app->request->csrfToken) ?>
 
-                                                <select class="form-control" name="role">
-                                                    <option value="10" <?= $user->role == 10 ? 'selected' : '' ?>>
-                                                        User</option>
-                                                    <option value="20" <?= $user->role == 20 ? 'selected' : '' ?>>
-                                                        Admin</option>
-                                                </select>
-
+                                                <label class="switch mb-0 mt-1">
+                                                    <input type="checkbox" name="status"
+                                                        <?= $user->status == 10 ? 'checked' : '' ?>>
+                                                    <span class="switch-state"></span>
+                                                </label>
+                                        </td>
+                                        <td>
+                                            <select class="form-control" name="role">
+                                                <option value="10" <?= $user->role == 10 ? 'selected' : '' ?>>User
+                                                </option>
+                                                <option value="20" <?= $user->role == 20 ? 'selected' : '' ?>>Admin
+                                                </option>
+                                            </select>
                                         </td>
                                         <td>
                                             <button type="submit" class="btn btn-primary">Update</button>
@@ -78,7 +78,6 @@ $this->title = 'Manage Users';
                                     </tr>
                                     <?php endforeach; ?>
                                 </tbody>
-
                             </table>
                         </div>
 
@@ -93,7 +92,37 @@ $this->title = 'Manage Users';
 
 <?php include Yii::getAlias('@app/views/layouts/_footer.php'); ?>
 
+<div class="toast-container position-fixed top-0 end-0 p-3 toast-index toast-rtl">
+    <div class="toast fade" id="liveToast" role="alert" aria-live="assertive" aria-atomic="true">
+        <div class="toast-header">
+            <strong class="me-auto">Notification</strong>
+            <small id="toast-timestamp"></small>
+            <button class="btn-close" type="button" data-bs-dismiss="toast" aria-label="Close"></button>
+        </div>
+        <div class="toast-body" id="toast-body">Notification</div>
+    </div>
+</div>
 <script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Check if there's a success message
+    const successMessage = "<?= Yii::$app->session->getFlash('success') ?>";
+    const errorMessage = "<?= Yii::$app->session->getFlash('error') ?>";
+    if (successMessage) {
+        document.getElementById('toast-body').textContent = successMessage;
+        document.getElementById('toast-timestamp').textContent = new Date().toLocaleTimeString();
+        const toastElement = document.getElementById('liveToast');
+        const toast = new bootstrap.Toast(toastElement);
+        toast.show();
+    }
+    if (errorMessage) {
+        document.getElementById('toast-body').textContent = errorMessage;
+        document.getElementById('toast-timestamp').textContent = new Date().toLocaleTimeString();
+        const toastElement = document.getElementById('liveToast');
+        const toast = new bootstrap.Toast(toastElement);
+        toast.show();
+    }
+});
+
 $(document).ready(function() {
     $('.dataTable').DataTable({
         order: [],

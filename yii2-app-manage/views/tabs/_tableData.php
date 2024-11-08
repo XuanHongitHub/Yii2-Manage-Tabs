@@ -866,9 +866,16 @@ $globalIndexOffset = $page * $rowsPerPage;
         var exportFormat = $('#export-format').val();
         var tableName = '<?= $tableName ?>';
 
-        var loadingSpinner = $(
-            '<a class="loading-spinner badge badge-light-primary" href=""><span class="p-1">Downloading</span></a>'
-        );
+        var loadingSpinner = $(`
+             <div class="loading-overlay">
+                <div class="loading-content">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="sr-only">Exporting...</span>
+                    </div>
+                    <span class="ml-2">Exporting data, please wait...</span>
+                </div>
+            </div>
+        `);
         $('body').append(loadingSpinner);
         $.ajax({
             url: '<?= \yii\helpers\Url::to(['tabs/export-excel']) ?>',
