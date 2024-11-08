@@ -73,17 +73,17 @@ document.addEventListener('DOMContentLoaded', function() {
                             <?= Html::hiddenInput(Yii::$app->request->csrfParam, Yii::$app->request->csrfToken) ?>
 
                             <div class="row">
-                                <div class="col-3 mb-3">
+                                <div class="col-12 col-md-6 col-lg-4 col-xl-3 mb-3">
                                     <label for="tab_name" class="form-label">Tab Name</label>
                                     <input type="text" name="tab_name" class="form-control" id="tab_name"
                                         value="<?= $tableCreationData['tabName'] ?? ''; ?>">
                                     <?php if (Yii::$app->session->hasFlash('error_tab_name')): ?>
-                                    <div class="text-danger"><?= Yii::$app->session->getFlash('error_tab_name') ?>
-                                    </div>
+                                    <div class="text-danger"><?= Yii::$app->session->getFlash('error_tab_name') ?></div>
                                     <?php endif; ?>
                                 </div>
+
                                 <!-- Chọn loại tab -->
-                                <div class="col-3 mb-3">
+                                <div class="col-12 col-md-6 col-lg-4 col-xl-3 mb-3">
                                     <label for="tab_type" class="form-label">Tab Type</label>
                                     <select name="tab_type" id="tab_type" class="form-select"
                                         onchange="toggleTabInputs()">

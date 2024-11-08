@@ -26,31 +26,32 @@ $this->title = 'List Tabs';
             <div class="col-sm-12">
                 <div class="card">
                     <div class="card-header card-no-border pb-0">
-                        <div class="d-flex">
-                            <div class="me-auto">
+                        <div class="d-flex flex-column flex-md-row align-items-md-center">
+                            <div class="me-auto mb-3 mb-md-0 text-center text-md-start">
                                 <h4>List of Tabs</h4>
                                 <p class="mt-1 f-m-light">Table Tab | Richtext Tab</p>
                             </div>
-                            <div class="d-flex align-items-center me-2">
-                                <a class="btn btn-outline-warning me-2" href="#" data-bs-toggle="modal"
+                            <div
+                                class="d-flex flex-wrap justify-content-center align-items-center me-md-2 mb-3 mb-md-0">
+                                <a class="btn btn-outline-warning me-2 mb-2" href="#" data-bs-toggle="modal"
                                     data-bs-target="#hideModal">
-                                    <i class="fas fa-eye me-1"></i> Show/Hidden Tab
+                                    <i class="fas fa-eye me-1"></i> Show/Hidden
                                 </a>
-                                <a class="btn btn-outline-primary me-2" href="#" data-bs-toggle="modal"
+                                <a class="btn btn-outline-primary me-2 mb-2" href="#" data-bs-toggle="modal"
                                     data-bs-target="#sortModal">
-                                    <i class="fas fa-sort-amount-down me-1"></i> Sort Order Tab
+                                    <i class="fas fa-sort-amount-down me-1"></i> Sort Tab
                                 </a>
-                                <a class="btn btn-danger" href="#" data-bs-toggle="modal"
+                                <a class="btn btn-danger me-2 mb-2" href="#" data-bs-toggle="modal"
                                     data-bs-target="#trashBinModal">
                                     <i class="fas fa-trash me-1"></i> Trash Bin
                                 </a>
-                            </div>
-                            <div class="text-end">
-                                <a class="btn btn-success" href="<?= \yii\helpers\Url::to(['settings/create']) ?>">
+                                <a class="btn btn-success mb-2" href="<?= \yii\helpers\Url::to(['settings/create']) ?>">
                                     <i class="fas fa-plus me-1"></i> New Tab
                                 </a>
                             </div>
+
                         </div>
+
                     </div>
 
                     <div class="card-body">
