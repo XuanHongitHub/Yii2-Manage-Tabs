@@ -131,8 +131,8 @@ $globalIndexOffset = $page * $rowsPerPage;
         <tbody id="tbodyData">
             <?php foreach ($data as $rowIndex => $row): ?>
             <?php
-                        $globalIndex = $globalIndexOffset + $rowIndex + 1;
-                        ?>
+                    $globalIndex = $globalIndexOffset + $rowIndex + 1;
+                    ?>
             <tr>
                 <td class="px-2 py-0"><input type="checkbox" class="row-checkbox" data-row="<?= $rowIndex ?>"
                         id="<?= $rowIndex ?>" data-table-name="<?= $tableName ?>">
@@ -202,22 +202,22 @@ $globalIndexOffset = $page * $rowsPerPage;
         <!-- Pagination Links -->
         <div class="dataTables_paginate paging_simple_numbers ms-auto">
             <?= LinkPager::widget([
-                            'pagination' => $pagination,
-                            'options' => ['class' => 'pagination justify-content-end align-items-center'],
-                            'linkContainerOptions' => ['tag' => 'span'],
-                            'linkOptions' => [
-                                'class' => 'paginate_button',
-                                'data-page' => function ($page) {
-                                return $page + 1;
-                            },
-                            ],
-                            'activePageCssClass' => 'current',
-                            'disabledPageCssClass' => 'disabled',
-                            'disabledListItemSubTagOptions' => ['tag' => 'span', 'class' => 'paginate_button'],
-                            'prevPageLabel' => 'Previous',
-                            'nextPageLabel' => 'Next',
-                            'maxButtonCount' => 5,
-                        ]) ?>
+                    'pagination' => $pagination,
+                    'options' => ['class' => 'pagination justify-content-end align-items-center'],
+                    'linkContainerOptions' => ['tag' => 'span'],
+                    'linkOptions' => [
+                        'class' => 'paginate_button',
+                        'data-page' => function ($page) {
+                        return $page + 1;
+                    },
+                    ],
+                    'activePageCssClass' => 'current',
+                    'disabledPageCssClass' => 'disabled',
+                    'disabledListItemSubTagOptions' => ['tag' => 'span', 'class' => 'paginate_button'],
+                    'prevPageLabel' => 'Previous',
+                    'nextPageLabel' => 'Next',
+                    'maxButtonCount' => 5,
+                ]) ?>
 
 
         </div>
@@ -572,6 +572,13 @@ $globalIndexOffset = $page * $rowsPerPage;
 
     function loadData(tabId, page, search, pageSize) {
 
+        var loadingSpinner = $(`
+             <div class="spinner-fixed">
+                <i class="fa fa-spin fa-spinner me-2"></i>
+            </div>
+        `);
+        $('body').append(loadingSpinner);
+
         $.ajax({
             url: "<?= \yii\helpers\Url::to(['tabs/load-tab-data']) ?>",
             type: "GET",
@@ -582,6 +589,7 @@ $globalIndexOffset = $page * $rowsPerPage;
                 pageSize: pageSize,
             },
             success: function(responseData) {
+                loadingSpinner.remove();
 
                 var data = responseData.data;
 
@@ -607,6 +615,8 @@ $globalIndexOffset = $page * $rowsPerPage;
                 $('#lastPageButton').attr('data-last-page', lastPage);
             },
             error: function(xhr, status, error) {
+                loadingSpinner.remove();
+
                 const toastLiveExample = document.getElementById('liveToast');
                 toastBody.textContent = `Error: ${xhr.responseText || 'Unknown error'}`;
                 const toast = new bootstrap.Toast(toastLiveExample);
@@ -834,7 +844,7 @@ $globalIndexOffset = $page * $rowsPerPage;
                                     $('#importExelModal').modal('hide');
                                     loadTabData(tabId);
                                 } else {
-                                    loadingSpinner.remove();
+                                    newLoadingSpinner.remove();
 
                                     alert('Failed to import Excel file: ' + response
                                         .message);

@@ -165,7 +165,7 @@ class SettingsController extends Controller
                 }
 
                 if ($tab->save()) {
-                    $filePath = Yii::getAlias('@runtime/richtext/' . $tab->id . '.rtf');
+                    $filePath = Yii::getAlias('@runtime/richtext/' . $tab->id . '.txt');
                     try {
                         file_put_contents($filePath, '');
                         Yii::$app->session->setFlash('success', 'Created successfully!');

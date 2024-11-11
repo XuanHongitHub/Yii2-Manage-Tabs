@@ -30,6 +30,10 @@ COPY . /var/www
 # Cấp quyền cho các thư mục quan trọng của Yii2
 RUN chown -R www-data:www-data /var/www \
     && chmod -R 755 /var/www
-
+# Install apt
+RUN apt-get update && apt-get install -y \
+    net-tools \
+    procps \
+    iproute2
 EXPOSE 9000
 CMD ["php-fpm"]

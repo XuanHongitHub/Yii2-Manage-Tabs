@@ -126,8 +126,7 @@ $isAdmin = User::isUserAdmin(Yii::$app->user->identity->username);
                             </div>
                         </li>
                         <li class="sidebar-list">
-                            <a class="sidebar-link sidebar-title link-nav"
-                                href="<?= \yii\helpers\Url::to(['site/index']) ?>">
+                            <a class="sidebar-link sidebar-title link-nav" href="<?= \yii\helpers\Url::to(['/']) ?>">
                                 <svg class="stroke-icon">
                                     <use href="<?= Yii::getAlias('@web') ?>/images/icon-sprite.svg#stroke-table">
                                     </use>

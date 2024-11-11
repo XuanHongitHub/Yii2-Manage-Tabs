@@ -134,7 +134,7 @@ class TabsController extends Controller
             }
         } elseif ($tabType === 'richtext') {
             // Richtext Tab
-            $filePath = Yii::getAlias('@runtime/richtext/' . $tabId . '.rtf');
+            $filePath = Yii::getAlias('@runtime/richtext/' . $tabId . '.txt');
             $content = file_exists($filePath) ? file_get_contents($filePath) : '';
 
             return $this->renderPartial('_richtextData', [
@@ -150,29 +150,29 @@ class TabsController extends Controller
      * Update RichtextData Action.
      *
      */
-    public function actionSaveRichtext()
-    {
-        if (Yii::$app->request->isPost) {
-            $tabId = Yii::$app->request->post('tabId');
-            $content = Yii::$app->request->post('content');
+    // public function actionSaveRichtext()
+    // {
+    //     if (Yii::$app->request->isPost) {
+    //         $tabId = Yii::$app->request->post('tabId');
+    //         $content = Yii::$app->request->post('content');
 
-            $filePath = Yii::getAlias('@runtime/richtext/' . $tabId . '.rtf');
-            try {
-                file_put_contents($filePath, $content);
-                return json_encode(['status' => 'success', 'message' => 'Content has been updated successfully.']);
-            } catch (\Exception $e) {
-                return json_encode(['status' => 'error', 'message' => 'An error occurred while updating the content.']);
-            }
-        }
-        return json_encode(['status' => 'error', 'message ' => 'Invalid request.']);
-    }
+    //         $filePath = Yii::getAlias('@runtime/richtext/' . $tabId . '.txt');
+    //         try {
+    //             file_put_contents($filePath, $content);
+    //             return json_encode(['status' => 'success', 'message' => 'Content has been updated successfully.']);
+    //         } catch (\Exception $e) {
+    //             return json_encode(['status' => 'error', 'message' => 'An error occurred while updating the content.']);
+    //         }
+    //     }
+    //     return json_encode(['status' => 'error', 'message ' => 'Invalid request.']);
+    // }
     /** 
      * Download RichtextData Action.
      *
      */
     public function actionDownload($tab_id)
     {
-        $filePath = Yii::getAlias('@runtime/richtext/' . $tab_id . '.rtf');
+        $filePath = Yii::getAlias('@runtime/richtext/' . $tab_id . '.txt');
 
         if (file_exists($filePath)) {
             return Yii::$app->response->sendFile($filePath);
@@ -419,7 +419,7 @@ class TabsController extends Controller
             }
         } elseif ($tab->tab_type == 'richtext') {
             try {
-                $filePath = Yii::getAlias('@runtime/richtext/' . $tabId . '.rtf');
+                $filePath = Yii::getAlias('@runtime/richtext/' . $tabId . '.txt');
 
                 if (file_exists($filePath)) {
                     unlink($filePath);
@@ -488,100 +488,113 @@ class TabsController extends Controller
      * Import + Export Excel
      * 
      */
+    public function actionImportExcel()
+    {
+        $file = $_FILES['import-excel-file'];
+        $tableName = Yii::$app->request->post('tableName');
+        $removeId = Yii::$app->request->post('removeId');
 
-     public function actionImportExcel()
-     {
-         $file = $_FILES['import-excel-file'];
-         $tableName = Yii::$app->request->post('tableName');
-         $removeId = Yii::$app->request->post('removeId');
-     
-         if ($file['error'] === UPLOAD_ERR_OK) {
-             $filePath = $file['tmp_name'];
-             $data = $this->parseExcel($filePath); // Function to read data from Excel file
-     
-             if (empty($data)) {
-                 return $this->asJson([
-                     'success' => false,
-                     'message' => 'The file contains no data.',
-                 ]);
-             }
-     
-             // Check if columns in the Excel file match the table columns
-             $columns = Yii::$app->db->schema->getTableSchema($tableName)->columns;
-             $expectedColumns = array_keys($columns);
-             $firstRow = reset($data); // Get the first row of the data
-     
-             // Check if there are any columns in the Excel file that don't match the table columns
-             $invalidColumns = array_diff(array_keys($firstRow), $expectedColumns);
-             if (!empty($invalidColumns)) {
-                 return $this->asJson([
-                     'success' => false,
-                     'message' => 'The following columns are invalid: ' . implode(', ', $invalidColumns),
-                 ]);
-             }
-     
-             $duplicateIds = [];
-             if (!$removeId) { // Check for duplicates unless the 'id' column is to be removed
-                 foreach ($data as $row) {
-                     $exists = Yii::$app->db->createCommand("SELECT COUNT(*) FROM {$tableName} WHERE id = :id")
-                         ->bindValue(':id', $row['id'])
-                         ->queryScalar();
-     
-                     if ($exists) {
-                         $duplicateIds[] = $row['id'];
-                     }
-                 }
-     
-                 if (!empty($duplicateIds)) {
-                     return $this->asJson([
-                         'success' => false,
-                         'duplicate' => true,
-                         'message' => 'Data with duplicate id(s): ' . implode(', ', $duplicateIds),
-                     ]);
-                 }
-             } else {
-                 foreach ($data as &$row) {
-                     unset($row['id']);
-                 }
-             }
-     
-             foreach ($data as $row) {
-                 Yii::$app->db->createCommand()->insert($tableName, $row)->execute();
-             }
-     
-             return $this->asJson(['success' => true]);
-         }
-     
-         return $this->asJson(['success' => false, 'message' => 'Unable to upload the Excel file']);
-     }
-     
+        if ($file['error'] === UPLOAD_ERR_OK) {
+            $filePath = $file['tmp_name'];
+
+            $data = iterator_to_array($this->parseExcel($filePath));
+
+            if (empty($data)) {
+                return $this->asJson([
+                    'success' => false,
+                    'message' => 'The file contains no data.',
+                ]);
+            }
+
+            $tableSchema = Yii::$app->db->schema->getTableSchema($tableName);
+            $columns = $tableSchema->columns;
+            $expectedColumns = array_keys($columns);
+            $primaryKey = $tableSchema->primaryKey[0];
+
+            if ($removeId && isset($columns[$primaryKey])) {
+                foreach ($data as &$row) {
+                    unset($row[$primaryKey]);
+                }
+                unset($columns[$primaryKey]);
+                $expectedColumns = array_keys($columns);
+            }
+
+            $duplicateIds = [];
+            if (!$removeId && isset($columns[$primaryKey])) {
+                $existingIds = Yii::$app->db->createCommand("SELECT `$primaryKey` FROM {$tableName} WHERE `$primaryKey` IN (" . implode(',', array_column($data, $primaryKey)) . ")")
+                    ->queryColumn();
+
+                foreach ($data as $key => $row) {
+                    if (in_array($row[$primaryKey], $existingIds)) {
+                        $duplicateIds[] = $row[$primaryKey];
+                        unset($data[$key]);
+                    }
+                }
+
+                if (!empty($duplicateIds)) {
+                    return $this->asJson([
+                        'success' => false,
+                        'duplicate' => true,
+                        'message' => 'Data with duplicate id(s): ' . implode(', ', $duplicateIds),
+                    ]);
+                }
+            }
+
+            $chunkSize = 1000;
+            $rowIndex = 0;
+            $totalRows = count($data);
+
+            while ($rowIndex < $totalRows) {
+                $rowsToInsert = array_slice($data, $rowIndex, $chunkSize);
+                $rowIndex += $chunkSize;
+
+                $rowsData = [];
+                foreach ($rowsToInsert as $row) {
+                    $rowData = [];
+                    foreach ($expectedColumns as $column) {
+                        $rowData[] = isset($row[$column]) ? $row[$column] : null;
+                    }
+                    $rowsData[] = $rowData;
+                }
+
+                if (!empty($rowsData)) {
+                    Yii::$app->db->createCommand()->batchInsert($tableName, $expectedColumns, $rowsData)->execute();
+                }
+            }
+
+            return $this->asJson(['success' => true]);
+        }
+
+        return $this->asJson(['success' => false, 'message' => 'Unable to upload the Excel file']);
+    }
 
     private function parseExcel($filePath)
     {
         $spreadsheet = IOFactory::load($filePath);
         $sheet = $spreadsheet->getActiveSheet();
 
-        $data = [];
-        foreach ($sheet->getRowIterator() as $rowIndex => $row) {
-            if ($rowIndex == 1) {
-                continue;
-            }
+        $headers = $this->getColumnHeadersFromExcel($filePath);
 
+        $rowIterator = $sheet->getRowIterator();
+        $rowIterator->next();
+        foreach ($rowIterator as $row) {
             $rowData = [];
             foreach ($row->getCellIterator() as $cell) {
                 $rowData[] = $cell->getValue();
             }
 
-            $data[] = array_combine($this->getColumnHeaders($sheet), $rowData);
+            yield array_combine($headers, $rowData);
         }
-
-        return $data;
     }
 
-    private function getColumnHeaders($sheet)
+    private function getColumnHeadersFromExcel($filePath)
     {
+        $spreadsheet = IOFactory::load($filePath);
+        $sheet = $spreadsheet->getActiveSheet();
+
+        $headerRow = $sheet->getRowIterator()->current();
         $headers = [];
-        foreach ($sheet->getRowIterator(1, 1)->current()->getCellIterator() as $cell) {
+        foreach ($headerRow->getCellIterator() as $cell) {
             $headers[] = $cell->getValue();
         }
         return $headers;
@@ -590,18 +603,18 @@ class TabsController extends Controller
     public function actionExportExcel($format, $tableName)
     {
         $result = $this->getExportData($tableName);
-        $columns = $result['columns'];  
-        $data = $result['data'];  
-    
+        $columns = $result['columns'];
+        $data = $result['data'];
+
         $spreadsheet = new Spreadsheet();
         $sheet = $spreadsheet->getActiveSheet();
-    
+
         $columnIndex = 1;
         foreach ($columns as $column) {
             $sheet->setCellValueByColumnAndRow($columnIndex, 1, $column);
             $columnIndex++;
         }
-    
+
         $headerStyle = [
             'font' => [
                 'bold' => true,
@@ -619,7 +632,7 @@ class TabsController extends Controller
             ],
         ];
         $sheet->getStyle('A1:' . chr(64 + count($columns)) . '1')->applyFromArray($headerStyle);
-    
+
         if (!empty($data)) {
             $rowIndex = 2;
             foreach ($data as $row) {
@@ -635,11 +648,11 @@ class TabsController extends Controller
         } else {
             $rowIndex = 2;
             foreach ($columns as $column) {
-                $sheet->setCellValueByColumnAndRow($columnIndex, $rowIndex, ''); 
+                $sheet->setCellValueByColumnAndRow($columnIndex, $rowIndex, '');
                 $columnIndex++;
             }
         }
-    
+
         $sheet->getStyle('A1:' . chr(64 + count($columns)) . ($rowIndex - 1))
             ->applyFromArray([
                 'borders' => [
@@ -649,45 +662,41 @@ class TabsController extends Controller
                     ],
                 ],
             ]);
-    
+
         foreach (range('A', chr(64 + count($columns))) as $columnID) {
             $sheet->getColumnDimension($columnID)->setAutoSize(true);
         }
-    
+
         $uploadDir = Yii::getAlias('@webroot/uploads');
         if (!is_dir($uploadDir)) {
             mkdir($uploadDir, 0777, true);
         }
-    
+
         $fileName = $tableName . '.' . $format;
         $tempFilePath = $uploadDir . DIRECTORY_SEPARATOR . $fileName;
-    
+
         $writer = new Xlsx($spreadsheet);
         $writer->save($tempFilePath);
-    
+
         $fileUrl = Yii::$app->urlManager->baseUrl . '/uploads/' . $fileName;
-    
+
         return $this->asJson([
             'success' => true,
             'file_url' => $fileUrl
         ]);
     }
-    
-
     public function getExportData($tableName)
     {
         $columns = Yii::$app->db->createCommand("DESCRIBE `$tableName`")->queryAll();
-    
-        $columnNames = array_map(function($column) {
+
+        $columnNames = array_map(function ($column) {
             return $column['Field']; // Trả về tên cột
         }, $columns);
-    
+
         $data = Yii::$app->db->createCommand("SELECT * FROM `$tableName`")->queryAll();
-    
+
         return ['columns' => $columnNames, 'data' => $data];
     }
-    
-
     public function actionDeleteExportFile()
     {
         $fileUrl = Yii::$app->request->post('file_url');
