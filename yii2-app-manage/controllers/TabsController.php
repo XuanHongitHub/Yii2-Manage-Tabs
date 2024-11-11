@@ -123,8 +123,6 @@ class TabsController extends Controller
                     ->limit($pagination->limit)
                     ->all();
 
-                Yii::error('Fetched data count: ' . count($data), __METHOD__);
-
                 return $this->renderPartial('_tableData', [
                     'columns' => $columns,
                     'data' => $data,
@@ -491,65 +489,81 @@ class TabsController extends Controller
      * 
      */
 
-    public function actionImportExcel()
-    {
-        $file = $_FILES['import-excel-file'];
-        $tableName = Yii::$app->request->post('tableName');
-        $removeId = Yii::$app->request->post('removeId');
-
-        if ($file['error'] === UPLOAD_ERR_OK) {
-            $filePath = $file['tmp_name'];
-            $data = $this->parseExcel($filePath); // Hàm đọc dữ liệu từ file Excel
-
-            $duplicateIds = [];
-            if (!$removeId) { // Kiểm tra trùng lặp nếu không yêu cầu xóa cột 'id'
-                foreach ($data as $row) {
-                    $exists = Yii::$app->db->createCommand("SELECT COUNT(*) FROM {$tableName} WHERE id = :id")
-                        ->bindValue(':id', $row['id'])
-                        ->queryScalar();
-
-                    if ($exists) {
-                        $duplicateIds[] = $row['id'];
-                    }
-                }
-
-                if (!empty($duplicateIds)) {
-                    return $this->asJson([
-                        'success' => false,
-                        'duplicate' => true,
-                        'message' => 'Data with duplicate id: ' . implode(', ', $duplicateIds),
-                    ]);
-                }
-            } else {
-                // Loại bỏ cột 'id' khỏi tất cả các hàng nếu removeId được bật
-                foreach ($data as &$row) {
-                    unset($row['id']);
-                }
-            }
-
-            // Thực hiện import dữ liệu vào bảng
-            foreach ($data as $row) {
-                Yii::$app->db->createCommand()->insert($tableName, $row)->execute();
-            }
-
-            return $this->asJson(['success' => true]);
-        }
-
-        return $this->asJson(['success' => false, 'message' => 'Unable to upload Excel file']);
-    }
-
+     public function actionImportExcel()
+     {
+         $file = $_FILES['import-excel-file'];
+         $tableName = Yii::$app->request->post('tableName');
+         $removeId = Yii::$app->request->post('removeId');
+     
+         if ($file['error'] === UPLOAD_ERR_OK) {
+             $filePath = $file['tmp_name'];
+             $data = $this->parseExcel($filePath); // Function to read data from Excel file
+     
+             if (empty($data)) {
+                 return $this->asJson([
+                     'success' => false,
+                     'message' => 'The file contains no data.',
+                 ]);
+             }
+     
+             // Check if columns in the Excel file match the table columns
+             $columns = Yii::$app->db->schema->getTableSchema($tableName)->columns;
+             $expectedColumns = array_keys($columns);
+             $firstRow = reset($data); // Get the first row of the data
+     
+             // Check if there are any columns in the Excel file that don't match the table columns
+             $invalidColumns = array_diff(array_keys($firstRow), $expectedColumns);
+             if (!empty($invalidColumns)) {
+                 return $this->asJson([
+                     'success' => false,
+                     'message' => 'The following columns are invalid: ' . implode(', ', $invalidColumns),
+                 ]);
+             }
+     
+             $duplicateIds = [];
+             if (!$removeId) { // Check for duplicates unless the 'id' column is to be removed
+                 foreach ($data as $row) {
+                     $exists = Yii::$app->db->createCommand("SELECT COUNT(*) FROM {$tableName} WHERE id = :id")
+                         ->bindValue(':id', $row['id'])
+                         ->queryScalar();
+     
+                     if ($exists) {
+                         $duplicateIds[] = $row['id'];
+                     }
+                 }
+     
+                 if (!empty($duplicateIds)) {
+                     return $this->asJson([
+                         'success' => false,
+                         'duplicate' => true,
+                         'message' => 'Data with duplicate id(s): ' . implode(', ', $duplicateIds),
+                     ]);
+                 }
+             } else {
+                 foreach ($data as &$row) {
+                     unset($row['id']);
+                 }
+             }
+     
+             foreach ($data as $row) {
+                 Yii::$app->db->createCommand()->insert($tableName, $row)->execute();
+             }
+     
+             return $this->asJson(['success' => true]);
+         }
+     
+         return $this->asJson(['success' => false, 'message' => 'Unable to upload the Excel file']);
+     }
+     
 
     private function parseExcel($filePath)
     {
-        // Sử dụng PhpSpreadsheet để load file Excel
         $spreadsheet = IOFactory::load($filePath);
         $sheet = $spreadsheet->getActiveSheet();
 
-        // Lấy dữ liệu từ sheet và lưu thành mảng
         $data = [];
         foreach ($sheet->getRowIterator() as $rowIndex => $row) {
             if ($rowIndex == 1) {
-                // Bỏ qua dòng tiêu đề
                 continue;
             }
 
@@ -558,7 +572,6 @@ class TabsController extends Controller
                 $rowData[] = $cell->getValue();
             }
 
-            // Thêm vào mảng dữ liệu
             $data[] = array_combine($this->getColumnHeaders($sheet), $rowData);
         }
 
@@ -576,18 +589,19 @@ class TabsController extends Controller
 
     public function actionExportExcel($format, $tableName)
     {
-        $data = $this->getExportData($tableName);
-
+        $result = $this->getExportData($tableName);
+        $columns = $result['columns'];  
+        $data = $result['data'];  
+    
         $spreadsheet = new Spreadsheet();
         $sheet = $spreadsheet->getActiveSheet();
-
-        $columns = array_keys($data[0]);
+    
         $columnIndex = 1;
         foreach ($columns as $column) {
             $sheet->setCellValueByColumnAndRow($columnIndex, 1, $column);
             $columnIndex++;
         }
-
+    
         $headerStyle = [
             'font' => [
                 'bold' => true,
@@ -605,19 +619,27 @@ class TabsController extends Controller
             ],
         ];
         $sheet->getStyle('A1:' . chr(64 + count($columns)) . '1')->applyFromArray($headerStyle);
-
-        $rowIndex = 2;
-        foreach ($data as $row) {
-            $columnIndex = 1;
-            foreach ($row as $cell) {
-                $sheet->setCellValueByColumnAndRow($columnIndex, $rowIndex, $cell);
-                $sheet->getStyleByColumnAndRow($columnIndex, $rowIndex)
-                    ->getAlignment()->setWrapText(true);
+    
+        if (!empty($data)) {
+            $rowIndex = 2;
+            foreach ($data as $row) {
+                $columnIndex = 1;
+                foreach ($row as $cell) {
+                    $sheet->setCellValueByColumnAndRow($columnIndex, $rowIndex, $cell);
+                    $sheet->getStyleByColumnAndRow($columnIndex, $rowIndex)
+                        ->getAlignment()->setWrapText(true);
+                    $columnIndex++;
+                }
+                $rowIndex++;
+            }
+        } else {
+            $rowIndex = 2;
+            foreach ($columns as $column) {
+                $sheet->setCellValueByColumnAndRow($columnIndex, $rowIndex, ''); 
                 $columnIndex++;
             }
-            $rowIndex++;
         }
-
+    
         $sheet->getStyle('A1:' . chr(64 + count($columns)) . ($rowIndex - 1))
             ->applyFromArray([
                 'borders' => [
@@ -627,34 +649,44 @@ class TabsController extends Controller
                     ],
                 ],
             ]);
-
+    
         foreach (range('A', chr(64 + count($columns))) as $columnID) {
             $sheet->getColumnDimension($columnID)->setAutoSize(true);
         }
+    
         $uploadDir = Yii::getAlias('@webroot/uploads');
-
         if (!is_dir($uploadDir)) {
             mkdir($uploadDir, 0777, true);
         }
-
+    
         $fileName = $tableName . '.' . $format;
         $tempFilePath = $uploadDir . DIRECTORY_SEPARATOR . $fileName;
-
+    
         $writer = new Xlsx($spreadsheet);
         $writer->save($tempFilePath);
-
+    
         $fileUrl = Yii::$app->urlManager->baseUrl . '/uploads/' . $fileName;
-
+    
         return $this->asJson([
             'success' => true,
             'file_url' => $fileUrl
         ]);
     }
+    
 
     public function getExportData($tableName)
     {
-        return Yii::$app->db->createCommand("SELECT * FROM `$tableName` ")->queryAll();
+        $columns = Yii::$app->db->createCommand("DESCRIBE `$tableName`")->queryAll();
+    
+        $columnNames = array_map(function($column) {
+            return $column['Field']; // Trả về tên cột
+        }, $columns);
+    
+        $data = Yii::$app->db->createCommand("SELECT * FROM `$tableName`")->queryAll();
+    
+        return ['columns' => $columnNames, 'data' => $data];
     }
+    
 
     public function actionDeleteExportFile()
     {

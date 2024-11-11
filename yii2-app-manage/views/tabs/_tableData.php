@@ -36,6 +36,51 @@ $globalIndexOffset = $page * $rowsPerPage;
     </div>
 </div>
 
+<!-- Modal for Import Excel -->
+<div class="modal fade" id="importExelModal" tabindex="-1" aria-labelledby="importExelModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="importExelModalLabel">Import Excel</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="importExcelForm" enctype="multipart/form-data">
+                    <div class="mb-3">
+                        <label for="import-excel-file" class="form-label">Select Excel File</label>
+                        <input class="form-control" type="file" id="import-excel-file" name="import-excel-file"
+                            accept=".xlsx, .xls" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Import Excel</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- Modal for Export Excel -->
+<div class="modal fade" id="exportExcelModal" tabindex="-1" aria-labelledby="exportExcelModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="exportExcelModalLabel">Export Excel</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="exportExcelForm">
+                    <div class="mb-3">
+                        <label for="export-format" class="form-label">Choose Export Format</label>
+                        <select class="form-control" id="export-format" name="export-format">
+                            <option value="xlsx">Excel (.xlsx)</option>
+                            <option value="xls">Excel 97-2003 (.xls)</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Export Excel</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
 <div id="tableData">
     <div class="d-flex flex-wrap justify-content-between mt-3">
         <div class="d-md-flex d-sm-block">
@@ -55,7 +100,7 @@ $globalIndexOffset = $page * $rowsPerPage;
             </button>
 
             <!-- Export Excel Button -->
-            <button class="btn btn-warning mb-2 me-auto" id="import-excel-btn" href="#" data-bs-toggle="modal"
+            <button class="btn btn-warning mb-2 me-auto" id="exportExcelForm" href="#" data-bs-toggle="modal"
                 data-bs-target="#exportExcelModal">
                 <i class="fa-solid fa-file-export"></i></i> Export Excel
             </button>
@@ -72,7 +117,6 @@ $globalIndexOffset = $page * $rowsPerPage;
         </form>
     </div>
 
-
     <table class="display border table-bordered dataTable">
         <thead>
             <tr>
@@ -87,8 +131,8 @@ $globalIndexOffset = $page * $rowsPerPage;
         <tbody id="tbodyData">
             <?php foreach ($data as $rowIndex => $row): ?>
             <?php
-                    $globalIndex = $globalIndexOffset + $rowIndex + 1;
-                    ?>
+                        $globalIndex = $globalIndexOffset + $rowIndex + 1;
+                        ?>
             <tr>
                 <td class="px-2 py-0"><input type="checkbox" class="row-checkbox" data-row="<?= $rowIndex ?>"
                         id="<?= $rowIndex ?>" data-table-name="<?= $tableName ?>">
@@ -158,22 +202,22 @@ $globalIndexOffset = $page * $rowsPerPage;
         <!-- Pagination Links -->
         <div class="dataTables_paginate paging_simple_numbers ms-auto">
             <?= LinkPager::widget([
-                    'pagination' => $pagination,
-                    'options' => ['class' => 'pagination justify-content-end align-items-center'],
-                    'linkContainerOptions' => ['tag' => 'span'],
-                    'linkOptions' => [
-                        'class' => 'paginate_button',
-                        'data-page' => function ($page) {
-                        return $page + 1;
-                    },
-                    ],
-                    'activePageCssClass' => 'current',
-                    'disabledPageCssClass' => 'disabled',
-                    'disabledListItemSubTagOptions' => ['tag' => 'span', 'class' => 'paginate_button'],
-                    'prevPageLabel' => 'Previous',
-                    'nextPageLabel' => 'Next',
-                    'maxButtonCount' => 5,
-                ]) ?>
+                            'pagination' => $pagination,
+                            'options' => ['class' => 'pagination justify-content-end align-items-center'],
+                            'linkContainerOptions' => ['tag' => 'span'],
+                            'linkOptions' => [
+                                'class' => 'paginate_button',
+                                'data-page' => function ($page) {
+                                return $page + 1;
+                            },
+                            ],
+                            'activePageCssClass' => 'current',
+                            'disabledPageCssClass' => 'disabled',
+                            'disabledListItemSubTagOptions' => ['tag' => 'span', 'class' => 'paginate_button'],
+                            'prevPageLabel' => 'Previous',
+                            'nextPageLabel' => 'Next',
+                            'maxButtonCount' => 5,
+                        ]) ?>
 
 
         </div>
@@ -242,58 +286,6 @@ $globalIndexOffset = $page * $rowsPerPage;
             </div>
         </div>
     </div>
-
-
-    <!-- Modal for Import Excel -->
-    <div class="modal fade" id="importExelModal" tabindex="-1" aria-labelledby="importExelModalLabel"
-        aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="importExelModalLabel">Import Excel</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <form id="importExcelForm" enctype="multipart/form-data">
-                        <div class="mb-3">
-                            <label for="import-excel-file" class="form-label">Select Excel File</label>
-                            <input class="form-control" type="file" id="import-excel-file" name="import-excel-file"
-                                accept=".xlsx, .xls" required>
-                        </div>
-                        <button type="submit" class="btn btn-primary">Import Excel</button>
-                    </form>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Modal for Export Excel -->
-    <div class="modal fade" id="exportExcelModal" tabindex="-1" aria-labelledby="exportExcelModalLabel"
-        aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="exportExcelModalLabel">Export Excel</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <form id="exportExcelForm">
-                        <div class="mb-3">
-                            <label for="export-format" class="form-label">Choose Export Format</label>
-                            <select class="form-control" id="export-format" name="export-format">
-                                <option value="xlsx">Excel (.xlsx)</option>
-                                <option value="xls">Excel 97-2003 (.xls)</option>
-                            </select>
-                        </div>
-                        <button type="submit" class="btn btn-primary">Export Excel</button>
-                    </form>
-                </div>
-            </div>
-        </div>
-    </div>
-
-
-
 
     <script>
     var tabId = <?= json_encode($tabId) ?>;
@@ -514,6 +506,13 @@ $globalIndexOffset = $page * $rowsPerPage;
     function loadTabData(tabId, page, search, pageSize) {
         localStorage.clear();
 
+        var loadingSpinner = $(`
+             <div class="spinner-fixed">
+                <i class="fa fa-spin fa-spinner me-2"></i>
+            </div>
+        `);
+        $('body').append(loadingSpinner);
+
         $.ajax({
             url: "<?= \yii\helpers\Url::to(['tabs/load-tab-data']) ?>",
             type: "GET",
@@ -524,6 +523,8 @@ $globalIndexOffset = $page * $rowsPerPage;
                 pageSize: pageSize,
             },
             success: function(data) {
+                loadingSpinner.remove();
+
                 $('#table-data-current').html(data);
                 // Cập nhật trạng thái của tab hiện tại
                 $('.nav-link').removeClass('active');
@@ -532,6 +533,7 @@ $globalIndexOffset = $page * $rowsPerPage;
                 $(`[data-id="${tabId}"]`).closest('.nav-item').addClass('active');
             },
             error: function(xhr, status, error) {
+                loadingSpinner.remove();
                 console.error('Error:', error);
                 alert('An error occurred while loading data. Please try again later.');
             }
@@ -857,15 +859,17 @@ $globalIndexOffset = $page * $rowsPerPage;
 
 
     // Export Excel Button Click
-    $(document).off('click', '#import-excel-btn').on('click', '#import-excel-btn', function() {
+    $(document).off('click', '#exportExcelForm').on('click', '#exportExcelForm', function() {
         $('#exportExcelModal').modal('show');
+        console.log("🚀 ~ $ ~ exportFormat:");
+
     });
 
     $(document).off('submit', '#exportExcelForm').on('submit', '#exportExcelForm', function(event) {
+
         event.preventDefault();
         var exportFormat = $('#export-format').val();
         var tableName = '<?= $tableName ?>';
-
         var loadingSpinner = $(`
              <div class="loading-overlay">
                 <div class="loading-content">

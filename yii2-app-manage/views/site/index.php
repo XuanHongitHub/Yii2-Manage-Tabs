@@ -210,6 +210,4 @@ $(document).ready(function() {
 });
 </script>
 
-
-
 <?php include Yii::getAlias('@app/views/layouts/_footer.php'); ?>

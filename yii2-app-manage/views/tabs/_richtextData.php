@@ -44,32 +44,42 @@ $tabId = $_GET['tabId'];
 </div>
 
 <script>
-function loadTabData(tabId, page, search, pageSize) {
-    localStorage.clear();
+    function loadTabData(tabId, page, search, pageSize) {
+        localStorage.clear();
 
-    $.ajax({
-        url: "<?= \yii\helpers\Url::to(['tabs/load-tab-data']) ?>",
-        type: "GET",
-        data: {
-            tabId: tabId,
-            page: page,
-            search: search,
-            pageSize: pageSize,
-        },
-        success: function(data) {
-            $('#table-data-current').html(data);
-            // Cập nhật trạng thái của tab hiện tại
-            $('.nav-link').removeClass('active');
-            $('.nav-item').removeClass('active');
-            $(`[data-id="${tabId}"]`).addClass('active');
-            $(`[data-id="${tabId}"]`).closest('.nav-item').addClass('active');
-        },
-        error: function(xhr, status, error) {
-            console.error('Error:', error);
-            alert('An error occurred while loading data. Please try again later.');
-        }
-    });
-}
+        var loadingSpinner = $(`
+             <div class="spinner-fixed">
+                <i class="fa fa-spin fa-spinner me-2"></i>
+            </div>
+        `);
+        $('body').append(loadingSpinner);
+
+        $.ajax({
+            url: "<?= \yii\helpers\Url::to(['tabs/load-tab-data']) ?>",
+            type: "GET",
+            data: {
+                tabId: tabId,
+                page: page,
+                search: search,
+                pageSize: pageSize,
+            },
+            success: function(data) {
+                loadingSpinner.remove();
+
+                $('#table-data-current').html(data);
+                // Cập nhật trạng thái của tab hiện tại
+                $('.nav-link').removeClass('active');
+                $('.nav-item').removeClass('active');
+                $(`[data-id="${tabId}"]`).addClass('active');
+                $(`[data-id="${tabId}"]`).closest('.nav-item').addClass('active');
+            },
+            error: function(xhr, status, error) {
+                loadingSpinner.remove();
+                console.error('Error:', error);
+                alert('An error occurred while loading data. Please try again later.');
+            }
+        });
+    }
 $(document).ready(function() {
     var editor1 = new RichTextEditor("#div_editor1");
     //editor1.setHTMLCode("Use inline HTML or setHTMLCode to init the default content.");
