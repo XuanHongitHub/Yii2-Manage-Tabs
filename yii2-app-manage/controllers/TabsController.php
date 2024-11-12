@@ -19,6 +19,7 @@ use PhpOffice\PhpSpreadsheet\Style\Border;
 use PhpOffice\PhpSpreadsheet\Style\Alignment;
 use PhpOffice\PhpSpreadsheet\Style\Font;
 use PhpOffice\PhpSpreadsheet\IOFactory;
+use yii\db\Schema;
 
 class TabsController extends Controller
 {
@@ -82,7 +83,7 @@ class TabsController extends Controller
         // Retrieve search keyword if it exists
 
         $searchTerm = Yii::$app->request->get('search', '');
-        $pageSize = Yii::$app->request->get('pageSize', 10);
+        $pageSize = intval(Yii::$app->request->get('pageSize', 10));
         $page = intval(Yii::$app->request->get('page', 0));
 
 
@@ -228,8 +229,6 @@ class TabsController extends Controller
         $tableName = Yii::$app->request->post('table');
         $data = Yii::$app->request->post('data');
 
-
-        Yii::error("Data: " . $data);
         $validData = [];
         foreach ($data as $column => $value) {
             if (preg_match('/^[a-zA-Z_][a-zA-Z0-9_]*$/', $column) || is_numeric($column)) {
@@ -496,7 +495,6 @@ class TabsController extends Controller
 
         if ($file['error'] === UPLOAD_ERR_OK) {
             $filePath = $file['tmp_name'];
-
             $data = iterator_to_array($this->parseExcel($filePath));
 
             if (empty($data)) {
@@ -509,63 +507,193 @@ class TabsController extends Controller
             $tableSchema = Yii::$app->db->schema->getTableSchema($tableName);
             $columns = $tableSchema->columns;
             $expectedColumns = array_keys($columns);
-            $primaryKey = $tableSchema->primaryKey[0];
 
-            if ($removeId && isset($columns[$primaryKey])) {
+            $excelHeaders = $this->getColumnHeadersFromExcel($filePath);
+
+            if ($this->validateColumns($excelHeaders, $expectedColumns) === false) {
+                $errorMessage = "\nColumn headers in the Excel file do not match the database columns. Please review the following details:\n\n";
+
+                // Hiển thị các cột Excel và các cột mong đợi trên cùng một hàng
+                $errorMessage .= "Excel file columns:\n" . "<div class='d-flex gap-3'>" . implode("", array_map(function ($header) {
+                    return "<div class='p-2 text-danger'>" . htmlspecialchars($header) . "</div>";
+                }, $excelHeaders)) . "</div>\n\n";
+
+                $errorMessage .= "Expected columns in table:\n" . "<div class='d-flex gap-3'>" . implode("", array_map(function ($column) {
+                    return "<div class='p-2 text-success'>" . htmlspecialchars($column) . "</div>";
+                }, $expectedColumns)) . "</div>\n\n";
+
+                return $this->asJson([
+                    'success' => false,
+                    'message' => $errorMessage
+                ]);
+            }
+
+
+            $data = array_slice($data, 1);
+
+            // Nếu cần bỏ ID
+            if ($removeId && isset($columns[$tableSchema->primaryKey[0]])) {
                 foreach ($data as &$row) {
-                    unset($row[$primaryKey]);
+                    unset($row[$tableSchema->primaryKey[0]]);
                 }
-                unset($columns[$primaryKey]);
+                unset($row);
+                unset($columns[$tableSchema->primaryKey[0]]);
                 $expectedColumns = array_keys($columns);
             }
 
+            // Kiểm tra trùng lặp ID nếu không bỏ ID
+            $primaryKey = $tableSchema->primaryKey[0];
             $duplicateIds = [];
             if (!$removeId && isset($columns[$primaryKey])) {
-                $existingIds = Yii::$app->db->createCommand("SELECT `$primaryKey` FROM {$tableName} WHERE `$primaryKey` IN (" . implode(',', array_column($data, $primaryKey)) . ")")
-                    ->queryColumn();
+                $primaryKeyValues = array_filter(array_column($data, $primaryKey));
+                if (!empty($primaryKeyValues)) {
+                    $existingIds = Yii::$app->db->createCommand("SELECT `$primaryKey` FROM {$tableName} WHERE `$primaryKey` IN (" . implode(',', $primaryKeyValues) . ")")
+                        ->queryColumn();
 
-                foreach ($data as $key => $row) {
-                    if (in_array($row[$primaryKey], $existingIds)) {
-                        $duplicateIds[] = $row[$primaryKey];
-                        unset($data[$key]);
+                    foreach ($data as $key => $row) {
+                        if (in_array($row[$primaryKey], $existingIds)) {
+                            $duplicateIds[] = $row[$primaryKey];
+                            unset($data[$key]);
+                        }
                     }
-                }
 
-                if (!empty($duplicateIds)) {
-                    return $this->asJson([
-                        'success' => false,
-                        'duplicate' => true,
-                        'message' => 'Data with duplicate id(s): ' . implode(', ', $duplicateIds),
-                    ]);
+                    if (!empty($duplicateIds)) {
+                        return $this->asJson([
+                            'success' => false,
+                            'duplicate' => true,
+                            'message' => 'Data with duplicate id(s): ' . implode(', ', $duplicateIds),
+                        ]);
+                    }
                 }
             }
 
-            $chunkSize = 1000;
-            $rowIndex = 0;
-            $totalRows = count($data);
+            // Bắt đầu transaction
+            $transaction = Yii::$app->db->beginTransaction();
 
-            while ($rowIndex < $totalRows) {
-                $rowsToInsert = array_slice($data, $rowIndex, $chunkSize);
-                $rowIndex += $chunkSize;
+            try {
+                $chunkSize = 1000;
+                $rowIndex = 0;
+                $totalRows = count($data);
+                $errors = []; // Mảng lưu trữ tất cả lỗi
 
-                $rowsData = [];
-                foreach ($rowsToInsert as $row) {
-                    $rowData = [];
-                    foreach ($expectedColumns as $column) {
-                        $rowData[] = isset($row[$column]) ? $row[$column] : null;
+                while ($rowIndex < $totalRows) {
+                    $rowsToInsert = array_slice($data, $rowIndex, $chunkSize);
+                    $rowIndex += count($rowsToInsert);
+
+                    if (empty($rowsToInsert)) {
+                        break;
                     }
-                    $rowsData[] = $rowData;
+
+                    $rowsData = [];
+                    $rowsToInsertCopy = $rowsToInsert;
+
+                    foreach ($rowsToInsertCopy as $row) {
+                        $rowData = [];
+                        $rowErrors = [];
+
+                        foreach ($expectedColumns as $column) {
+                            $columnSchema = $columns[$column];
+                            $value = isset($row[$column]) ? $row[$column] : null;
+
+                            if (!$this->isValidColumnType($value, $columnSchema)) {
+                                $rowErrors[] = "The value '<strong class=\"txt-danger\">{$value}</strong>' for column '<strong class=\"txt-danger\">{$column}</strong>' is invalid. 
+                                Expected type: <strong class=\"text-success\">" . strtoupper($columnSchema->type) . "</strong> but got: <strong class=\"txt-danger\">" . strtoupper(gettype($value)) . "</strong>";
+                            }
+
+                            if (empty($rowErrors)) {
+                                $rowData[] = $value;
+                            }
+                        }
+
+                        if (!empty($rowErrors)) {
+                            $errors[] = $rowErrors;
+                        } else {
+                            $rowsData[] = $rowData;
+                        }
+                    }
+
+                    if (!empty($rowsData)) {
+                        Yii::$app->db->createCommand()->batchInsert($tableName, $expectedColumns, $rowsData)->execute();
+                    }
                 }
 
-                if (!empty($rowsData)) {
-                    Yii::$app->db->createCommand()->batchInsert($tableName, $expectedColumns, $rowsData)->execute();
+                if (!empty($errors)) {
+                    $errorMessages = [];
+                    foreach ($errors as $index => $errorRow) {
+                        $errorMessages[] = "<strong class=\"\">Error " . ($index + 1) . "</strong>:\n" . implode("\n\n", $errorRow);
+                    }
+                    throw new \Exception("Errors found during import: \n\n" . implode("\n\n", $errorMessages));
                 }
+
+                // Commit transaction 
+                $transaction->commit();
+
+                return $this->asJson(['success' => true]);
+
+            } catch (\Exception $e) {
+                // Rollback transaction 
+                $transaction->rollBack();
+                Yii::error("Error during import: " . $e->getMessage(), __METHOD__);
+                return $this->asJson([
+                    'success' => false,
+                    'message' => 'An error occurred during import: ' . $e->getMessage(),
+                ]);
             }
-
-            return $this->asJson(['success' => true]);
         }
 
         return $this->asJson(['success' => false, 'message' => 'Unable to upload the Excel file']);
+    }
+
+    // Validate Data Import
+    private function isValidColumnType($value, $columnSchema)
+    {
+        if (is_null($value)) {
+            return true; // Cho phép giá trị NULL
+        }
+
+        switch ($columnSchema->type) {
+            case Schema::TYPE_INTEGER:
+                return filter_var($value, FILTER_VALIDATE_INT) !== false;
+
+            case Schema::TYPE_FLOAT:
+            case Schema::TYPE_DOUBLE:
+            case Schema::TYPE_DECIMAL:
+                return is_numeric($value);
+
+            case Schema::TYPE_BOOLEAN:
+                return in_array($value, [0, 1, '0', '1', true, false], true);
+
+            case Schema::TYPE_STRING:
+            case Schema::TYPE_TEXT:
+                return is_scalar($value);
+
+            case Schema::TYPE_DATE:
+                return strtotime($value) !== false && date('Y-m-d', strtotime($value)) === $value;
+
+            case Schema::TYPE_DATETIME:
+                return strtotime($value) !== false && date('Y-m-d H:i:s', strtotime($value)) === $value;
+
+            default:
+                return true;
+        }
+    }
+    // Validate columns
+    private function validateColumns($excelHeaders, $expectedColumns)
+    {
+        Yii::error("expectedColumns: " . print_r($expectedColumns, true), __METHOD__);
+        Yii::error("excelHeaders: " . print_r($excelHeaders, true), __METHOD__);
+
+        if (count($excelHeaders) !== count($expectedColumns)) {
+            return false;
+        }
+
+        foreach ($excelHeaders as $header) {
+            if (!in_array($header, $expectedColumns)) {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     private function parseExcel($filePath)
@@ -576,7 +704,8 @@ class TabsController extends Controller
         $headers = $this->getColumnHeadersFromExcel($filePath);
 
         $rowIterator = $sheet->getRowIterator();
-        $rowIterator->next();
+        // $rowIterator->next();
+
         foreach ($rowIterator as $row) {
             $rowData = [];
             foreach ($row->getCellIterator() as $cell) {
@@ -594,76 +723,64 @@ class TabsController extends Controller
 
         $headerRow = $sheet->getRowIterator()->current();
         $headers = [];
+
         foreach ($headerRow->getCellIterator() as $cell) {
-            $headers[] = $cell->getValue();
+            $headers[] = (string) $cell->getValue();
         }
+
         return $headers;
     }
 
+
     public function actionExportExcel($format, $tableName)
     {
-        $result = $this->getExportData($tableName);
-        $columns = $result['columns'];
-        $data = $result['data'];
+        $columns = Yii::$app->db->createCommand("DESCRIBE `$tableName`")->queryAll();
+        $columnNames = array_map(fn($column) => $column['Field'], $columns);
 
         $spreadsheet = new Spreadsheet();
         $sheet = $spreadsheet->getActiveSheet();
 
         $columnIndex = 1;
-        foreach ($columns as $column) {
+        foreach ($columnNames as $column) {
             $sheet->setCellValueByColumnAndRow($columnIndex, 1, $column);
             $columnIndex++;
         }
 
         $headerStyle = [
-            'font' => [
-                'bold' => true,
-                'size' => 12,
-            ],
+            'font' => ['bold' => true, 'size' => 12],
             'alignment' => [
                 'horizontal' => Alignment::HORIZONTAL_CENTER,
                 'vertical' => Alignment::VERTICAL_CENTER,
             ],
             'borders' => [
-                'allBorders' => [
-                    'borderStyle' => Border::BORDER_THIN,
-                    'color' => ['rgb' => '000000'],
-                ],
+                'allBorders' => ['borderStyle' => Border::BORDER_THIN, 'color' => ['rgb' => '000000']],
             ],
         ];
-        $sheet->getStyle('A1:' . chr(64 + count($columns)) . '1')->applyFromArray($headerStyle);
+        $sheet->getStyle('A1:' . chr(64 + count($columnNames)) . '1')->applyFromArray($headerStyle);
 
-        if (!empty($data)) {
-            $rowIndex = 2;
-            foreach ($data as $row) {
+        $query = (new \yii\db\Query())->from($tableName);
+        $batchSize = 1000;
+        $rowIndex = 2;
+
+        foreach ($query->batch($batchSize) as $rows) {
+            foreach ($rows as $row) {
                 $columnIndex = 1;
                 foreach ($row as $cell) {
                     $sheet->setCellValueByColumnAndRow($columnIndex, $rowIndex, $cell);
-                    $sheet->getStyleByColumnAndRow($columnIndex, $rowIndex)
-                        ->getAlignment()->setWrapText(true);
                     $columnIndex++;
                 }
                 $rowIndex++;
             }
-        } else {
-            $rowIndex = 2;
-            foreach ($columns as $column) {
-                $sheet->setCellValueByColumnAndRow($columnIndex, $rowIndex, '');
-                $columnIndex++;
-            }
         }
 
-        $sheet->getStyle('A1:' . chr(64 + count($columns)) . ($rowIndex - 1))
-            ->applyFromArray([
-                'borders' => [
-                    'allBorders' => [
-                        'borderStyle' => Border::BORDER_THIN,
-                        'color' => ['rgb' => '000000'],
-                    ],
-                ],
-            ]);
+        // Border
+        $sheet->getStyle('A1:' . chr(64 + count($columnNames)) . ($rowIndex - 1))->applyFromArray([
+            'borders' => [
+                'allBorders' => ['borderStyle' => Border::BORDER_THIN, 'color' => ['rgb' => '000000']],
+            ],
+        ]);
 
-        foreach (range('A', chr(64 + count($columns))) as $columnID) {
+        foreach (range('A', chr(64 + count($columnNames))) as $columnID) {
             $sheet->getColumnDimension($columnID)->setAutoSize(true);
         }
 
@@ -685,25 +802,27 @@ class TabsController extends Controller
             'file_url' => $fileUrl
         ]);
     }
+
     public function getExportData($tableName)
     {
         $columns = Yii::$app->db->createCommand("DESCRIBE `$tableName`")->queryAll();
+        $columnNames = array_map(fn($column) => $column['Field'], $columns);
 
-        $columnNames = array_map(function ($column) {
-            return $column['Field']; // Trả về tên cột
-        }, $columns);
-
-        $data = Yii::$app->db->createCommand("SELECT * FROM `$tableName`")->queryAll();
+        $data = [];
+        foreach (Yii::$app->db->createCommand("SELECT * FROM `$tableName`")->query()->batch(1000) as $rows) {
+            $data = array_merge($data, $rows);
+        }
 
         return ['columns' => $columnNames, 'data' => $data];
     }
+
     public function actionDeleteExportFile()
     {
         $fileUrl = Yii::$app->request->post('file_url');
         $filePath = Yii::getAlias('@webroot') . parse_url($fileUrl, PHP_URL_PATH);
 
         if (file_exists($filePath)) {
-            unlink($filePath); // Xóa tệp
+            unlink($filePath);
             return $this->asJson(['success' => true]);
         } else {
             return $this->asJson(['success' => false, 'message' => 'File not found']);
