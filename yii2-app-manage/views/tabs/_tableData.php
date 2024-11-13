@@ -848,8 +848,10 @@ $globalIndexOffset = $page * $rowsPerPage;
                         $('#importExcelForm')[0].reset();
                         $('#importExelModal').modal('hide');
                     } else if (response.duplicate) {
-                        $('#confirmMessage').text("Remove the 'id' column and continue importing?\n" +
-                            response.message);
+                        $('#confirmMessage').html(
+                            `This will overwrite existing entries in the <strong>[Primary Key]</strong> column. Do you want to continue with the import?<br><br>
+                            ${response.message}`
+                        );
 
                         $('#confirmModal').modal('show');
 
@@ -888,7 +890,7 @@ $globalIndexOffset = $page * $rowsPerPage;
                                         var toastBodySuccess = toastElementSuccess
                                             .querySelector('.toast-body');
                                         toastBodySuccess.innerText =
-                                            "Excel file imported successfully without IDs!";
+                                            "Excel file imported successfully without [PK]s!";
 
                                         var toastSuccess = new bootstrap.Toast(
                                             toastElementSuccess, {

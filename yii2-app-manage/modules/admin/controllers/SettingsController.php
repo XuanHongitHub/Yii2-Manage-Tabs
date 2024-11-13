@@ -1,11 +1,11 @@
 <?php
 
-namespace app\controllers;
+namespace app\modules\admin\controllers;
 
+use yii\web\Controller;
 use Yii;
 use app\models\User;
 use yii\web\Response;
-use yii\web\Controller;
 use app\models\Tab;
 use app\models\TableTab;
 use app\models\TabGroups;

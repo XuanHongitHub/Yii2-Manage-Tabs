@@ -8,7 +8,8 @@ use app\models\User;
 $this->title = 'Manage Users';
 
 ?>
-<?php include Yii::getAlias('@app/views/layouts/_sidebar.php'); ?>
+        <?php include Yii::getAlias('@app/views/layouts/_sidebar.php'); ?>
+
 <div class="page-body">
     <div class="container-fluid">
         <div class="page-title">
@@ -47,35 +48,35 @@ $this->title = 'Manage Users';
                                 </thead>
                                 <tbody>
                                     <?php foreach ($users as $user): ?>
-                                    <tr>
-                                        <td><?= Html::encode($user->id) ?></td>
-                                        <td><?= Html::encode($user->username) ?></td>
-                                        <td><?= Html::encode($user->email) ?></td>
-                                        <td style="text-align: center;">
-                                            <form
-                                                action="<?= \yii\helpers\Url::to(['users/update-user', 'id' => $user->id]) ?>"
-                                                method="post">
-                                                <?= Html::hiddenInput(Yii::$app->request->csrfParam, Yii::$app->request->csrfToken) ?>
+                                        <tr>
+                                            <td><?= Html::encode($user->id) ?></td>
+                                            <td><?= Html::encode($user->username) ?></td>
+                                            <td><?= Html::encode($user->email) ?></td>
+                                            <td style="text-align: center;">
+                                                <form
+                                                    action="<?= \yii\helpers\Url::to(['users/update-user', 'id' => $user->id]) ?>"
+                                                    method="post">
+                                                    <?= Html::hiddenInput(Yii::$app->request->csrfParam, Yii::$app->request->csrfToken) ?>
 
-                                                <label class="switch mb-0 mt-1">
-                                                    <input type="checkbox" name="status"
-                                                        <?= $user->status == 10 ? 'checked' : '' ?>>
-                                                    <span class="switch-state"></span>
-                                                </label>
-                                        </td>
-                                        <td>
-                                            <select class="form-control" name="role">
-                                                <option value="10" <?= $user->role == 10 ? 'selected' : '' ?>>User
-                                                </option>
-                                                <option value="20" <?= $user->role == 20 ? 'selected' : '' ?>>Admin
-                                                </option>
-                                            </select>
-                                        </td>
-                                        <td>
-                                            <button type="submit" class="btn btn-primary">Update</button>
-                                            </form>
-                                        </td>
-                                    </tr>
+                                                    <label class="switch mb-0 mt-1">
+                                                        <input type="checkbox" name="status"
+                                                            <?= $user->status == 10 ? 'checked' : '' ?>>
+                                                        <span class="switch-state"></span>
+                                                    </label>
+                                            </td>
+                                            <td>
+                                                <select class="form-control" name="role">
+                                                    <option value="10" <?= $user->role == 10 ? 'selected' : '' ?>>User
+                                                    </option>
+                                                    <option value="20" <?= $user->role == 20 ? 'selected' : '' ?>>Admin
+                                                    </option>
+                                                </select>
+                                            </td>
+                                            <td>
+                                                <button type="submit" class="btn btn-primary">Update</button>
+                                                </form>
+                                            </td>
+                                        </tr>
                                     <?php endforeach; ?>
                                 </tbody>
                             </table>
@@ -90,7 +91,7 @@ $this->title = 'Manage Users';
     <!-- Container-fluid Ends-->
 </div>
 
-<?php include Yii::getAlias('@app/views/layouts/_footer.php'); ?>
+
 
 <div class="toast-container position-fixed top-0 end-0 p-3 toast-index toast-rtl">
     <div class="toast fade" id="liveToast" role="alert" aria-live="assertive" aria-atomic="true">
@@ -140,3 +141,4 @@ $(document).ready(function() {
     });
 });
 </script>
+

@@ -11,6 +11,11 @@ $config = [
         '@bower' => '@vendor/bower-asset',
         '@npm' => '@vendor/npm-asset',
     ],
+    'modules' => [
+        'admin' => [
+            'class' => 'app\modules\admin\Module',
+        ],
+    ],
     'components' => [
 
         'request' => [
@@ -65,11 +70,15 @@ $config = [
             'enablePrettyUrl' => true,
             'showScriptName' => false,
             'rules' => [
+                '' => 'site/index',
+                'settings/group/create' => 'settings/group',
+                'settings/group/index' => 'settings/group-index',
 
             ],
         ],
     ],
     'params' => $params,
+
 ];
 
 if (YII_ENV_DEV) {
@@ -81,13 +90,13 @@ if (YII_ENV_DEV) {
     //     'allowedIPs' => ['127.0.0.1', '::1', '172.19.0.3', '172.19.0.4', '172.19.0.1', '172.19.0.2'],
     // ];
 
-    // $config['bootstrap'][] = 'gii';
-    // $config['modules']['gii'] = [
-    //     'class' => 'yii\gii\Module',
-    //     // uncomment the following to add your IP if you are not connecting from localhost.
-    //     'allowedIPs' => ['127.0.0.1', '::1', '172.19.0.3', '172.19.0.4', '172.19.0.1', '172.19.0.2'],
+    $config['bootstrap'][] = 'gii';
+    $config['modules']['gii'] = [
+        'class' => 'yii\gii\Module',
+        // uncomment the following to add your IP if you are not connecting from localhost.
+        'allowedIPs' => ['127.0.0.1', '::1', '172.19.0.3', '172.19.0.4', '172.19.0.1', '172.19.0.2'],
 
-    // ];
+    ];
 }
 
 return $config;

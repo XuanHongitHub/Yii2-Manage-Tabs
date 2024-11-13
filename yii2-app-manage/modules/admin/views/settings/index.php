@@ -9,9 +9,7 @@ $tableCreationData = Yii::$app->session->getFlash('tableCreationData', []);
 $this->title = 'List Tabs';
 
 ?>
-        <?php include Yii::getAlias('@app/views/layouts/_sidebar.php'); ?>
-
-
+<?php include Yii::getAlias('@app/views/layouts/_sidebar-settings.php'); ?>
 
 
 <div class="page-body">
@@ -86,8 +84,8 @@ $this->title = 'List Tabs';
                                         </td>
                                         <td class="text-center">
                                             <?= $tab->deleted == 3 ?
-                                                    '<span class="badge badge-warning">Hide</span>' : '<span class="badge badge-success">Show</span>'
-                                                    ?>
+                                                        '<span class="badge badge-warning">Hide</span>' : '<span class="badge badge-success">Show</span>'
+                                                        ?>
                                         </td>
                                         <td><?= Html::encode($tab->position) ?></td>
                                         <td><?= Html::encode(Yii::$app->formatter->asDate($tab->created_at)) ?></td>
@@ -519,5 +517,3 @@ document.addEventListener("DOMContentLoaded", function() {
     });
 });
 </script>
-
-

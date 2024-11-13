@@ -15,8 +15,11 @@ $dataSizes = $tableCreationData['dataSizes'] ?? [];
 $defaultValues = $tableCreationData['defaultValues'] ?? [];
 $isNotNull = $tableCreationData['isNotNull'] ?? [];
 $isPrimary = $tableCreationData['isPrimary'] ?? [];
+
 ?>
+<?php include Yii::getAlias('@app/views/layouts/_icon.php'); ?>
 <?php include Yii::getAlias('@app/views/layouts/_sidebar.php'); ?>
+
 
 <div class="toast-container position-fixed top-0 end-0 p-3 toast-index toast-rtl">
     <div class="toast fade" id="liveToast" role="alert" aria-live="assertive" aria-atomic="true">
@@ -73,7 +76,7 @@ document.addEventListener('DOMContentLoaded', function() {
                             <?= Html::hiddenInput(Yii::$app->request->csrfParam, Yii::$app->request->csrfToken) ?>
 
                             <div class="row">
-                                <div class="col-12 col-md-6 col-lg-4 col-xl-3 mb-3">
+                                <div class="col-12 col-md-6 col-lg-3 col-xl-3 mb-3">
                                     <label for="tab_name" class="form-label">Tab Name</label>
                                     <input type="text" name="tab_name" class="form-control" id="tab_name"
                                         value="<?= $tableCreationData['tabName'] ?? ''; ?>">
@@ -83,7 +86,7 @@ document.addEventListener('DOMContentLoaded', function() {
                                 </div>
 
                                 <!-- Chọn loại tab -->
-                                <div class="col-12 col-md-6 col-lg-4 col-xl-3 mb-3">
+                                <div class="col-12 col-md-6 col-lg-3 col-xl-2 mb-3">
                                     <label for="tab_type" class="form-label">Tab Type</label>
                                     <select name="tab_type" id="tab_type" class="form-select"
                                         onchange="toggleTabInputs()">
@@ -91,6 +94,45 @@ document.addEventListener('DOMContentLoaded', function() {
                                         <option value="richtext">Rich Text</option>
                                     </select>
                                 </div>
+                                <!-- Group Tab -->
+                                <div class="col-12 col-md-6 col-lg-2 col-xl-2 mb-3">
+                                    <label for="tab_group" class="form-label">Select Tab Group</label>
+                                    <select name="tab_group" id="tab_group" class="form-select">
+                                        <option value="">-- Không --</option>
+                                        <?php foreach ($tabGroups as $group): ?>
+                                        <option value="<?= $group->id ?>"
+                                            <?= (isset($tableCreationData['tabGroup']) && $tableCreationData['tabGroup'] == $group->id) ? 'selected' : '' ?>>
+                                            <?= Html::encode($group->name) ?>
+                                        </option>
+                                        <?php endforeach; ?>
+                                    </select>
+                                    <?php if (Yii::$app->session->hasFlash('error_tab_group')): ?>
+                                    <div class="text-danger"><?= Yii::$app->session->getFlash('error_tab_group') ?>
+                                    </div>
+                                    <?php endif; ?>
+                                </div>
+
+                                <!-- Icon Selection (this will be hidden when a group is selected) -->
+                                <div class="col-12 col-md-6 col-lg-2 col-xl-2 mb-3" id="icon-container">
+                                    <label for="icon-select" class="form-label">Chọn icon</label>
+                                    <select id="icon-select" name="icon" class="form-select">
+                                        <?php foreach ($iconOptions as $iconValue => $iconLabel): ?>
+                                        <option value="<?= Html::encode($iconValue) ?>"><?= Html::encode($iconLabel) ?>
+                                        </option>
+                                        <?php endforeach; ?>
+                                    </select>
+
+
+                                </div>
+
+                                <div class="col-2 d-flex align-items-center ms-3" id="icon-display">
+                                    <svg class="stroke-icon" width="24" height="24">
+                                        <use
+                                            href="<?= Yii::getAlias('@web') ?>/images/icon-sprite.svg#<?= reset(array_keys($iconOptions)) ?>">
+                                        </use>
+                                    </svg>
+                                </div>
+
                             </div>
 
                             <!-- Phần input cho loại tab "Table" -->
@@ -196,7 +238,7 @@ document.addEventListener('DOMContentLoaded', function() {
     </div>
 </div>
 
-<?php include Yii::getAlias('@app/views/layouts/_footer.php'); ?>
+
 
 <script>
 function toggleTabInputs() {
@@ -267,3 +309,48 @@ function togglePrimaryKey(primaryCheckbox) {
     }
 }
 </script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const tabGroupSelect = document.getElementById('tab_group');
+    const iconContainer = document.getElementById('icon-container');
+    const iconDisplay = document.getElementById('icon-display');
+
+    toggleIconSelection(tabGroupSelect.value);
+
+    tabGroupSelect.addEventListener('change', function() {
+        toggleIconSelection(this.value);
+    });
+
+    function toggleIconSelection(selectedValue) {
+        if (selectedValue) {
+            iconContainer.classList.add('d-none');
+            iconDisplay.classList.add('d-none');
+        } else {
+            iconContainer.classList.remove('d-none');
+            iconDisplay.classList.remove('d-none');
+        }
+    }
+});
+
+document.getElementById('icon-select').addEventListener('change', function() {
+    const selectedIcon = this.value;
+    const iconDisplay = document.getElementById('icon-display').querySelector('use');
+    iconDisplay.setAttribute('href', `<?= Yii::getAlias('@web') ?>/images/icon-sprite.svg#${selectedIcon}`);
+});
+</script>
+
+<style>
+#icon-display {
+    margin-top: 5px;
+}
+
+.stroke-icon {
+
+    fill: currentColor;
+    stroke: #363636;
+    ;
+}
+</style>
+
+

@@ -50,12 +50,15 @@ class TabsController extends Controller
      *
      * @return string
      */
-    public function actionIndex()
+    public function actionTable()
     {
         $userId = Yii::$app->user->id;
 
+        // Lấy group_id từ URL, nếu không có thì mặc định là 1
+        $tabId = Yii::$app->request->get('id');
+
         $tabs = Tab::find()
-            ->where(['user_id' => $userId])
+            ->where(['user_id' => $userId, 'id' => $tabId])  // Lọc theo group_id từ URL
             ->orderBy([
                 'position' => SORT_ASC,
                 'id' => SORT_DESC,
@@ -64,11 +67,57 @@ class TabsController extends Controller
 
         $tableTabs = TableTab::find()->all();
 
-        return $this->render('index', [
+        return $this->render('table/index', [
             'tabs' => $tabs,
             'tableTabs' => $tableTabs,
         ]);
     }
+
+    public function actionRichtext()
+    {
+        $userId = Yii::$app->user->id;
+
+        // Lấy group_id từ URL, nếu không có thì mặc định là 2
+        $tabId = Yii::$app->request->get('id');
+
+        $tabs = Tab::find()
+            ->where(['user_id' => $userId, 'id' => $tabId])  // Lọc theo group_id từ URL
+            ->orderBy([
+                'position' => SORT_ASC,
+                'id' => SORT_DESC,
+            ])
+            ->all();
+
+        return $this->render('richtext/index', [
+            'tabs' => $tabs,
+        ]);
+    }
+
+    public function actionGroupTabs()
+    {
+        $userId = Yii::$app->user->id;
+
+        $groupId = Yii::$app->request->get('group_id');
+
+        $query = Tab::find()->where(['user_id' => $userId]);
+
+        if ($groupId !== null) {
+            $query->andWhere(['group_id' => $groupId]);
+        }
+
+        $tabs = $query->orderBy([
+            'position' => SORT_ASC,
+            'id' => SORT_DESC,
+        ])->all();
+
+        $tableTabs = TableTab::find()->all();
+
+        return $this->render('group/index', [
+            'tabs' => $tabs,
+            'tableTabs' => $tableTabs,
+        ]);
+    }
+
     /**
      * Load Tab Data Action.
      *
@@ -513,7 +562,6 @@ class TabsController extends Controller
             if ($this->validateColumns($excelHeaders, $expectedColumns) === false) {
                 $errorMessage = "\nColumn headers in the Excel file do not match the database columns. Please review the following details:\n\n";
 
-                // Hiển thị các cột Excel và các cột mong đợi trên cùng một hàng
                 $errorMessage .= "Excel file columns:\n" . "<div class='d-flex gap-3'>" . implode("", array_map(function ($header) {
                     return "<div class='p-2 text-danger'>" . htmlspecialchars($header) . "</div>";
                 }, $excelHeaders)) . "</div>\n\n";
@@ -528,22 +576,11 @@ class TabsController extends Controller
                 ]);
             }
 
-
             $data = array_slice($data, 1);
 
-            // Nếu cần bỏ ID
-            if ($removeId && isset($columns[$tableSchema->primaryKey[0]])) {
-                foreach ($data as &$row) {
-                    unset($row[$tableSchema->primaryKey[0]]);
-                }
-                unset($row);
-                unset($columns[$tableSchema->primaryKey[0]]);
-                $expectedColumns = array_keys($columns);
-            }
-
-            // Kiểm tra trùng lặp ID nếu không bỏ ID
             $primaryKey = $tableSchema->primaryKey[0];
             $duplicateIds = [];
+
             if (!$removeId && isset($columns[$primaryKey])) {
                 $primaryKeyValues = array_filter(array_column($data, $primaryKey));
                 if (!empty($primaryKeyValues)) {
@@ -553,7 +590,7 @@ class TabsController extends Controller
                     foreach ($data as $key => $row) {
                         if (in_array($row[$primaryKey], $existingIds)) {
                             $duplicateIds[] = $row[$primaryKey];
-                            unset($data[$key]);
+                            unset($data[$key]);  // 
                         }
                     }
 
@@ -561,20 +598,20 @@ class TabsController extends Controller
                         return $this->asJson([
                             'success' => false,
                             'duplicate' => true,
-                            'message' => 'Data with duplicate id(s): ' . implode(', ', $duplicateIds),
+                            'message' => 'Data with duplicate id(s): ' . implode(', ', $duplicateIds) . '. These rows will be overwritten.'
                         ]);
                     }
                 }
             }
 
-            // Bắt đầu transaction
+            // Transaction
             $transaction = Yii::$app->db->beginTransaction();
 
             try {
                 $chunkSize = 1000;
                 $rowIndex = 0;
                 $totalRows = count($data);
-                $errors = []; // Mảng lưu trữ tất cả lỗi
+                $errors = [];
 
                 while ($rowIndex < $totalRows) {
                     $rowsToInsert = array_slice($data, $rowIndex, $chunkSize);
@@ -584,13 +621,13 @@ class TabsController extends Controller
                         break;
                     }
 
-                    $rowsData = [];
-                    $rowsToInsertCopy = $rowsToInsert;
-
-                    foreach ($rowsToInsertCopy as $row) {
+                    // INSERT ... ON DUPLICATE KEY UPDATE
+                    foreach ($rowsToInsert as $index => $row) {
+                        $currentRowIndex = $rowIndex - count($rowsToInsert) + $index + 2;
                         $rowData = [];
                         $rowErrors = [];
 
+                        // Update
                         foreach ($expectedColumns as $column) {
                             $columnSchema = $columns[$column];
                             $value = isset($row[$column]) ? $row[$column] : null;
@@ -600,27 +637,31 @@ class TabsController extends Controller
                                 Expected type: <strong class=\"text-success\">" . strtoupper($columnSchema->type) . "</strong> but got: <strong class=\"txt-danger\">" . strtoupper(gettype($value)) . "</strong>";
                             }
 
-                            if (empty($rowErrors)) {
-                                $rowData[] = $value;
-                            }
+                            $rowData[$column] = $value;
                         }
 
                         if (!empty($rowErrors)) {
-                            $errors[] = $rowErrors;
+                            $errors[] = "Error at row {$currentRowIndex}:\n" . implode("\n\n", $rowErrors);
                         } else {
-                            $rowsData[] = $rowData;
-                        }
-                    }
+                            $columnsList = implode('`, `', array_keys($rowData));
+                            $valuesList = implode(', ', array_map(function ($value) {
+                                return is_null($value) ? 'NULL' : Yii::$app->db->quoteValue($value);
+                            }, $rowData));
 
-                    if (!empty($rowsData)) {
-                        Yii::$app->db->createCommand()->batchInsert($tableName, $expectedColumns, $rowsData)->execute();
+                            $updateList = implode(', ', array_map(function ($column) {
+                                return "`$column` = VALUES(`$column`)";
+                            }, array_keys($rowData)));
+
+                            $sql = "INSERT INTO {$tableName} (`$columnsList`) VALUES ($valuesList) ON DUPLICATE KEY UPDATE $updateList";
+                            Yii::$app->db->createCommand($sql)->execute();
+                        }
                     }
                 }
 
                 if (!empty($errors)) {
                     $errorMessages = [];
-                    foreach ($errors as $index => $errorRow) {
-                        $errorMessages[] = "<strong class=\"\">Error " . ($index + 1) . "</strong>:\n" . implode("\n\n", $errorRow);
+                    foreach ($errors as $error) {
+                        $errorMessages[] = "<strong class=\"\">{$error}</strong>";
                     }
                     throw new \Exception("Errors found during import: \n\n" . implode("\n\n", $errorMessages));
                 }
@@ -633,16 +674,18 @@ class TabsController extends Controller
             } catch (\Exception $e) {
                 // Rollback transaction 
                 $transaction->rollBack();
-                Yii::error("Error during import: " . $e->getMessage(), __METHOD__);
                 return $this->asJson([
                     'success' => false,
                     'message' => 'An error occurred during import: ' . $e->getMessage(),
                 ]);
             }
+
+
         }
 
         return $this->asJson(['success' => false, 'message' => 'Unable to upload the Excel file']);
     }
+
 
     // Validate Data Import
     private function isValidColumnType($value, $columnSchema)

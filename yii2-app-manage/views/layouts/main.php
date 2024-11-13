@@ -52,14 +52,13 @@ $this->registerLinkTag(['rel' => 'icon', 'type' => 'image/x-icon', 'href' => Yii
     <!-- page-wrapper Start-->
     <div class="page-wrapper compact-wrapper" id="pageWrapper">
 
-
         <!-- Main Content Ends-->
         <?= $content ?>
 
         <!-- Main Content Ends-->
 
 
-
+        <?php include Yii::getAlias('@app/views/layouts/_footer.php'); ?>
     </div>
     </div>
 

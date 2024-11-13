@@ -39604,14 +39604,14 @@ footer p .footer-icon {
   height: 16px;
   stroke-width: 0.1;
   margin-right: 12px;
-  stroke: #222222;
+  stroke: #6e6e6e;
 }
 
 .page-wrapper.compact-wrapper .page-body-wrapper div.sidebar-wrapper .sidebar-main .sidebar-links li a span {
   letter-spacing: 0.7px;
   text-transform: capitalize;
-  font-weight: 500;
-  color: #363636;
+  font-weight: 600;
+  color: #6a6a6a;
   width: 168px;
 }
 
@@ -39769,11 +39769,11 @@ footer p .footer-icon {
 .page-wrapper.compact-wrapper .page-body-wrapper div.sidebar-wrapper .sidebar-main .sidebar-links .simplebar-wrapper .simplebar-mask .simplebar-content-wrapper .simplebar-content>li .sidebar-submenu li a {
   padding: 7px 25px;
   font-size: 14px;
-  color: #222222;
+  color: #6e6e6e;
   display: block;
   position: relative;
   letter-spacing: 0.06em;
-  font-weight: 400;
+  font-weight: 600;
   -webkit-transition: all 0.3s ease;
   transition: all 0.3s ease;
   white-space: nowrap;
@@ -39783,7 +39783,7 @@ footer p .footer-icon {
 
 .page-wrapper.compact-wrapper .page-body-wrapper div.sidebar-wrapper .sidebar-main .sidebar-links .simplebar-wrapper .simplebar-mask .simplebar-content-wrapper .simplebar-content>li .sidebar-submenu li a.active {
   color: var(--theme-default);
-  font-weight: 500;
+  font-weight: 600;
 }
 
 .page-wrapper.compact-wrapper .page-body-wrapper div.sidebar-wrapper .sidebar-main .sidebar-links .simplebar-wrapper .simplebar-mask .simplebar-content-wrapper .simplebar-content>li .sidebar-submenu li a.active svg.svg-menu {

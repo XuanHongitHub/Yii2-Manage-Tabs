@@ -8,7 +8,7 @@ use app\models\User;
 
 $this->title = 'Tabs Data';
 ?>
-<?php include Yii::getAlias('@app/views/layouts/_nav.php'); ?>
+<?php include Yii::getAlias('@app/views/layouts/_sidebar.php'); ?>
 
 <div class="page-body">
     <div class="container-fluid">
@@ -205,5 +205,3 @@ foreach ($tabs as $tab) {
 
     });
 </script>
-
-<?php include Yii::getAlias('@app/views/layouts/_footer.php'); ?>
