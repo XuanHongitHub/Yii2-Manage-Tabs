@@ -35,7 +35,7 @@ class SettingsController extends Controller
         ];
     }
 
-    public function actionIndex()
+    public function actionTabsList()
     {
         $userId = Yii::$app->user->id;
         $tabs = Tab::find()
@@ -47,31 +47,33 @@ class SettingsController extends Controller
             ->all();
 
         $tabGroups = TabGroups::find()->all();
-        return $this->render('index', [
+        return $this->render('tabs/index', [
             'tabs' => $tabs,
             'tabGroups' => $tabGroups,
         ]);
     }
-    public function actionCreate()
+    public function actionTabsCreate()
     {
         $tabGroups = TabGroups::find()->all();
 
-        return $this->render('create', [
+        return $this->render('tabs/create', [
             'tabGroups' => $tabGroups,
 
         ]);
     }
-    public function actionGroup()
+    public function actionGroupCreate()
     {
 
         return $this->render('group/create', [
 
         ]);
     }
-    public function actionGroupIndex()
+    public function actionGroupList()
     {
+        $tabGroups = TabGroups::find()->all();
 
         return $this->render('group/index', [
+            'tabGroups' => $tabGroups,
 
         ]);
     }
@@ -80,13 +82,13 @@ class SettingsController extends Controller
         if (Yii::$app->request->isPost) {
             $name = Yii::$app->request->post('name');
             $icon = Yii::$app->request->post('icon');
+            $group_type = Yii::$app->request->post('group_type');
 
-            // Tạo một đối tượng nhóm tab mới
             $tabGroup = new TabGroups();
             $tabGroup->name = $name;
             $tabGroup->icon = $icon;
+            $tabGroup->group_type = $group_type;
 
-            // Lưu vào cơ sở dữ liệu
             if ($tabGroup->save()) {
                 Yii::$app->session->setFlash('success', 'Nhóm tab đã được tạo thành công!');
             } else {
@@ -94,8 +96,7 @@ class SettingsController extends Controller
             }
         }
 
-        // Hiển thị trang tạo nhóm tab
-        return $this->redirect('group/index');
+        return $this->redirect('group-create');
     }
     public function actionCreateTab()
     {
@@ -152,7 +153,7 @@ class SettingsController extends Controller
                             ]);
                             if (!$tableTab->save()) {
                                 Yii::$app->session->setFlash('error', 'Cannot save');
-                                return $this->redirect(['settings/create']);
+                                return $this->redirect(['tabs-create']);
                             }
                         }
 
@@ -187,24 +188,24 @@ class SettingsController extends Controller
                         Yii::$app->session->setFlash('success', 'Create Successful.');
 
                         $transaction->commit();
-                        return $this->redirect(['settings/create', 'id' => $tab->id]);
+                        return $this->redirect(['tabs-create', 'id' => $tab->id]);
                     }
                 } catch (\Exception $e) {
                     $transaction->rollBack();
                     Yii::$app->session->setFlash('error', $e->getMessage());
-                    return $this->redirect(['settings/create']);
+                    return $this->redirect(['tabs-create']);
                 }
 
             } elseif ($tabType === 'richtext') {
                 if (empty($tabName)) {
                     Yii::$app->session->setFlash('error', 'Tab name cannot be empty.');
-                    return $this->redirect(['settings/create']);
+                    return $this->redirect(['tabs-create']);
                 }
 
                 $existingTab = Tab::findOne(['tab_name' => $tabName, 'tab_type' => 'richtext', 'user_id' => $userId]);
                 if ($existingTab) {
                     Yii::$app->session->setFlash('error', 'Tab name already exists. Please choose a different name.');
-                    return $this->redirect(['settings/create']);
+                    return $this->redirect(['tabs-create']);
                 }
 
                 if ($tab->save()) {
@@ -216,10 +217,10 @@ class SettingsController extends Controller
                         Yii::error('Cannot create file: ' . $e->getMessage());
                         Yii::$app->session->setFlash('error', 'An error occurred while saving the file.');
                     }
-                    return $this->redirect(['settings/create']);
+                    return $this->redirect(['tabs-create']);
                 } else {
                     Yii::$app->session->setFlash('error', 'An error occurred while creating the tab. Please try again.');
-                    return $this->redirect(['settings/create']);
+                    return $this->redirect(['tabs-create']);
                 }
             }
         }
@@ -345,5 +346,180 @@ class SettingsController extends Controller
 
         throw new NotFoundHttpException('The requested page does not exist.');
     }
+
+
+       /** 
+     * Delete Tab Action.
+     *
+     */
+    public function actionDeleteTab()
+    {
+        $postData = Yii::$app->request->post();
+
+        if (isset($postData['tabId'])) {
+            $tabId = $postData['tabId'];
+
+            $affectedRows = Tab::updateAll(
+                ['deleted' => 1],
+                ['id' => $tabId]
+            );
+
+            if ($affectedRows > 0) {
+                return $this->asJson(['success' => true, 'message' => 'Soft delete successful.']);
+            } else {
+                return $this->asJson(['success' => false, 'message' => 'No records updated.']);
+            }
+        } else {
+            return $this->asJson(['success' => false, 'message' => 'Missing tabId.']);
+        }
+    }
+    /** 
+     * Update Restore Action.
+     *
+     */
+    public function actionRestoreTab()
+    {
+        $postData = Yii::$app->request->post();
+
+        if (isset($postData['tabId'])) {
+            $tabId = $postData['tabId'];
+
+            $affectedRows = Tab::updateAll(
+                ['deleted' => 0],
+                ['id' => $tabId]
+            );
+
+            if ($affectedRows > 0) {
+                return $this->asJson(['success' => true, 'message' => 'Restore successful.']);
+            } else {
+                return $this->asJson(['success' => false, 'message' => 'No records updated.']);
+            }
+        } else {
+            return $this->asJson(['success' => false, 'message' => 'Missing tabId.']);
+        }
+    }
+    /** 
+     * Delete Permanently Tab Action.
+     *
+     */
+    public function actionDeletePermanentlyTab()
+    {
+        $postData = Yii::$app->request->post();
+
+        $tabId = $postData['tabId'];
+
+        $tab = Tab::find()->where(['id' => $tabId])->one();
+
+        if (!$tab) {
+            return $this->asJson(['success' => false, 'message' => 'Tab does not exist.']);
+        }
+        if ($tab->tab_type == 'table') {
+            $tableName = $postData['tableName'];
+
+            if (!preg_match('/^[a-zA-Z_][a-zA-Z0-9_]*$/', $tableName)) {
+                return $this->asJson(['success' => false, ' message' => 'Invalid table name.']);
+            }
+            $sql = "DROP TABLE IF EXISTS `$tableName`";
+
+            try {
+                Yii::$app->db->createCommand($sql)->execute();
+
+                $tableTabTable = 'table_tab';
+                $deleteTabSql = "DELETE FROM `$tableTabTable` WHERE `tab_id` = :tabId";
+                Yii::$app->db->createCommand($deleteTabSql)->bindValue(':tabId', $tabId)->execute();
+
+                $tabTable = 'tab';
+                $deleteTabRecordSql = "DELETE FROM `$tabTable` WHERE `id` = :tabId";
+                Yii::$app->db->createCommand($deleteTabRecordSql)->bindValue(':tabId', $tabId)->execute();
+
+                return $this->asJson(['success' => true, 'message' => 'Table and data were successfully deleted.']);
+            } catch (\Exception $e) {
+                return $this->asJson(['success' => false, 'message' => $e->getMessage()]);
+            }
+        } elseif ($tab->tab_type == 'richtext') {
+            try {
+                $filePath = Yii::getAlias('@runtime/richtext/' . $tabId . '.txt');
+
+                if (file_exists($filePath)) {
+                    unlink($filePath);
+                }
+                $tabTable = 'tab';
+                $deleteTabRecordSql = "DELETE FROM `$tabTable` WHERE `id` = :tabId";
+                Yii::$app->db->createCommand($deleteTabRecordSql)->bindValue(':tabId', $tabId)->execute();
+
+                return $this->asJson(['success' => true, 'message' => 'Richtext data was successfully deleted.']);
+            } catch (\Exception $e) {
+                return $this->asJson(['success' => false, 'message' => $e->getMessage()]);
+            }
+        }
+        return $this->asJson(['success' => false, 'message' => 'Invalid tab type.']);
+    }
+    /** 
+     * Update Postion Action.
+     *
+     */
+    public function actionUpdateSortOrder()
+    {
+        Yii::$app->response->format = Response::FORMAT_JSON;
+        $tabs = Yii::$app->request->post('tabs');
+
+        if ($tabs) {
+            foreach ($tabs as $tab) {
+                $model = Tab::findOne($tab['id']);
+                if ($model) {
+                    $model->position = $tab['position'];
+                    if (!$model->save()) {
+                        return [
+                            'success' => false,
+                            'message' => 'Unable to save tab with ID: ' . $tab['id'],
+                        ];
+                    }
+                }
+            }
+            return ['success' => true];
+        }
+
+        return [
+            'success' => false,
+            'message' => 'Invalid data.'
+        ];
+    }
+    /** 
+     * Update Show/Hide Tab Action.
+     *
+     */
+    public function actionUpdateHideStatus()
+    {
+        $hideStatus = Yii::$app->request->post('hideStatus', []);
+
+        foreach ($hideStatus as $tabId => $status) {
+            $tab = Tab::findOne($tabId);
+            if ($tab) {
+                $tab->deleted = $status;
+                $tab->save();
+            }
+        }
+
+        return $this->asJson(['success' => true]);
+    }
+
+
+    public function actionUpdateTab()
+{
+    $tabId = Yii::$app->request->post('tab_id');
+    $groupId = Yii::$app->request->post('group_id');
+    $status = Yii::$app->request->post('status');
+    $position = Yii::$app->request->post('position');
+
+    $tab = Tab::findOne($tabId);
+    if ($tab) {
+        $tab->group_id = $groupId;
+        $tab->deleted = $status == 3 ? 3 : 0; 
+        $tab->save();
+        return json_encode(['status' => 'success']);
+    }
+
+    return json_encode(['status' => 'error']);
+}
 
 }

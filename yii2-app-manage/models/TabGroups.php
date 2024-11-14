@@ -10,6 +10,7 @@ use Yii;
  * @property int $id
  * @property string $name
  * @property string|null $icon
+ * @property string $group_type
  * @property int|null $position
  * @property int|null $deleted
  * @property string $created_at
@@ -34,9 +35,11 @@ class TabGroups extends \yii\db\ActiveRecord
     {
         return [
             [['name'], 'required'],
+            [['group_type'], 'string'],
             [['position', 'deleted'], 'integer'],
             [['created_at', 'updated_at'], 'safe'],
             [['name', 'icon'], 'string', 'max' => 255],
+            [['name'], 'unique'],
         ];
     }
 
@@ -49,6 +52,7 @@ class TabGroups extends \yii\db\ActiveRecord
             'id' => 'ID',
             'name' => 'Name',
             'icon' => 'Icon',
+            'group_type' => 'Group Type',
             'position' => 'Position',
             'deleted' => 'Deleted',
             'created_at' => 'Created At',

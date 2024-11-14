@@ -1,6 +1,7 @@
 <?php
 
 use yii\helpers\Html;
+use app\models\TabGroups;
 
 /** @var yii\web\View $this */
 /** @var app\models\TableTab[] $tableTabs */
@@ -9,10 +10,7 @@ $tableCreationData = Yii::$app->session->getFlash('tableCreationData', []);
 $this->title = 'List Tabs';
 
 ?>
-        <?php include Yii::getAlias('@app/views/layouts/_sidebar.php'); ?>
-
-
-
+<?php include Yii::getAlias('@app/views/layouts/_sidebar-settings.php'); ?>
 
 <div class="page-body">
     <div class="container-fluid">
@@ -64,6 +62,7 @@ $this->title = 'List Tabs';
                                         <th>ID</th>
                                         <th>Name</th>
                                         <th class="text-center">Type</th>
+                                        <th class="text-center">Group</th>
                                         <th class="text-center">Status</th>
                                         <th>Position</th>
                                         <th>Created</th>
@@ -83,6 +82,10 @@ $this->title = 'List Tabs';
                                             <span class="badge badge-light-danger">Richtext</span>
                                             <?php endif; ?>
                                         </td>
+                                        <td class="text-center">
+                                            <?= $tab && $tab->group_id ? TabGroups::findOne($tab->group_id)->name : 'Không'; ?>
+                                        </td>
+
                                         </td>
                                         <td class="text-center">
                                             <?= $tab->deleted == 3 ?
@@ -92,8 +95,16 @@ $this->title = 'List Tabs';
                                         <td><?= Html::encode($tab->position) ?></td>
                                         <td><?= Html::encode(Yii::$app->formatter->asDate($tab->created_at)) ?></td>
                                         <td class="d-flex text-nowrap justify-content-center">
-                                            <!-- <button class="btn btn-secondary btn-sm save-row-btn me-1"><i
-                                                    class="fa-solid fa-pen-to-square"></i></button> -->
+                                            <button class="btn btn-primary btn-sm edit-btn me-1" data-bs-toggle="modal"
+                                                data-bs-target="#editModal"
+                                                data-tab-id="<?= htmlspecialchars($tab->id) ?>"
+                                                data-tab-name="<?= htmlspecialchars($tab->tab_name) ?>"
+                                                data-tab-type="<?= htmlspecialchars($tab->tab_type) ?>"
+                                                data-group-id="<?= htmlspecialchars($tab->group_id) ?>"
+                                                data-status="<?= htmlspecialchars($tab->deleted) ?>"
+                                                data-position="<?= htmlspecialchars($tab->position) ?>">
+                                                <i class="fa-solid fa-pen-to-square"></i>
+                                            </button>
                                             <button href="#" data-bs-toggle="modal" data-bs-target="#deleteModal"
                                                 class="btn btn-danger btn-sm delete-btn"
                                                 data-tab-id="<?= htmlspecialchars($tab->id) ?>">
@@ -115,6 +126,110 @@ $this->title = 'List Tabs';
         </div>
     </div>
 </div>
+
+<!-- Modal sửa -->
+<div class="modal fade" id="editModal" tabindex="-1" aria-labelledby="editModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="editModalLabel">Sửa Tab</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="editTabForm">
+                    <!-- Không cho phép sửa tên Tab -->
+                    <div class="mb-3">
+                        <label for="editTabName" class="form-label">Tên Tab</label>
+                        <input type="text" class="form-control" id="editTabName" name="tab_name" disabled>
+                    </div>
+                    <div class="mb-3">
+                        <label for="editTabType" class="form-label">Loại Tab</label>
+                        <input class="form-control" id="editTabType" name="tab_type" disabled>
+                    </div>
+                    <div class="mb-3">
+                        <label for="editGroup" class="form-label">Group</label>
+                        <select class="form-select" id="editGroup" name="group_id">
+                            <?php foreach ($tabGroups as $group): ?>
+                            <option value="<?= $group->id ?>" <?= $group->id == $tab->group_id ? 'selected' : '' ?>>
+                                <?= Html::encode($group->name) ?>
+                            </option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="editStatus" class="form-label">Trạng thái</label>
+                        <select class="form-select" id="editStatus" name="status">
+                            <option value="0" <?= $tab->deleted == 0 ? 'selected' : '' ?>>Hiển thị</option>
+                            <option value="3" <?= $tab->deleted == 3 ? 'selected' : '' ?>>Ẩn</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="editPosition" class="form-label">Vị trí</label>
+                        <input type="number" class="form-control" id="editPosition" name="position"
+                            value="<?= $tab->position ?>">
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+                <button type="button" class="btn btn-primary" id="saveTabChanges">Lưu thay đổi</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+$(document).ready(function() {
+    // Khi nhấn vào nút sửa
+    $('.edit-btn').on('click', function() {
+        var tabId = $(this).data('tab-id');
+        var tabName = $(this).data('tab-name');
+        var tabType = $(this).data('tab-type');
+        var groupId = $(this).data('group-id');
+        var status = $(this).data('status');
+        var position = $(this).data('position');
+
+        $('#editTabName').val(tabName);
+        $('#editTabType').val(tabType);
+        $('#editGroup').val(groupId);
+        $('#editStatus').val(status);
+        $('#editPosition').val(position);
+        $('#editTabForm').data('tab-id', tabId);
+    });
+
+    $('#saveTabChanges').on('click', function() {
+        var form = $('#editTabForm');
+        var tabId = form.data('tab-id');
+        var groupId = $('#editGroup').val();
+        var status = $('#editStatus').val();
+        var position = $('#editPosition').val();
+
+        $.ajax({
+            url: '<?= \yii\helpers\Url::to(['settings/update-tab']) ?>',
+            type: 'POST',
+            headers: {
+                'X-CSRF-Token': $('meta[name="csrf-token"]').attr('content')
+            },
+            data: {
+                tab_id: tabId,
+                group_id: groupId,
+                status: status,
+                position: position
+            },
+            success: function(response) {
+                $('#editModal').modal('hide');
+                location.reload();
+            },
+            error: function() {
+                alert('Có lỗi xảy ra, vui lòng thử lại.');
+            }
+        });
+    });
+});
+</script>
+
+
+
 
 <!-- Modal Trash Bin -->
 <div class="modal fade" id="trashBinModal" tabindex="-1" aria-labelledby="trashBinModalLabel" aria-hidden="true">
@@ -333,11 +448,11 @@ $(document).ready(function() {
         $('.toggle-hide-btn').each(function() {
             const tabId = $(this).data('tab-id');
             const isChecked = $(this).is(':checked');
-            hideStatus[tabId] = isChecked ? 3 : 0;
+            hideStatus[tabId] = isChecked ? 0 : 3;
         });
 
         $.ajax({
-            url: '<?= \yii\helpers\Url::to(['tabs/update-hide-status']) ?>',
+            url: '<?= \yii\helpers\Url::to(['settings/update-hide-status']) ?>',
             method: 'POST',
             headers: {
                 'X-CSRF-Token': $('meta[name="csrf-token"]').attr('content')
@@ -370,7 +485,7 @@ $(document).ready(function() {
         });
 
         $.ajax({
-            url: '/tabs/update-sort-order',
+            url: '/settings/update-sort-order',
             method: 'POST',
             headers: {
                 'X-CSRF-Token': $('meta[name="csrf-token"]').attr('content')
@@ -395,7 +510,7 @@ $(document).ready(function() {
         const tabId = $(this).data('tab-id');
 
         $.ajax({
-            url: '<?= \yii\helpers\Url::to(['tabs/restore-tab']) ?>',
+            url: '<?= \yii\helpers\Url::to(['settings/restore-tab']) ?>',
             method: 'POST',
             headers: {
                 'X-CSRF-Token': $('meta[name="csrf-token"]').attr('content')
@@ -423,7 +538,7 @@ $(document).ready(function() {
 
             if (confirm("Are you sure you want to permanently delete this tab?")) {
                 $.ajax({
-                    url: '<?= \yii\helpers\Url::to(['tabs/delete-permanently-tab']) ?>',
+                    url: '<?= \yii\helpers\Url::to(['settings/delete-permanently-tab']) ?>',
                     method: 'POST',
                     headers: {
                         'X-CSRF-Token': $('meta[name="csrf-token"]').attr('content')
@@ -453,7 +568,7 @@ $(document).ready(function() {
         const tabId = $(this).data('tab-id');
 
         $.ajax({
-            url: '<?= \yii\helpers\Url::to(['tabs/delete-tab']) ?>',
+            url: '<?= \yii\helpers\Url::to(['settings/delete-tab']) ?>',
             method: 'POST',
             headers: {
                 'X-CSRF-Token': $('meta[name="csrf-token"]').attr('content')
@@ -481,7 +596,7 @@ $(document).ready(function() {
 
         if (confirm("Are you sure you want to delete permanenttly?")) {
             $.ajax({
-                url: '<?= \yii\helpers\Url::to(['tabs/delete-permanently-tab']) ?>',
+                url: '<?= \yii\helpers\Url::to(['settings/delete-permanently-tab']) ?>',
                 method: 'POST',
                 headers: {
                     'X-CSRF-Token': $('meta[name="csrf-token"]').attr('content')
@@ -519,5 +634,3 @@ document.addEventListener("DOMContentLoaded", function() {
     });
 });
 </script>
-
-

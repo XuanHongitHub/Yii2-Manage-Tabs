@@ -1,12 +1,15 @@
 <?php
 
 use app\models\User;
+use app\models\TabGroups;
 
 /** @var yii\web\View $this */
 /** @var app\models\TableTab[] $tableTabs */
 /** @var app\models\Tab[] $tabs */
 
 $this->title = 'Tabs Data';
+
+$groupId = $_GET['groupId'];
 ?>
 <?php include Yii::getAlias('@app/views/layouts/_sidebar.php'); ?>
 
@@ -25,7 +28,8 @@ $this->title = 'Tabs Data';
 
                 <div class="card">
                     <div class="card-header card-no-border pb-0">
-                        <h4>Trang chủ</h4>
+                        <h4><?= TabGroups::findOne($groupId)->name ?? 'Nhóm này không tồn tại hoặc đã bị ẩn/xóa.' ?>
+                        </h4>
                     </div>
                     <div class="card-body">
                         <ul class="simple-wrapper nav nav-tabs" id="tab-list">

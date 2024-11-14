@@ -80,18 +80,20 @@ class SiteController extends Controller
         $userId = Yii::$app->user->id;
 
         $tabs = Tab::find()
-            ->where(['user_id' => $userId])
-            ->orderBy([
-                'position' => SORT_ASC,
-                'id' => SORT_DESC,
-            ])
-            ->all();
-
-        $tableTabs = TableTab::find()->all();
+        ->where(['user_id' => $userId])
+        ->andWhere(['tab_type' => 'richtext']) 
+        ->andWhere(['deleted' => 0])
+        ->orderBy([
+            'position' => SORT_ASC,
+            'id' => SORT_DESC,
+        ])
+        ->all();
+    
+        // $tableTabs = TableTab::find()->all();
 
         return $this->render('index', [
             'tabs' => $tabs,
-            'tableTabs' => $tableTabs,
+            // 'tableTabs' => $tableTabs,
         ]);
     }
 

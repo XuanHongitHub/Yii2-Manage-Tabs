@@ -1,10 +1,6 @@
 <?php
 
-use app\models\User;
-
 /** @var yii\web\View $this */
-/** @var app\models\TableTab[] $tableTabs */
-/** @var app\models\Tab[] $tabs */
 
 $this->title = 'Tabs Data';
 ?>
@@ -25,35 +21,12 @@ $this->title = 'Tabs Data';
 
                 <div class="card">
                     <div class="card-header card-no-border pb-0">
-                        <h4>Trang chủ</h4>
+                        <h4>
+                            <?= $tab_item ? $tab_item->tab_name : 'Tab này không tồn tại hoặc đã bị ẩn/xóa.'; ?>
+                        </h4>
+
                     </div>
                     <div class="card-body">
-                        <ul class="simple-wrapper nav nav-tabs" id="tab-list">
-                            <?php if (!empty($tabs)): ?>
-                            <?php $hasValidTabs = false; ?>
-                            <?php foreach ($tabs as $index => $tab): ?>
-                            <?php if ($tab->deleted == 0): ?>
-                            <?php $hasValidTabs = true; ?>
-                            <li class="nav-item">
-                                <a class="nav-link <?= $index === 0 ? 'active' : '' ?>" href="#"
-                                    data-id="<?= $tab->id ?>" onclick="loadTabData(<?= $tab->id ?>, null)">
-                                    <?= htmlspecialchars($tab->tab_name) ?>
-                                </a>
-                            </li>
-                            <?php endif; ?>
-                            <?php endforeach; ?>
-
-                            <?php if (!$hasValidTabs): ?>
-                            <div class="align-items-center m-2">
-                                No Tabs Available. Please create a new tab in the settings.
-                            </div>
-                            <?php endif; ?>
-                            <?php else: ?>
-                            <div class="align-items-center m-2">
-                                No Tabs Available. Please create a new tab in the settings.
-                            </div>
-                            <?php endif; ?>
-                        </ul>
                         <div class="tab-content">
                             <div class="tab-pane fade show active" id="tab-data-current">
                                 <div class="table-responsive" id="table-data-current">
@@ -71,21 +44,14 @@ $this->title = 'Tabs Data';
 </div>
 <?php
 
-$firstTabId = null;
-foreach ($tabs as $tab) {
-    if ($tab->deleted == 0) {
-        $firstTabId = $tab->id;
-        break;
-    }
-}
 
 ?>
 <script async>
 $(document).ready(function() {
 
-    var firstTabId = <?= !empty($firstTabId) ? $tabs[0]->id : 'null' ?>;
-    if (firstTabId !== null) {
-        loadTabData(firstTabId);
+    var table_tabId = <?= !empty($tab_item) ? $tab_item->id : 'null' ?>;
+    if (table_tabId !== null) {
+        loadTabData(table_tabId);
     } else {
         console.log("No tabs available to load data.");
     }
@@ -129,7 +95,7 @@ $(document).ready(function() {
         function(e) {
             e.preventDefault();
             var page = $(this).data('page');
-            var tabId = $('.nav-link.active').data('id');
+            var tabId = table_tabId;
             var search = $('input[name="search"]').val();
             var pageSize = $('#pageSize').val();
 
@@ -142,7 +108,7 @@ $(document).ready(function() {
 
     $(document).off('click', '#goToPageButton').on('click', '#goToPageButton', function() {
         var page = $('#goToPageInput').val();
-        var tabId = $('.nav-link.active').data('id');
+        var tabId = table_tabId;
         var search = $('input[name="search"]').val();
         var pageSize = $('#pageSize').val();
 
@@ -163,7 +129,7 @@ $(document).ready(function() {
         e.preventDefault();
 
         var page = $(this).data('page');
-        var tabId = $('.nav-link.active').data('id');
+        var tabId = table_tabId;
         var search = $('input[name="search"]').val();
         var pageSize = $('#pageSize').val();
         var totalCount = $('#totalCount').val();
@@ -181,7 +147,7 @@ $(document).ready(function() {
     $(document).off('change', '#pageSize').on('change', '#pageSize', function() {
         var pageSize = $(this).val();
 
-        var tabId = $('.nav-link.active').data('id');
+        var tabId = table_tabId;
         var search = $('input[name="search"]').val();
 
         if (search && typeof search === 'string') {

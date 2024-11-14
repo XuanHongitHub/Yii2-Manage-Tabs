@@ -6,9 +6,10 @@ use yii\helpers\Html;
 /** @var app\models\TableTab[] $tableTabs */
 $tableCreationData = Yii::$app->session->getFlash('tableCreationData', []);
 
-$this->title = 'List Tabs';
+$this->title = 'List Groups';
 
 ?>
+<?php include Yii::getAlias('@app/views/layouts/_icon.php'); ?>
 <?php include Yii::getAlias('@app/views/layouts/_sidebar-settings.php'); ?>
 
 
@@ -60,50 +61,59 @@ $this->title = 'List Tabs';
                                 <thead>
                                     <tr>
                                         <th>ID</th>
-                                        <th>Name</th>
-                                        <th class="text-center">Type</th>
-                                        <th class="text-center">Status</th>
-                                        <th>Position</th>
-                                        <th>Created</th>
+                                        <th>Tên Nhóm</th>
+                                        <th>Icon</th>
+                                        <th>Loại Nhóm</th>
+                                        <th>Vị Trí</th>
+                                        <th>Trạng Thái</th>
+                                        <th>Created At</th>
                                         <th style="width: 8%">Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody id="columnsContainer">
-                                    <?php foreach ($tabs as $tab): ?>
-                                    <?php if ($tab->deleted != 1): ?>
+                                    <?php foreach ($tabGroups as $tabGroup): ?>
                                     <tr>
-                                        <td><?= Html::encode($tab->id) ?></td>
-                                        <td><?= Html::encode($tab->tab_name) ?></td>
+                                        <td><?= Html::encode($tabGroup->id) ?></td>
+                                        <td><?= Html::encode($tabGroup->name) ?></td>
+                                        <td>
+                                            <div class="col-2 d-flex align-items-center ms-3" id="icon-display">
+                                                <svg class="stroke-icon" width="24" height="24">
+                                                    <use
+                                                        href="<?= Yii::getAlias('@web') ?>/images/icon-sprite.svg#<?= $tabGroup->icon ?>">
+                                                    </use>
+                                                </svg>
+                                            </div>
+                                        </td>
                                         <td class="text-center">
-                                            <?php if ($tab->tab_type == 'table'): ?>
-                                            <span class="badge badge-light-primary">Table</span>
+                                            <?php if ($tabGroup->group_type == 'menu_group'): ?>
+                                            <span class="badge badge-light-primary">Sub Menu</span>
                                             <?php else: ?>
-                                            <span class="badge badge-light-danger">Richtext</span>
+                                            <span class="badge badge-light-danger">Sub Tab</span>
                                             <?php endif; ?>
                                         </td>
-                                        </td>
-                                        <td class="text-center">
-                                            <?= $tab->deleted == 3 ?
-                                                        '<span class="badge badge-warning">Hide</span>' : '<span class="badge badge-success">Show</span>'
-                                                        ?>
-                                        </td>
-                                        <td><?= Html::encode($tab->position) ?></td>
-                                        <td><?= Html::encode(Yii::$app->formatter->asDate($tab->created_at)) ?></td>
+                                        <td><?= Html::encode($tabGroup->position) ?></td>
+                                        <td><?= $tabGroup->deleted ? 'Yes' : 'No' ?></td>
+                                        <td><?= Yii::$app->formatter->asDatetime($tabGroup->created_at) ?></td>
                                         <td class="d-flex text-nowrap justify-content-center">
-                                            <!-- <button class="btn btn-secondary btn-sm save-row-btn me-1"><i
-                                                    class="fa-solid fa-pen-to-square"></i></button> -->
+                                            <button class="btn btn-sm btn-primary me-1 edit-btn" data-bs-toggle="modal"
+                                                data-bs-target="#editModal" data-tab-group-id="<?= $tabGroup->id ?>"
+                                                data-group-name="<?= Html::encode($tabGroup->name) ?>"
+                                                data-group-type="<?= Html::encode($tabGroup->group_type) ?>"
+                                                data-icon="<?= Html::encode($tabGroup->icon) ?>"
+                                                data-status="<?= Html::encode($tabGroup->deleted) ?>"
+                                                data-position="<?= Html::encode($tabGroup->position) ?>">
+                                                <i class="fas fa-edit"></i>
+                                            </button>
                                             <button href="#" data-bs-toggle="modal" data-bs-target="#deleteModal"
                                                 class="btn btn-danger btn-sm delete-btn"
-                                                data-tab-id="<?= htmlspecialchars($tab->id) ?>">
+                                                data-tab-id="<?= $tabGroup->id ?>">
                                                 <i class="fa-regular fa-trash-can"></i>
                                             </button>
                                         </td>
-                                    </tr>
-                                    <?php endif; ?>
 
+                                    </tr>
                                     <?php endforeach; ?>
                                 </tbody>
-
                             </table>
                         </div>
 
@@ -113,6 +123,214 @@ $this->title = 'List Tabs';
         </div>
     </div>
 </div>
+
+<!-- Modal sửa Tab Group -->
+<div class="modal fade" id="editModal" tabindex="-1" aria-labelledby="editModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="editModalLabel">Sửa Tab Group</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="editTabGroupForm">
+                    <!-- Tên nhóm -->
+                    <div class="mb-3">
+                        <label for="tabGroupName" class="form-label">Tên nhóm</label>
+                        <input type="text" class="form-control" id="tabGroupName" name="name" required>
+                    </div>
+
+                    <!-- Loại nhóm -->
+                    <div class="mb-3">
+                        <label for="tabGroupType" class="form-label">Loại nhóm</label>
+                        <select class="form-select" id="tabGroupType" name="group_type" required>
+                            <option value="menu_group">Sub Menu</option>
+                            <option value="sub_tab">Sub Tab</option>
+                        </select>
+                    </div>
+
+                    <!-- Icon -->
+                    <div class="mb-3">
+                        <label for="icon-select" id="icon" class="form-label">Chọn icon</label>
+                        <div class="d-flex align-items-center">
+                            <div class="col-8">
+                                <!-- Hiển thị khu vực chọn icon -->
+                                <div id="icon-select-wrapper" class="d-flex align-items-center"
+                                    style="cursor: pointer; border: 1px solid #ccc; padding: 8px; border-radius: 8px;">
+                                    <span id="selected-icon-label">Chọn icon</span>
+                                    <svg id="selected-icon" class="stroke-icon ms-3" width="24" height="24">
+                                        <use
+                                            href="<?= Yii::getAlias('@web') ?>/images/icon-sprite.svg#<?= reset(array_keys($iconOptions)) ?>">
+                                        </use>
+                                    </svg>
+                                </div>
+
+                                <!-- Danh sách icon -->
+                                <div id="icon-list" class="mt-2"
+                                    style="display: none !important; overflow-y: auto; max-height: 200px; border: 1px solid #ccc; border-radius: 8px;">
+                                    <?php foreach ($iconOptions as $iconValue => $iconLabel): ?>
+                                    <div class="icon-item me-2 mb-2" data-icon="<?= Html::encode($iconValue) ?>"
+                                        style="cursor: pointer; padding: 4px;">
+                                        <svg class="stroke-icon" width="40" height="40">
+                                            <use
+                                                href="<?= Yii::getAlias('@web') ?>/images/icon-sprite.svg#<?= Html::encode($iconValue) ?>">
+                                            </use>
+                                        </svg>
+                                    </div>
+                                    <?php endforeach; ?>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+
+                    <!-- Trạng thái -->
+                    <div class="mb-3">
+                        <label for="tabGroupStatus" class="form-label">Trạng thái</label>
+                        <select class="form-select" id="tabGroupStatus" name="status" required>
+                            <option value="1">Hiển thị</option>
+                            <option value="3">Ẩn</option>
+                        </select>
+                    </div>
+
+                    <!-- Vị trí -->
+                    <div class="mb-3">
+                        <label for="tabGroupPosition" class="form-label">Vị trí</label>
+                        <input type="number" class="form-control" id="tabGroupPosition" name="position" required>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+                <button type="button" class="btn btn-primary" id="saveTabGroupChanges">Lưu thay đổi</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+$(document).ready(function() {
+    // Khi nhấn vào nút sửa
+    $('.edit-btn').on('click', function() {
+        var groupId = $(this).data('tab-group-id');
+        var groupName = $(this).data('group-name');
+        var groupType = $(this).data('group-type');
+        var icon = $(this).data('icon');
+        var status = $(this).data('status');
+        var position = $(this).data('position');
+
+        // Điền giá trị vào các trường trong modal
+        $('#tabGroupName').val(groupName);
+        $('#tabGroupType').val(groupType); // Chọn loại nhóm
+        $('#icon-select').val(icon); // Chọn icon
+        $('#tabGroupStatus').val(status);
+        $('#tabGroupPosition').val(position);
+
+        // Lưu trữ ID nhóm vào form để sử dụng khi gửi
+        $('#editTabGroupForm').data('group-id', groupId);
+    });
+
+    // Khi nhấn "Lưu thay đổi"
+    $('#saveTabGroupChanges').on('click', function() {
+        var form = $('#editTabGroupForm');
+        var groupId = form.data('group-id');
+        var groupName = $('#tabGroupName').val();
+        var groupType = $('#tabGroupType').val();
+        var icon = $('#icon-select').val();
+        var status = $('#tabGroupStatus').val();
+        var position = $('#tabGroupPosition').val();
+
+        $.ajax({
+            url: '<?= \yii\helpers\Url::to(['settings/update-group']) ?>',
+            type: 'POST',
+            headers: {
+                'X-CSRF-Token': $('meta[name="csrf-token"]').attr('content')
+            },
+            data: {
+                id: groupId,
+                name: groupName,
+                group_type: groupType,
+                icon: icon,
+                status: status,
+                position: position
+            },
+            success: function(response) {
+                $('#editModal').modal('hide');
+                location.reload(); // Tải lại trang để thấy thay đổi
+            },
+            error: function() {
+                alert('Có lỗi xảy ra, vui lòng thử lại.');
+            }
+        });
+    });
+
+    // Cập nhật icon khi thay đổi
+    $('#icon-select').change(function() {
+        const selectedIcon = $(this).val();
+        const iconDisplay = $('#icon-display-edit svg use');
+        iconDisplay.attr('href', `<?= Yii::getAlias('@web') ?>/images/icon-sprite.svg#${selectedIcon}`);
+    });
+});
+
+$(document).ready(function() {
+    // Mở/Đóng danh sách icon khi nhấn vào khối chọn
+    $('#icon-select-wrapper').on('click', function() {
+        $('#icon-list').toggle(); // Hiện/ẩn danh sách icon
+    });
+
+    // Khi nhấn vào một icon, cập nhật icon đã chọn và thêm viền highlight
+    $('#icon-list .icon-item').on('click', function() {
+        var selectedIcon = $(this).data('icon'); // Lấy icon đã chọn
+
+        // Cập nhật tên của icon đã chọn vào ô chọn
+        $('#selected-icon-label').text('Icon: ' + selectedIcon);
+
+        // Thay đổi icon đã chọn
+        $('#selected-icon use').attr('href', '<?= Yii::getAlias('@web') ?>/images/icon-sprite.svg#' +
+            selectedIcon);
+
+        // Thêm viền highlight cho icon được chọn
+        $('#icon-list .icon-item').removeClass('selected');
+        $(this).addClass('selected');
+
+        // Cập nhật giá trị cho trường select (nếu bạn cần sử dụng)
+        $('#icon-select').val(selectedIcon);
+
+        // Đóng danh sách icon sau khi chọn
+        $('#icon-list').hide();
+    });
+
+    // Thêm viền highlight cho icon được chọn
+    $('#icon-list .icon-item').css({
+        'border': '1px solid transparent',
+        'border-radius': '8px',
+        'padding': '4px'
+    });
+
+    $('#icon-list .icon-item.selected').css({
+        'border': '2px solid #007bff' // Viền màu xanh dương cho icon được chọn
+    });
+});
+document.addEventListener('DOMContentLoaded', function() {
+    // Check if there's a success message
+    const successMessage = "<?= Yii::$app->session->getFlash('success') ?>";
+    const errorMessage = "<?= Yii::$app->session->getFlash('error') ?>";
+    if (successMessage) {
+        document.getElementById('toast-body').textContent = successMessage;
+        document.getElementById('toast-timestamp').textContent = new Date().toLocaleTimeString();
+        const toastElement = document.getElementById('liveToast');
+        const toast = new bootstrap.Toast(toastElement);
+        toast.show();
+    }
+    if (errorMessage) {
+        document.getElementById('toast-body').textContent = errorMessage;
+        document.getElementById('toast-timestamp').textContent = new Date().toLocaleTimeString();
+        const toastElement = document.getElementById('liveToast');
+        const toast = new bootstrap.Toast(toastElement);
+        toast.show();
+    }
+});
+</script>
 
 <!-- Modal Trash Bin -->
 <div class="modal fade" id="trashBinModal" tabindex="-1" aria-labelledby="trashBinModalLabel" aria-hidden="true">
@@ -134,11 +352,11 @@ $this->title = 'List Tabs';
                     </thead>
                     <tbody id="trash-bin-list">
                         <?php $hasDeletedTabs = false; ?>
-                        <?php foreach ($tabs as $tab): ?>
+                        <?php foreach ($tabGroups as $tab): ?>
                         <?php if ($tab->deleted == 1): ?>
                         <?php $hasDeletedTabs = true; ?>
                         <tr>
-                            <td><?= htmlspecialchars($tab->tab_name) ?></td>
+                            <td><?= htmlspecialchars($tab->name) ?></td>
                             <td class="text-center">
                                 <?php if ($tab->tab_type == 'table'): ?>
                                 <span class="badge badge-light-primary">Table</span>
@@ -152,7 +370,7 @@ $this->title = 'List Tabs';
                                     <i class="fa-solid fa-rotate-left"></i>
                                 </button>
                                 <button type="button" class="btn btn-danger delete-tab-btn" id="delete-permanently-btn"
-                                    data-tab-name="<?= htmlspecialchars($tab->tab_name) ?>"
+                                    data-tab-name="<?= htmlspecialchars($tab->name) ?>"
                                     data-tab-id="<?= htmlspecialchars($tab->id) ?>">
                                     <i class="fa-regular fa-trash-can"></i>
                                 </button>
@@ -195,11 +413,11 @@ $this->title = 'List Tabs';
                         </tr>
                     </thead>
                     <tbody id="hide-tabs-list">
-                        <?php foreach ($tabs as $tab): ?>
+                        <?php foreach ($tabGroups as $tab): ?>
                         <?php if ($tab->deleted == 0 || $tab->deleted == 3): ?>
                         <tr>
                             <td>
-                                <?= htmlspecialchars($tab->tab_name) ?>
+                                <?= htmlspecialchars($tab->name) ?>
                             </td>
                             <td class="text-center">
                                 <label class="switch mb-0 mt-1">
@@ -234,10 +452,10 @@ $this->title = 'List Tabs';
             <div class="modal-body">
                 <p>Drag and drop to arrange tabs.</p>
                 <ul class="list-group" id="sortable-tabs">
-                    <?php foreach ($tabs as $index => $tab): ?>
+                    <?php foreach ($tabGroups as $index => $tab): ?>
                     <li class="list-group-item d-flex justify-content-between align-items-center"
                         data-tab-id="<?= $tab->id ?>">
-                        <span><?= htmlspecialchars($tab->tab_name) ?></span>
+                        <span><?= htmlspecialchars($tab->name) ?></span>
                         <span class="badge bg-secondary"><?= $index + 1 ?></span>
                     </li>
                     <?php endforeach; ?>
@@ -276,7 +494,7 @@ $this->title = 'List Tabs';
 <div class="toast-container position-fixed top-0 end-0 p-3 toast-index toast-rtl">
     <div class="toast fade" id="liveToast" role="alert" aria-live="assertive" aria-atomic="true">
         <div class="toast-header">
-            <strong class="me-auto">Notification</strong>
+            <strong class="me-auto">Thông báo</strong>
             <small id="toast-timestamp"></small>
             <button class="btn-close" type="button" data-bs-dismiss="toast" aria-label="Close"></button>
         </div>

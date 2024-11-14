@@ -31,7 +31,7 @@ $tabsWithoutGroup = Tab::find()->where(['group_id' => null])->all();
 
         </div>
         <div
-            class="nav-right col-xxl-7 col-xl-6 col-auto box-col-6 pull-right right-header p-0 ms-auto d-flex align-items-center me-5">
+            class="nav-right col-xxl-7 col-xl-6 col-auto box-col-6 pull-right right-header p-0 ms-auto d-flex align-items-center me-3">
             <ul class="nav-menus">
 
                 <li class="profile-nav onhover-dropdown p-0">
@@ -56,12 +56,16 @@ $tabsWithoutGroup = Tab::find()->where(['group_id' => null])->all();
                         </div>
                     </div>
                     <ul class="profile-dropdown onhover-show-div">
+                        <li><a href="<?= Yii::$app->urlManager->createUrl(['admin/settings/tabs-list']) ?>"><span><i
+                                        class="fa-solid fa-gear me-2"></i>Cài đặt</span></a></li>
+                        <li><a href="<?= Yii::$app->urlManager->createUrl(['site/change-password']) ?>"><span><i
+                                        class="fa-solid fa-key me-2"></i></i>Đổi mật khẩu</span></a></li>
                         <li>
                             <form action="<?= Html::encode(Yii::$app->urlManager->createUrl(['site/logout'])) ?>"
                                 method="post">
                                 <input type="hidden" name="_csrf" value="<?= Yii::$app->request->csrfToken; ?>">
                                 <a class="d-inline" href="#" onclick="this.closest('form').submit(); return false;">
-                                    <span><i class="fa-solid fa-right-to-bracket me-2"></i> Logout</span>
+                                    <span><i class="fa-solid fa-right-to-bracket me-2"></i> Đăng xuất</span>
                                 </a>
                             </form>
                         </li>
@@ -122,9 +126,9 @@ $tabsWithoutGroup = Tab::find()->where(['group_id' => null])->all();
                                     aria-hidden="true"></i></div>
                         </li>
 
-                        <li class="sidebar-main-title pt-0">
+                        <li class="sidebar-main-title pt-4">
                             <div>
-                                <h6 class="lan-1">Quản lý</h6>
+                                <h6 class="lan-1">Cài đặt </h6>
                             </div>
                         </li>
 
@@ -139,12 +143,12 @@ $tabsWithoutGroup = Tab::find()->where(['group_id' => null])->all();
                                 <div class="according-menu"><i class="fa fa-angle-right"></i></div>
                             </a>
                             <ul class="sidebar-submenu" style="display: none;">
-                                <li><a href="<?= \yii\helpers\Url::to(['settings/index']) ?>">
+                                <li><a href="<?= \yii\helpers\Url::to(['settings/tabs-list']) ?>">
                                         <svg class="svg-menu">
                                             <use href="<?= Yii::getAlias('@web') ?>/images/icon-sprite.svg#right-3">
                                             </use>
                                         </svg>Danh sách</a></li>
-                                <li><a href="<?= \yii\helpers\Url::to(['settings/create']) ?>">
+                                <li><a href="<?= \yii\helpers\Url::to(['settings/tabs-create']) ?>">
                                         <svg class="svg-menu">
                                             <use href="<?= Yii::getAlias('@web') ?>/images/icon-sprite.svg#right-3">
                                             </use>
@@ -162,12 +166,12 @@ $tabsWithoutGroup = Tab::find()->where(['group_id' => null])->all();
                                 <div class="according-menu"><i class="fa fa-angle-right"></i></div>
                             </a>
                             <ul class="sidebar-submenu" style="display: none;">
-                                <li><a href="<?= \yii\helpers\Url::to(['settings/group/index']) ?>">
+                                <li><a href="<?= \yii\helpers\Url::to(['settings/group-list']) ?>">
                                         <svg class="svg-menu">
                                             <use href="<?= Yii::getAlias('@web') ?>/images/icon-sprite.svg#right-3">
                                             </use>
                                         </svg>Danh sách</a></li>
-                                <li><a href="<?= \yii\helpers\Url::to(['settings/group/create']) ?>">
+                                <li><a href="<?= \yii\helpers\Url::to(['settings/group-create']) ?>">
                                         <svg class="svg-menu">
                                             <use href="<?= Yii::getAlias('@web') ?>/images/icon-sprite.svg#right-3">
                                             </use>

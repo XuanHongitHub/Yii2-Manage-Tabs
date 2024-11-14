@@ -9,8 +9,15 @@ use app\models\Tab;
 use app\models\TabGroups;
 
 $isAdmin = User::isUserAdmin(Yii::$app->user->identity->username);
-$tabGroups = TabGroups::find()->all();
-$tabsWithoutGroup = Tab::find()->where(['group_id' => null])->all();
+$currentUserId = Yii::$app->user->id;
+
+$tabGroups = TabGroups::find()
+    ->where(['deleted' => 0])
+    ->all();
+
+$tabsWithoutGroup = Tab::find()
+    ->where(['group_id' => null, 'deleted' => 0, 'user_id' => $currentUserId])
+    ->all();
 ?>
 
 <!-- Page Header Start-->
@@ -31,7 +38,7 @@ $tabsWithoutGroup = Tab::find()->where(['group_id' => null])->all();
 
         </div>
         <div
-            class="nav-right col-xxl-7 col-xl-6 col-auto box-col-6 pull-right right-header p-0 ms-auto d-flex align-items-center me-5">
+            class="nav-right col-xxl-7 col-xl-6 col-auto box-col-6 pull-right right-header p-0 ms-auto d-flex align-items-center me-3">
             <ul class="nav-menus">
 
                 <li class="profile-nav onhover-dropdown p-0">
@@ -56,8 +63,8 @@ $tabsWithoutGroup = Tab::find()->where(['group_id' => null])->all();
                         </div>
                     </div>
                     <ul class="profile-dropdown onhover-show-div">
-                        <li><a href="<?= Yii::$app->urlManager->createUrl(['admin/settings']) ?>"><span><i
-                                        class="fa-solid fa-gear me-2"></i>Settings</span></a></li>
+                        <li><a href="<?= Yii::$app->urlManager->createUrl(['admin/settings/tabs-list']) ?>"><span><i
+                                        class="fa-solid fa-gear me-2"></i>Cài đặt</span></a></li>
                         <li><a href="<?= Yii::$app->urlManager->createUrl(['site/change-password']) ?>"><span><i
                                         class="fa-solid fa-key me-2"></i></i>Đổi mật khẩu</span></a></li>
                         <li>
@@ -65,7 +72,7 @@ $tabsWithoutGroup = Tab::find()->where(['group_id' => null])->all();
                                 method="post">
                                 <input type="hidden" name="_csrf" value="<?= Yii::$app->request->csrfToken; ?>">
                                 <a class="d-inline" href="#" onclick="this.closest('form').submit(); return false;">
-                                    <span><i class="fa-solid fa-right-to-bracket me-2"></i> Logout</span>
+                                    <span><i class="fa-solid fa-right-to-bracket me-2"></i> Đăng xuất</span>
                                 </a>
                             </form>
                         </li>
@@ -143,6 +150,20 @@ $tabsWithoutGroup = Tab::find()->where(['group_id' => null])->all();
                                 </div>
                             </a>
                         </li>
+                        <li class="sidebar-list">
+                            <a class="sidebar-link sidebar-title link-nav"
+                                href="<?= \yii\helpers\Url::to(['admin/settings/tabs-list']) ?>">
+                                <svg class="stroke-icon">
+                                    <use
+                                        href="<?= Yii::getAlias('@web') ?>/images/icon-sprite.svg#stroke-knowledgebase">
+                                    </use>
+                                </svg>
+                                <span> Cài đặt</span>
+                                <div class="according-menu"><i class="fa fa-angle-right"></i>
+                                </div>
+                            </a>
+                        </li>
+
 
                         <!-- Tab SS -->
                         <li class="sidebar-main-title pt-2">
@@ -152,32 +173,53 @@ $tabsWithoutGroup = Tab::find()->where(['group_id' => null])->all();
                         </li>
                         <?php if (!empty($tabGroups)): ?>
                         <?php foreach ($tabGroups as $group): ?>
-
-                        <li class="sidebar-list"><a class="sidebar-link sidebar-title" href="#">
+                        <li class="sidebar-list">
+                            <!-- Kiểm tra nếu là nhóm menu, hiển thị submenu -->
+                            <?php if ($group->group_type == 'menu_group'): ?>
+                            <a class="sidebar-link sidebar-title" href="#">
                                 <svg class="stroke-icon">
                                     <use href="<?= Yii::getAlias('@web') ?>/images/icon-sprite.svg#<?= $group->icon ?>">
                                     </use>
                                 </svg>
                                 <svg class="fill-icon">
                                     <use href="<?= Yii::getAlias('@web') ?>/images/icon-sprite.svg#fill-editors"></use>
-                                </svg><span><?= Html::encode($group->name) ?></span>
+                                </svg>
+                                <span><?= Html::encode($group->name) ?></span>
                                 <div class="according-menu"><i class="fa fa-angle-right"></i></div>
                             </a>
                             <ul class="sidebar-submenu" style="display: none;">
                                 <?php foreach ($group->tabs as $tab): ?>
-                                <li><a href="<?= \yii\helpers\Url::to(['settings/group', 'groupId' => $group->id]) ?>">
+                                <?php if ($tab->deleted == 0): ?>
+                                <li>
+                                    <a href="<?= \yii\helpers\Url::to(['tabs/tab-view', 'tabId' => $tab->id]) ?>"
+                                        data-tab-id="<?= $tab->id ?>"
+                                        class="<?= Yii::$app->request->get('tabId') === $tab->id ? 'active' : '' ?>">
                                         <svg class="svg-menu">
                                             <use href="<?= Yii::getAlias('@web') ?>/images/icon-sprite.svg#right-3">
                                             </use>
                                         </svg>
                                         <?= Html::encode($tab->tab_name) ?>
-                                    </a></li>
+                                    </a>
+                                </li>
+                                <?php endif; ?>
                                 <?php endforeach; ?>
                             </ul>
+                            <?php else: ?>
+                            <!-- Nếu không phải menu_group, hiển thị link trực tiếp tới trang cài đặt -->
+                            <a class="sidebar-link sidebar-title link-nav"
+                                href="<?= \yii\helpers\Url::to(['tabs/group-view', 'groupId' => $group->id]) ?>"
+                                data-group-id="<?= $group->id ?>">
+                                <svg class="stroke-icon">
+                                    <use href="<?= Yii::getAlias('@web') ?>/images/icon-sprite.svg#<?= $group->icon ?>">
+                                    </use>
+                                </svg>
+                                <span><?= Html::encode($group->name) ?></span>
+                                <div class="according-menu"><i class="fa fa-angle-right"></i></div>
+                            </a>
+                            <?php endif; ?>
                         </li>
                         <?php endforeach; ?>
                         <?php endif; ?>
-
 
                         <!-- Không nhóm -->
                         <li class="sidebar-main-title pt-2">
@@ -186,17 +228,15 @@ $tabsWithoutGroup = Tab::find()->where(['group_id' => null])->all();
                             </div>
                         </li>
                         <?php if (!empty($tabsWithoutGroup)): ?>
-                        <?php foreach ($tabsWithoutGroup as $tab): ?>
-                        <li class="sidebar-list"><a class="sidebar-link sidebar-title link-nav"
-                                href="<?= \yii\helpers\Url::to(['settings/group']) ?>">
+                        <?php foreach ($tabsWithoutGroup as $item): ?>
+                        <li class="sidebar-list <?= Yii::$app->request->get('tabId') === $item->id ? 'active' : '' ?>">
+                            <a class="sidebar-link sidebar-title link-nav" data-tab-id="<?= $item->id ?>"
+                                href="<?= \yii\helpers\Url::to(['tabs/tab-view', 'tabId' => $item->id]) ?>">
                                 <svg class="stroke-icon">
-                                    <use href="<?= Yii::getAlias('@web') ?>/images/icon-sprite.svg#stroke-editors">
+                                    <use href="<?= Yii::getAlias('@web') ?>/images/icon-sprite.svg#stroke-table">
                                     </use>
                                 </svg>
-                                <svg class="fill-icon">
-                                    <use href="<?= Yii::getAlias('@web') ?>/images/icon-sprite.svg#fill-editors">
-                                    </use>
-                                </svg><span><?= $tab->tab_name ?></span>
+                                <span><?= $item->tab_name ?></span>
                             </a>
                         </li>
                         <?php endforeach; ?>

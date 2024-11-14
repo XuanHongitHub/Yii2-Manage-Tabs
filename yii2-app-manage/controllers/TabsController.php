@@ -50,73 +50,44 @@ class TabsController extends Controller
      *
      * @return string
      */
-    public function actionTable()
+    public function actionTabView()
     {
         $userId = Yii::$app->user->id;
+        $tabId = Yii::$app->request->get('tabId');
 
-        // Lấy group_id từ URL, nếu không có thì mặc định là 1
-        $tabId = Yii::$app->request->get('id');
+        $tab_item = Tab::find()
+            ->where(['user_id' => $userId, 'deleted' => 0, 'id' => $tabId])
+            ->one();
+        $tableTabs = TableTab::find()->all();
+
+        return $this->render('tab-view/index', [
+            'tab_item' => $tab_item,
+            'tableTabs' => $tableTabs,
+        ]);
+    }
+
+    public function actionGroupView()
+    {
+        $userId = Yii::$app->user->id; 
+
+        $groupId = Yii::$app->request->get('groupId'); 
 
         $tabs = Tab::find()
-            ->where(['user_id' => $userId, 'id' => $tabId])  // Lọc theo group_id từ URL
-            ->orderBy([
-                'position' => SORT_ASC,
-                'id' => SORT_DESC,
-            ])
-            ->all();
+                ->where(['user_id' => $userId, 'deleted' => 0, 'group_id' => $groupId])
+                ->orderBy([
+                    'position' => SORT_ASC,
+                    'id' => SORT_DESC,
+                ])
+                ->all();;
 
         $tableTabs = TableTab::find()->all();
 
-        return $this->render('table/index', [
+        return $this->render('group-view/index', [
             'tabs' => $tabs,
             'tableTabs' => $tableTabs,
         ]);
     }
 
-    public function actionRichtext()
-    {
-        $userId = Yii::$app->user->id;
-
-        // Lấy group_id từ URL, nếu không có thì mặc định là 2
-        $tabId = Yii::$app->request->get('id');
-
-        $tabs = Tab::find()
-            ->where(['user_id' => $userId, 'id' => $tabId])  // Lọc theo group_id từ URL
-            ->orderBy([
-                'position' => SORT_ASC,
-                'id' => SORT_DESC,
-            ])
-            ->all();
-
-        return $this->render('richtext/index', [
-            'tabs' => $tabs,
-        ]);
-    }
-
-    public function actionGroupTabs()
-    {
-        $userId = Yii::$app->user->id;
-
-        $groupId = Yii::$app->request->get('group_id');
-
-        $query = Tab::find()->where(['user_id' => $userId]);
-
-        if ($groupId !== null) {
-            $query->andWhere(['group_id' => $groupId]);
-        }
-
-        $tabs = $query->orderBy([
-            'position' => SORT_ASC,
-            'id' => SORT_DESC,
-        ])->all();
-
-        $tableTabs = TableTab::find()->all();
-
-        return $this->render('group/index', [
-            'tabs' => $tabs,
-            'tableTabs' => $tableTabs,
-        ]);
-    }
 
     /**
      * Load Tab Data Action.
@@ -200,22 +171,22 @@ class TabsController extends Controller
      * Update RichtextData Action.
      *
      */
-    // public function actionSaveRichtext()
-    // {
-    //     if (Yii::$app->request->isPost) {
-    //         $tabId = Yii::$app->request->post('tabId');
-    //         $content = Yii::$app->request->post('content');
+    public function actionSaveRichtext()
+    {
+        if (Yii::$app->request->isPost) {
+            $tabId = Yii::$app->request->post('tabId');
+            $content = Yii::$app->request->post('content');
 
-    //         $filePath = Yii::getAlias('@runtime/richtext/' . $tabId . '.txt');
-    //         try {
-    //             file_put_contents($filePath, $content);
-    //             return json_encode(['status' => 'success', 'message' => 'Content has been updated successfully.']);
-    //         } catch (\Exception $e) {
-    //             return json_encode(['status' => 'error', 'message' => 'An error occurred while updating the content.']);
-    //         }
-    //     }
-    //     return json_encode(['status' => 'error', 'message ' => 'Invalid request.']);
-    // }
+            $filePath = Yii::getAlias('@runtime/richtext/' . $tabId . '.txt');
+            try {
+                file_put_contents($filePath, $content);
+                return json_encode(['status' => 'success', 'message' => 'Nội dung đã được cập nhật thành công.']);
+            } catch (\Exception $e) {
+                return json_encode(['status' => 'error', 'message' => 'Đã xảy ra lỗi khi cập nhật nội dung.']);
+            }
+        }
+        return json_encode(['status' => 'error', 'message ' => 'Đã xảy ra lỗi khi cập nhật nội dung.']);
+    }
     /** 
      * Download RichtextData Action.
      *
@@ -227,7 +198,7 @@ class TabsController extends Controller
         if (file_exists($filePath)) {
             return Yii::$app->response->sendFile($filePath);
         } else {
-            throw new \yii\web\NotFoundHttpException('File not found.');
+            throw new \yii\web\NotFoundHttpException('Không tìm thấy tệp tin.');
         }
     }
     /** 
@@ -377,161 +348,6 @@ class TabsController extends Controller
             return $this->asJson(['success' => false, 'message' => $e->getMessage()]);
         }
     }
-    /** 
-     * Delete Tab Action.
-     *
-     */
-    public function actionDeleteTab()
-    {
-        $postData = Yii::$app->request->post();
-
-        if (isset($postData['tabId'])) {
-            $tabId = $postData['tabId'];
-
-            $affectedRows = Tab::updateAll(
-                ['deleted' => 1],
-                ['id' => $tabId]
-            );
-
-            if ($affectedRows > 0) {
-                return $this->asJson(['success' => true, 'message' => 'Soft delete successful.']);
-            } else {
-                return $this->asJson(['success' => false, 'message' => 'No records updated.']);
-            }
-        } else {
-            return $this->asJson(['success' => false, 'message' => 'Missing tabId.']);
-        }
-    }
-    /** 
-     * Update Restore Action.
-     *
-     */
-    public function actionRestoreTab()
-    {
-        $postData = Yii::$app->request->post();
-
-        if (isset($postData['tabId'])) {
-            $tabId = $postData['tabId'];
-
-            $affectedRows = Tab::updateAll(
-                ['deleted' => 0],
-                ['id' => $tabId]
-            );
-
-            if ($affectedRows > 0) {
-                return $this->asJson(['success' => true, 'message' => 'Restore successful.']);
-            } else {
-                return $this->asJson(['success' => false, 'message' => 'No records updated.']);
-            }
-        } else {
-            return $this->asJson(['success' => false, 'message' => 'Missing tabId.']);
-        }
-    }
-    /** 
-     * Delete Permanently Tab Action.
-     *
-     */
-    public function actionDeletePermanentlyTab()
-    {
-        $postData = Yii::$app->request->post();
-
-        $tabId = $postData['tabId'];
-
-        $tab = Tab::find()->where(['id' => $tabId])->one();
-
-        if (!$tab) {
-            return $this->asJson(['success' => false, 'message' => 'Tab does not exist.']);
-        }
-        if ($tab->tab_type == 'table') {
-            $tableName = $postData['tableName'];
-
-            if (!preg_match('/^[a-zA-Z_][a-zA-Z0-9_]*$/', $tableName)) {
-                return $this->asJson(['success' => false, ' message' => 'Invalid table name.']);
-            }
-            $sql = "DROP TABLE IF EXISTS `$tableName`";
-
-            try {
-                Yii::$app->db->createCommand($sql)->execute();
-
-                $tableTabTable = 'table_tab';
-                $deleteTabSql = "DELETE FROM `$tableTabTable` WHERE `tab_id` = :tabId";
-                Yii::$app->db->createCommand($deleteTabSql)->bindValue(':tabId', $tabId)->execute();
-
-                $tabTable = 'tab';
-                $deleteTabRecordSql = "DELETE FROM `$tabTable` WHERE `id` = :tabId";
-                Yii::$app->db->createCommand($deleteTabRecordSql)->bindValue(':tabId', $tabId)->execute();
-
-                return $this->asJson(['success' => true, 'message' => 'Table and data were successfully deleted.']);
-            } catch (\Exception $e) {
-                return $this->asJson(['success' => false, 'message' => $e->getMessage()]);
-            }
-        } elseif ($tab->tab_type == 'richtext') {
-            try {
-                $filePath = Yii::getAlias('@runtime/richtext/' . $tabId . '.txt');
-
-                if (file_exists($filePath)) {
-                    unlink($filePath);
-                }
-                $tabTable = 'tab';
-                $deleteTabRecordSql = "DELETE FROM `$tabTable` WHERE `id` = :tabId";
-                Yii::$app->db->createCommand($deleteTabRecordSql)->bindValue(':tabId', $tabId)->execute();
-
-                return $this->asJson(['success' => true, 'message' => 'Richtext data was successfully deleted.']);
-            } catch (\Exception $e) {
-                return $this->asJson(['success' => false, 'message' => $e->getMessage()]);
-            }
-        }
-        return $this->asJson(['success' => false, 'message' => 'Invalid tab type.']);
-    }
-    /** 
-     * Update Postion Action.
-     *
-     */
-    public function actionUpdateSortOrder()
-    {
-        Yii::$app->response->format = Response::FORMAT_JSON;
-        $tabs = Yii::$app->request->post('tabs');
-
-        if ($tabs) {
-            foreach ($tabs as $tab) {
-                $model = Tab::findOne($tab['id']);
-                if ($model) {
-                    $model->position = $tab['position'];
-                    if (!$model->save()) {
-                        return [
-                            'success' => false,
-                            'message' => 'Unable to save tab with ID: ' . $tab['id'],
-                        ];
-                    }
-                }
-            }
-            return ['success' => true];
-        }
-
-        return [
-            'success' => false,
-            'message' => 'Invalid data.'
-        ];
-    }
-    /** 
-     * Update Show/Hide Tab Action.
-     *
-     */
-    public function actionUpdateHideStatus()
-    {
-        $hideStatus = Yii::$app->request->post('hideStatus', []);
-
-        foreach ($hideStatus as $tabId => $status) {
-            $tab = Tab::findOne($tabId);
-            if ($tab) {
-                $tab->deleted = $status;
-                $tab->save();
-            }
-        }
-
-        return $this->asJson(['success' => true]);
-    }
-
     /**
      * Import + Export Excel
      * 
@@ -549,7 +365,7 @@ class TabsController extends Controller
             if (empty($data)) {
                 return $this->asJson([
                     'success' => false,
-                    'message' => 'The file contains no data.',
+                    'message' => 'Tập tin không chứa dữ liệu.',
                 ]);
             }
 
@@ -560,13 +376,13 @@ class TabsController extends Controller
             $excelHeaders = $this->getColumnHeadersFromExcel($filePath);
 
             if ($this->validateColumns($excelHeaders, $expectedColumns) === false) {
-                $errorMessage = "\nColumn headers in the Excel file do not match the database columns. Please review the following details:\n\n";
-
-                $errorMessage .= "Excel file columns:\n" . "<div class='d-flex gap-3'>" . implode("", array_map(function ($header) {
+                $errorMessage = "\nCác tiêu đề cột trong tệp Excel không khớp với các cột cơ sở dữ liệu. Vui lòng xem lại các chi tiết sau:\n\n";
+                
+                $errorMessage .= "Cột tệp trong tệp Excel:\n" . "<div class='d-flex gap-3'>" . implode("", array_map(function ($header) {
                     return "<div class='p-2 text-danger'>" . htmlspecialchars($header) . "</div>";
                 }, $excelHeaders)) . "</div>\n\n";
 
-                $errorMessage .= "Expected columns in table:\n" . "<div class='d-flex gap-3'>" . implode("", array_map(function ($column) {
+                $errorMessage .= "Các cột dự kiến ​​trong bảng:\n" . "<div class='d-flex gap-3'>" . implode("", array_map(function ($column){
                     return "<div class='p-2 text-success'>" . htmlspecialchars($column) . "</div>";
                 }, $expectedColumns)) . "</div>\n\n";
 
@@ -598,7 +414,7 @@ class TabsController extends Controller
                         return $this->asJson([
                             'success' => false,
                             'duplicate' => true,
-                            'message' => 'Data with duplicate id(s): ' . implode(', ', $duplicateIds) . '. These rows will be overwritten.'
+                            'message' => 'Dữ liệu có PK(s) trùng lặp: ' . implode(', ', $duplicateIds) . '. Những hàng có PK(s) trên sẽ bị ghi đè.'
                         ]);
                     }
                 }
@@ -633,8 +449,8 @@ class TabsController extends Controller
                             $value = isset($row[$column]) ? $row[$column] : null;
 
                             if (!$this->isValidColumnType($value, $columnSchema)) {
-                                $rowErrors[] = "The value '<strong class=\"txt-danger\">{$value}</strong>' for column '<strong class=\"txt-danger\">{$column}</strong>' is invalid. 
-                                Expected type: <strong class=\"text-success\">" . strtoupper($columnSchema->type) . "</strong> but got: <strong class=\"txt-danger\">" . strtoupper(gettype($value)) . "</strong>";
+                                $rowErrors[] = "Giá trị '<strong class=\"txt-danger\">{$value}</strong>' cho cột '<strong class=\"txt-danger\">{$column}</strong>' không hợp lệ.  
+                                Loại dữ liệu dự kiến: <strong class=\"text-success\">" . strtoupper($columnSchema->type) . "</strong> nhưng đã nhận được: <strong class=\"txt-danger\">" . strtoupper(gettype($value)) . "</strong>";
                             }
 
                             $rowData[$column] = $value;
@@ -663,7 +479,7 @@ class TabsController extends Controller
                     foreach ($errors as $error) {
                         $errorMessages[] = "<strong class=\"\">{$error}</strong>";
                     }
-                    throw new \Exception("Errors found during import: \n\n" . implode("\n\n", $errorMessages));
+                    throw new \Exception("Đã tìm thấy lỗi trong quá trình nhập: \n\n" . implode("\n\n", $errorMessages));
                 }
 
                 // Commit transaction 
@@ -676,14 +492,14 @@ class TabsController extends Controller
                 $transaction->rollBack();
                 return $this->asJson([
                     'success' => false,
-                    'message' => 'An error occurred during import: ' . $e->getMessage(),
+                    'message' => 'Đã xảy ra lỗi trong quá trình nhập: ' . $e->getMessage(),
                 ]);
             }
 
 
         }
 
-        return $this->asJson(['success' => false, 'message' => 'Unable to upload the Excel file']);
+        return $this->asJson(['success' => false, 'message' => 'Không thể tải tệp Excel lên']);
     }
 
 
@@ -868,7 +684,7 @@ class TabsController extends Controller
             unlink($filePath);
             return $this->asJson(['success' => true]);
         } else {
-            return $this->asJson(['success' => false, 'message' => 'File not found']);
+            return $this->asJson(['success' => false, 'message' => 'Không tìm thấy tập tin']);
         }
     }
 

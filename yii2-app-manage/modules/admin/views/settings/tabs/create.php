@@ -18,7 +18,7 @@ $isPrimary = $tableCreationData['isPrimary'] ?? [];
 
 ?>
 <?php include Yii::getAlias('@app/views/layouts/_icon.php'); ?>
-<?php include Yii::getAlias('@app/views/layouts/_sidebar.php'); ?>
+<?php include Yii::getAlias('@app/views/layouts/_sidebar-settings.php'); ?>
 
 
 <div class="toast-container position-fixed top-0 end-0 p-3 toast-index toast-rtl">
@@ -352,5 +352,3 @@ document.getElementById('icon-select').addEventListener('change', function() {
     ;
 }
 </style>
-
-

@@ -38758,7 +38758,7 @@ footer p .footer-icon {
 .page-wrapper .page-header .header-wrapper .nav-right .profile-dropdown {
   width: 160px;
   top: 57px;
-  left: -12px;
+  left: -45px;
   padding: 0 10px;
 }
 
@@ -45190,10 +45190,12 @@ footer p .footer-icon {
 .spinner-fixed {
   position: fixed;
   top: 45%;
-  left: 50%;
+  left: calc(50% + 125px);
+  /* Cộng thêm một khoảng cách để tạo khoảng trống cho sidebar */
   transform: translate(-50%, -50%);
   z-index: 9999;
 }
+
 
 .spinner-fixed i {
   font-size: 40px;
@@ -45251,4 +45253,40 @@ footer p .footer-icon {
   color: #333 !important;
   border: 1px solid transparent;
   border-radius: 2px;
+}
+
+#icon-display {
+  margin-top: 5px;
+}
+
+.stroke-icon {
+  width: 24px;
+  height: 24px;
+  fill: currentColor;
+  stroke: #363636;
+}
+
+.icon-item.selected {
+  border: 2px solid #007bff;
+  /* Viền màu xanh dương */
+  border-radius: 8px;
+  padding: 4px;
+}
+
+#icon-list {
+  display: none;
+  overflow-y: auto;
+  max-height: 200px;
+  border-radius: 8px;
+  padding: 10px;
+}
+
+#icon-select-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+  border: 1px solid #ccc;
+  padding: 8px;
+  border-radius: 8px;
 }
