@@ -136,7 +136,7 @@ $globalIndexOffset = $page * $rowsPerPage;
                 <?php foreach ($columns as $column): ?>
                 <th><?= htmlspecialchars($column->name) ?></th>
                 <?php endforeach; ?>
-                <th style="width: 8%;">Action</th>
+                <th style="width: 8%;">Thao Tác</th>
             </tr>
         </thead>
         <?php if (!empty($data)): ?>
@@ -217,22 +217,22 @@ $globalIndexOffset = $page * $rowsPerPage;
         <!-- Pagination Links -->
         <div class="dataTables_paginate paging_simple_numbers ms-md-auto">
             <?= LinkPager::widget([
-                    'pagination' => $pagination,
-                    'options' => ['class' => 'pagination justify-content-end align-items-center'],
-                    'linkContainerOptions' => ['tag' => 'span'],
-                    'linkOptions' => [
-                        'class' => 'paginate_button',
-                        'data-page' => function ($page) {
+                'pagination' => $pagination,
+                'options' => ['class' => 'pagination justify-content-end align-items-center'],
+                'linkContainerOptions' => ['tag' => 'span'],
+                'linkOptions' => [
+                    'class' => 'paginate_button',
+                    'data-page' => function ($page) {
                         return $page + 1;
                     },
-                    ],
-                    'activePageCssClass' => 'current',
-                    'disabledPageCssClass' => 'disabled',
-                    'disabledListItemSubTagOptions' => ['tag' => 'span', 'class' => 'paginate_button'],
-                    'prevPageLabel' => 'Previous',
-                    'nextPageLabel' => 'Next',
-                    'maxButtonCount' => 5,
-                ]) ?>
+                ],
+                'activePageCssClass' => 'current',
+                'disabledPageCssClass' => 'disabled',
+                'disabledListItemSubTagOptions' => ['tag' => 'span', 'class' => 'paginate_button'],
+                'prevPageLabel' => 'Previous',
+                'nextPageLabel' => 'Next',
+                'maxButtonCount' => 5,
+            ]) ?>
         </div>
 
         <!-- Last Page Button -->
@@ -267,8 +267,8 @@ $globalIndexOffset = $page * $rowsPerPage;
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"
-                        aria-label="Cancel">Cancel</button>
-                    <button type="button" class="btn btn-primary" id="save-row-btn">Save</button>
+                        aria-label="Cancel">Hủy</button>
+                    <button type="button" class="btn btn-primary" id="save-row-btn">Lưu</button>
                 </div>
             </div>
         </div>
@@ -295,8 +295,8 @@ $globalIndexOffset = $page * $rowsPerPage;
                     <?php endforeach; ?>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="button" id="add-row-btn" class="btn btn-primary">Add</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                    <button type="button" id="add-row-btn" class="btn btn-primary">Thêm</button>
                 </div>
             </div>
         </div>
@@ -305,8 +305,8 @@ $globalIndexOffset = $page * $rowsPerPage;
     <script>
     var tabId = <?= json_encode($tabId) ?>;
     var columns = <?= json_encode(array_map(function ($column) {
-            return htmlspecialchars($column->name);
-        }, $columns)) ?>;
+                        return htmlspecialchars($column->name);
+                    }, $columns)) ?>;
     var columnsArray = Array.isArray(columns) ? columns : Object.entries(columns).map(([key]) => ({
         name: key,
     }));

@@ -11,12 +11,14 @@ $this->title = 'Create Tabs';
 // Loop through columns from session data or initialize empty
 $columns = $tableCreationData['columns'] ?? [];
 $dataTypes = $tableCreationData['dataTypes'] ?? [];
+$tabmenuId = $tableCreationData['tabmenuId'] ?? [];
 $dataSizes = $tableCreationData['dataSizes'] ?? [];
 $defaultValues = $tableCreationData['defaultValues'] ?? [];
 $isNotNull = $tableCreationData['isNotNull'] ?? [];
 $isPrimary = $tableCreationData['isPrimary'] ?? [];
 
 ?>
+
 <?php include Yii::getAlias('@app/views/layouts/_icon.php'); ?>
 <?php include Yii::getAlias('@app/views/layouts/_sidebar-settings.php'); ?>
 
@@ -68,8 +70,8 @@ document.addEventListener('DOMContentLoaded', function() {
             <div class="col-sm-12">
                 <div class="card">
                     <div class="card-header card-no-border pb-0">
-                        <h4>Create Tab</h4>
-                        <p class="mt-1 f-m-light">Create Table Tab | Richtext Tab</p>
+                        <h4>Thêm Mới Tab</h4>
+                        <p class="mt-1 f-m-light">Thêm Table Tab | Richtext Tab</p>
                     </div>
                     <div class="card-body">
                         <form action="<?= \yii\helpers\Url::to(['create-tab']) ?>" method="post">
@@ -77,7 +79,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
                             <div class="row">
                                 <div class="col-12 col-md-6 col-lg-3 col-xl-3 mb-3">
-                                    <label for="tab_name" class="form-label">Tab Name</label>
+                                    <label for="tab_name" class="form-label">Tên Tab</label>
                                     <input type="text" name="tab_name" class="form-control" id="tab_name"
                                         value="<?= $tableCreationData['tabName'] ?? ''; ?>">
                                     <?php if (Yii::$app->session->hasFlash('error_tab_name')): ?>
@@ -87,149 +89,180 @@ document.addEventListener('DOMContentLoaded', function() {
 
                                 <!-- Chọn loại tab -->
                                 <div class="col-12 col-md-6 col-lg-3 col-xl-2 mb-3">
-                                    <label for="tab_type" class="form-label">Tab Type</label>
+                                    <label for="tab_type" class="form-label">Loại Tab</label>
                                     <select name="tab_type" id="tab_type" class="form-select"
                                         onchange="toggleTabInputs()">
                                         <option value="table">Table</option>
                                         <option value="richtext">Rich Text</option>
                                     </select>
                                 </div>
-                                <!-- Group Tab -->
+                                <!-- Menu Tab -->
                                 <div class="col-12 col-md-6 col-lg-2 col-xl-2 mb-3">
-                                    <label for="tab_group" class="form-label">Select Tab Group</label>
-                                    <select name="tab_group" id="tab_group" class="form-select">
-                                        <option value="">-- Không --</option>
-                                        <?php foreach ($tabGroups as $group): ?>
+                                    <label for="tab_menu" class="form-label">Chọn Loại Menu</label>
+                                    <select name="tab_menu" id="tab_menu" class="form-select">
+                                        <option class="txt-primary" value="">-- Không --</option>
+
+                                        <?php foreach ($tabMenus as $group): ?>
+                                        <?php if ($group->menu_type !== 'none'): ?>
+                                        <!-- Kiểm tra menu_type -->
                                         <option value="<?= $group->id ?>"
-                                            <?= (isset($tableCreationData['tabGroup']) && $tableCreationData['tabGroup'] == $group->id) ? 'selected' : '' ?>>
+                                            <?= (isset($tabmenuId) && $tabmenuId == $group->id) ? 'selected' : '' ?>>
                                             <?= Html::encode($group->name) ?>
                                         </option>
+                                        <?php endif; ?>
                                         <?php endforeach; ?>
                                     </select>
-                                    <?php if (Yii::$app->session->hasFlash('error_tab_group')): ?>
-                                    <div class="text-danger"><?= Yii::$app->session->getFlash('error_tab_group') ?>
-                                    </div>
+                                    <?php if (Yii::$app->session->hasFlash('error_tab_menu')): ?>
+                                    <div class="text-danger"><?= Yii::$app->session->getFlash('error_tab_menu') ?></div>
                                     <?php endif; ?>
                                 </div>
 
-                                <!-- Icon Selection (this will be hidden when a group is selected) -->
-                                <div class="col-12 col-md-6 col-lg-2 col-xl-2 mb-3" id="icon-container">
+
+
+                                <!-- Icon -->
+                                <div class="col-12 col-md-8 col-lg-6 col-xl-4 custom-col mb-3 mb-3">
                                     <label for="icon-select" class="form-label">Chọn icon</label>
-                                    <select id="icon-select" name="icon" class="form-select">
-                                        <?php foreach ($iconOptions as $iconValue => $iconLabel): ?>
-                                        <option value="<?= Html::encode($iconValue) ?>"><?= Html::encode($iconLabel) ?>
-                                        </option>
-                                        <?php endforeach; ?>
-                                    </select>
+                                    <div class="row">
+                                        <div class="col-12">
+                                            <div id="icon-select-wrapper"
+                                                class="d-flex align-items-center justify-content-between"
+                                                style="cursor: pointer; border: 1px solid #ccc; padding: 8px; border-radius: 8px;">
+                                                <span
+                                                    id="selected-icon-label"><?= isset($selectedIconLabel) ? Html::encode($selectedIconLabel) : 'Chọn icon' ?></span>
+                                                <svg id="selected-icon" class="stroke-icon mx-2" width="24" height="24">
+                                                    <use
+                                                        href="<?= isset($selectedIcon) ? Yii::getAlias('@web') . "/images/icon-sprite.svg#{$selectedIcon}" : '' ?>">
+                                                    </use>
+                                                </svg>
+                                            </div>
 
+                                            <!-- Danh sách icon -->
+                                            <div id="icon-list" class="d-flex flex-wrap mt-2"
+                                                style="display: none; overflow-y: auto; max-height: 200px; border: 1px solid #ccc; border-radius: 8px;">
+                                                <?php foreach ($iconOptions as $iconValue => $iconLabel): ?>
+                                                <div class="icon-item col-2 col-md-2 col-lg-1 me-2 mb-2 text-center"
+                                                    data-icon="<?= Html::encode($iconValue) ?>"
+                                                    style="cursor: pointer; padding: 4px">
+                                                    <svg class="stroke-icon" width="40" height="40">
+                                                        <use
+                                                            href="<?= Yii::getAlias('@web') ?>/images/icon-sprite.svg#<?= Html::encode($iconValue) ?>">
+                                                        </use>
+                                                    </svg>
+                                                </div>
+                                                <?php endforeach; ?>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <input type="hidden" id="icon-selected-value" name="icon"
+                                        value="<?= Html::encode($selectedIcon ?? '') ?>">
 
                                 </div>
 
-                                <div class="col-2 d-flex align-items-center ms-3" id="icon-display">
-                                    <svg class="stroke-icon" width="24" height="24">
-                                        <use
-                                            href="<?= Yii::getAlias('@web') ?>/images/icon-sprite.svg#<?= reset(array_keys($iconOptions)) ?>">
-                                        </use>
-                                    </svg>
+                                <!-- Phần input cho loại tab "Table" -->
+                                <div id="tableInputs" style="display: none;">
+                                    <div class="table-responsive">
+                                        <table class="table table-bordered">
+                                            <thead>
+                                                <tr>
+                                                    <th>Tên</th>
+                                                    <th>Loại</th>
+                                                    <th>Độ Dài</th>
+                                                    <th class="text-center">Not_Null</th>
+                                                    <th class="text-center">A_I</th>
+                                                    <th></th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="columnsContainer">
+                                                <?php
+                                                foreach ($columns as $index => $column): ?>
+                                                <tr>
+                                                    <td>
+                                                        <input type="text" name="columns[]" class="form-control"
+                                                            value="<?= Html::encode($column) ?>">
+                                                        <?php if (Yii::$app->session->hasFlash("error_columns[$index]")): ?>
+                                                        <div class="text-danger">
+                                                            <?= Yii::$app->session->getFlash("error_columns[$index]") ?>
+                                                        </div>
+                                                        <?php endif; ?>
+                                                    </td>
+                                                    <td>
+                                                        <select name="data_types[]" class="form-select">
+                                                            <?php
+                                                                $dataTypeOptions = [
+                                                                    "INT",
+                                                                    "BIGINT",
+                                                                    "SMALLINT",
+                                                                    "TINYINT",
+                                                                    "FLOAT",
+                                                                    "DOUBLE",
+                                                                    "DECIMAL",
+                                                                    "VARCHAR",
+                                                                    "CHAR",
+                                                                    "TEXT",
+                                                                    "MEDIUMTEXT",
+                                                                    "LONGTEXT",
+                                                                    "DATE",
+                                                                    "DATETIME",
+                                                                    "TIMESTAMP",
+                                                                    "TIME",
+                                                                    "BOOLEAN",
+                                                                    "JSON",
+                                                                    "BLOB"
+                                                                ];
+                                                                foreach ($dataTypeOptions as $option): ?>
+                                                            <option value="<?= $option ?>"
+                                                                <?= (isset($dataTypes[$index]) && $dataTypes[$index] == $option) ? 'selected' : '' ?>>
+                                                                <?= $option ?>
+                                                            </option>
+                                                            <?php endforeach; ?>
+                                                        </select>
+                                                        <?php if (Yii::$app->session->hasFlash("error_data_types[$index]")): ?>
+                                                        <div class="text-danger">
+                                                            <?= Yii::$app->session->getFlash("error_data_types[$index]") ?>
+                                                        </div>
+                                                        <?php endif; ?>
+                                                    </td>
+                                                    <td><input type="number" name="data_sizes[]" class="form-control"
+                                                            value="<?= Html::encode($dataSizes[$index] ?? '') ?>"
+                                                            placeholder="Length">
+                                                        <?php if (Yii::$app->session->hasFlash("error_data_sizes[$index]")): ?>
+                                                        <div class="text-danger">
+                                                            <?= Yii::$app->session->getFlash("error_data_sizes[$index]") ?>
+                                                        </div>
+                                                        <?php endif; ?>
+                                                    </td>
+                                                    <td class="text-center">
+                                                        <input type="checkbox" name="is_not_null[<?= $index ?>]"
+                                                            value="1" class="form-check-input"
+                                                            <?= (isset($isNotNull[$index]) && $isNotNull[$index] == '1') ? 'checked' : '' ?>>
+                                                    </td>
+                                                    <td class="text-center">
+                                                        <input type="checkbox" name="is_primary[]" value="1"
+                                                            class="form-check-input"
+                                                            <?= (isset($isPrimary[$index]) && $isPrimary[$index] == '1') ? 'checked' : '' ?>>
+                                                        <?php if (Yii::$app->session->hasFlash("error_is_primary[$index]")): ?>
+                                                        <div class="text-danger">
+                                                            <?= Yii::$app->session->getFlash("error_is_primary[$index]") ?>
+                                                        </div>
+                                                        <?php endif; ?>
+                                                    </td>
+                                                    <td>
+                                                        <i class="fa-solid fa-square-minus text-danger fs-3"
+                                                            style="cursor: pointer;" onclick="removeColumn(this)"></i>
+                                                    </td>
+                                                </tr>
+                                                <?php endforeach; ?>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                    <button type="button" class="btn btn-outline-primary my-3" onclick="addColumn()">+
+                                        Thêm cột</button>
                                 </div>
-
-                            </div>
-
-                            <!-- Phần input cho loại tab "Table" -->
-                            <div id="tableInputs" style="display: none;">
-                                <div class="table-responsive">
-                                    <table class="table table-bordered">
-                                        <thead>
-                                            <tr>
-                                                <th>Name</th>
-                                                <th>Type</th>
-                                                <th>Length/Value</th>
-                                                <th class="text-center">Not_Null</th>
-                                                <th class="text-center">A_I</th>
-                                                <th></th>
-                                            </tr>
-                                        </thead>
-                                        <tbody id="columnsContainer">
-                                            <?php 
-                                        foreach ($columns as $index => $column): ?>
-                                            <tr>
-                                                <td>
-                                                    <input type="text" name="columns[]" class="form-control"
-                                                        value="<?= Html::encode($column) ?>">
-                                                    <?php if (Yii::$app->session->hasFlash("error_columns[$index]")): ?>
-                                                    <div class="text-danger">
-                                                        <?= Yii::$app->session->getFlash("error_columns[$index]") ?>
-                                                    </div>
-                                                    <?php endif; ?>
-                                                </td>
-                                                <td>
-                                                    <select name="data_types[]" class="form-select">
-                                                        <?php
-                                                        $dataTypeOptions = [
-                                                            "INT", "BIGINT", "SMALLINT", "TINYINT", "FLOAT",
-                                                            "DOUBLE", "DECIMAL", "VARCHAR", "CHAR", "TEXT",
-                                                            "MEDIUMTEXT", "LONGTEXT", "DATE", "DATETIME",
-                                                            "TIMESTAMP", "TIME", "BOOLEAN", "JSON", "BLOB"
-                                                        ];
-                                                        foreach ($dataTypeOptions as $option): ?>
-                                                        <option value="<?= $option ?>"
-                                                            <?= (isset($dataTypes[$index]) && $dataTypes[$index] == $option) ? 'selected' : '' ?>>
-                                                            <?= $option ?>
-                                                        </option>
-                                                        <?php endforeach; ?>
-                                                    </select>
-                                                    <?php if (Yii::$app->session->hasFlash("error_data_types[$index]")): ?>
-                                                    <div class="text-danger">
-                                                        <?= Yii::$app->session->getFlash("error_data_types[$index]") ?>
-                                                    </div>
-                                                    <?php endif; ?>
-                                                </td>
-                                                <td><input type="number" name="data_sizes[]" class="form-control"
-                                                        value="<?= Html::encode($dataSizes[$index] ?? '') ?>"
-                                                        placeholder="Length">
-                                                    <?php if (Yii::$app->session->hasFlash("error_data_sizes[$index]")): ?>
-                                                    <div class="text-danger">
-                                                        <?= Yii::$app->session->getFlash("error_data_sizes[$index]") ?>
-                                                    </div>
-                                                    <?php endif; ?>
-                                                </td>
-
-                                                <td class="text-center">
-                                                    <input type="checkbox" name="is_not_null[]" value="1"
-                                                        class="form-check-input"
-                                                        <?= (isset($isNotNull[$index]) && $isNotNull[$index] == '1') ? 'checked' : '' ?>>
-                                                    <?php if (Yii::$app->session->hasFlash("error_is_not_null[$index]")): ?>
-                                                    <div class="text-danger">
-                                                        <?= Yii::$app->session->getFlash("error_is_not_null[$index]") ?>
-                                                    </div>
-                                                    <?php endif; ?>
-                                                </td>
-                                                <td class="text-center">
-                                                    <input type="checkbox" name="is_primary[]" value="1"
-                                                        class="form-check-input" onchange="togglePrimaryKey(this)"
-                                                        <?= (isset($isPrimary[$index]) && $isPrimary[$index] == '1') ? 'checked' : '' ?>>
-                                                    <?php if (Yii::$app->session->hasFlash("error_is_primary[$index]")): ?>
-                                                    <div class="text-danger">
-                                                        <?= Yii::$app->session->getFlash("error_is_primary[$index]") ?>
-                                                    </div>
-                                                    <?php endif; ?>
-                                                </td>
-                                                <td>
-                                                    <i class="fa-solid fa-square-minus text-danger fs-3"
-                                                        style="cursor: pointer;" onclick="removeColumn(this)"></i>
-                                                </td>
-                                            </tr>
-                                            <?php endforeach; ?>
-                                        </tbody>
-                                    </table>
+                                <!-- Nút tạo -->
+                                <div class="mt-3">
+                                    <button type="submit" class="btn btn-success">Thêm</button>
                                 </div>
-                                <button type="button" class="btn btn-outline-primary my-3" onclick="addColumn()">+ Add
-                                    column</button>
-                            </div>
-                            <!-- Nút tạo -->
-                            <div class="mt-3">
-                                <button type="submit" class="btn btn-success">Create</button>
-                            </div>
                         </form>
                     </div>
                 </div>
@@ -285,7 +318,7 @@ function addColumn() {
             <input type="checkbox" name="is_not_null[]" value="1" class="form-check-input">
         </td>
         <td class="text-center">
-            <input type="checkbox" name="is_primary[]" value="1" class="form-check-input" onchange="togglePrimaryKey(this)">
+            <input type="checkbox" name="is_primary[]" value="1" class="form-check-input">
         </td>
         <td><i class="fa-solid fa-square-minus text-danger fs-3" style="cursor: pointer;" onclick="removeColumn(this)"></i></td>`;
     columnsContainer.appendChild(inputGroup);
@@ -296,47 +329,28 @@ function removeColumn(button) {
     const row = button.closest('tr');
     row.remove();
 }
-
-function togglePrimaryKey(primaryCheckbox) {
-    const notNullCheckbox = primaryCheckbox.closest('tr').querySelector(
-        'input[name="is_not_null[]"]');
-
-    if (primaryCheckbox.checked) {
-        notNullCheckbox.checked = true;
-        notNullCheckbox.disabled = true;
-    } else {
-        notNullCheckbox.disabled = false;
-    }
-}
-</script>
-
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    const tabGroupSelect = document.getElementById('tab_group');
-    const iconContainer = document.getElementById('icon-container');
-    const iconDisplay = document.getElementById('icon-display');
-
-    toggleIconSelection(tabGroupSelect.value);
-
-    tabGroupSelect.addEventListener('change', function() {
-        toggleIconSelection(this.value);
+$(document).ready(function() {
+    $('.icon-item').on('click', function() {
+        var selectedIcon = $(this).data('icon');
+        $('#selected-icon-label').text(selectedIcon);
+        $('#selected-icon use').attr('href', '<?= Yii::getAlias('@web') ?>/images/icon-sprite.svg#' +
+            selectedIcon);
+        $('#icon-selected-value').val(selectedIcon);
+        console.log("🚀 ~ selectedIcon:", selectedIcon);
+        console.log("Input value:", $('#icon-selected-value').val());
+        $('#icon-list').hide();
     });
 
-    function toggleIconSelection(selectedValue) {
-        if (selectedValue) {
-            iconContainer.classList.add('d-none');
-            iconDisplay.classList.add('d-none');
+    $('#tab_menu').change(function() {
+        var selectedMenu = $(this).val();
+        if (selectedMenu !== '') {
+            $('#icon-list').hide();
+            $('#selected-icon-label').text('Chọn icon');
+            $('#icon-selected-value').val('');
         } else {
-            iconContainer.classList.remove('d-none');
-            iconDisplay.classList.remove('d-none');
+            $('#icon-list').show();
         }
-    }
-});
-
-document.getElementById('icon-select').addEventListener('change', function() {
-    const selectedIcon = this.value;
-    const iconDisplay = document.getElementById('icon-display').querySelector('use');
-    iconDisplay.setAttribute('href', `<?= Yii::getAlias('@web') ?>/images/icon-sprite.svg#${selectedIcon}`);
+    });
 });
 </script>
 
@@ -346,9 +360,7 @@ document.getElementById('icon-select').addEventListener('change', function() {
 }
 
 .stroke-icon {
-
     fill: currentColor;
     stroke: #363636;
-    ;
 }
 </style>

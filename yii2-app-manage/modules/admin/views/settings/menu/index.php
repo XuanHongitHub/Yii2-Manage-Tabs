@@ -6,7 +6,7 @@ use yii\helpers\Html;
 /** @var app\models\TableTab[] $tableTabs */
 $tableCreationData = Yii::$app->session->getFlash('tableCreationData', []);
 
-$this->title = 'List Groups';
+$this->title = 'Danh Sách Menu';
 
 ?>
 <?php include Yii::getAlias('@app/views/layouts/_icon.php'); ?>
@@ -28,25 +28,26 @@ $this->title = 'List Groups';
                     <div class="card-header card-no-border pb-0">
                         <div class="d-flex flex-column flex-md-row align-items-md-center">
                             <div class="me-auto mb-3 mb-md-0 text-center text-md-start">
-                                <h4>List of Tabs</h4>
-                                <p class="mt-1 f-m-light">Table Tab | Richtext Tab</p>
+                                <h4>Danh sách Menu</h4>
+                                <p class="mt-1 f-m-light">Sub Menu | Sub Tab</p>
                             </div>
                             <div
                                 class="d-flex flex-wrap justify-content-center align-items-center me-md-2 mb-3 mb-md-0">
                                 <a class="btn btn-outline-warning me-2 mb-2" href="#" data-bs-toggle="modal"
                                     data-bs-target="#hideModal">
-                                    <i class="fas fa-eye me-1"></i> Show/Hidden
+                                    <i class="fas fa-eye me-1"></i> Hiện/Ẩn
                                 </a>
                                 <a class="btn btn-outline-primary me-2 mb-2" href="#" data-bs-toggle="modal"
                                     data-bs-target="#sortModal">
-                                    <i class="fas fa-sort-amount-down me-1"></i> Sort Tab
+                                    <i class="fas fa-sort-amount-down me-1"></i> Sắp Xếp
                                 </a>
                                 <a class="btn btn-danger me-2 mb-2" href="#" data-bs-toggle="modal"
                                     data-bs-target="#trashBinModal">
-                                    <i class="fas fa-trash me-1"></i> Trash Bin
+                                    <i class="fas fa-trash me-1"></i> Thùng Rác
                                 </a>
-                                <a class="btn btn-success mb-2" href="<?= \yii\helpers\Url::to(['settings/create']) ?>">
-                                    <i class="fas fa-plus me-1"></i> New Tab
+                                <a class="btn btn-success mb-2"
+                                    href="<?= \yii\helpers\Url::to(['settings/menu-create']) ?>">
+                                    <i class="fas fa-plus me-1"></i> Thêm Tab
                                 </a>
                             </div>
 
@@ -61,17 +62,18 @@ $this->title = 'List Groups';
                                 <thead>
                                     <tr>
                                         <th>ID</th>
-                                        <th>Tên Nhóm</th>
+                                        <th>Tên Menu</th>
                                         <th>Icon</th>
-                                        <th>Loại Nhóm</th>
+                                        <th>Loại Menu</th>
+                                        <th class="text-center">Trạng Thái</th>
+
                                         <th>Vị Trí</th>
-                                        <th>Trạng Thái</th>
                                         <th>Created At</th>
-                                        <th style="width: 8%">Actions</th>
+                                        <th style="width: 8%">Thao tác</th>
                                     </tr>
                                 </thead>
                                 <tbody id="columnsContainer">
-                                    <?php foreach ($tabGroups as $tabGroup): ?>
+                                    <?php foreach ($tabMenus as $tabGroup): ?>
                                     <tr>
                                         <td><?= Html::encode($tabGroup->id) ?></td>
                                         <td><?= Html::encode($tabGroup->name) ?></td>
@@ -85,20 +87,27 @@ $this->title = 'List Groups';
                                             </div>
                                         </td>
                                         <td class="text-center">
-                                            <?php if ($tabGroup->group_type == 'menu_group'): ?>
-                                            <span class="badge badge-light-primary">Sub Menu</span>
+                                            <?php if ($tabGroup->menu_type == 'menu_group'): ?>
+                                            <span class="badge badge-light-primary">Menu Con</span>
+                                            <?php elseif ($tabGroup->menu_type == 'tab_menu'): ?>
+                                            <span class="badge badge-light-danger">Tab Con</span>
                                             <?php else: ?>
-                                            <span class="badge badge-light-danger">Sub Tab</span>
+                                            <span class="badge badge-light-dark">Không</span>
                                             <?php endif; ?>
                                         </td>
+                                        <td class="text-center">
+                                            <?= $tabGroup->deleted == 3 ?
+                                                    '<span class="badge badge-warning">Ẩn</span>' : '<span class="badge badge-success">Hiện</span>'
+                                                ?>
+                                        </td>
                                         <td><?= Html::encode($tabGroup->position) ?></td>
-                                        <td><?= $tabGroup->deleted ? 'Yes' : 'No' ?></td>
+
                                         <td><?= Yii::$app->formatter->asDatetime($tabGroup->created_at) ?></td>
                                         <td class="d-flex text-nowrap justify-content-center">
                                             <button class="btn btn-sm btn-primary me-1 edit-btn" data-bs-toggle="modal"
                                                 data-bs-target="#editModal" data-tab-group-id="<?= $tabGroup->id ?>"
                                                 data-group-name="<?= Html::encode($tabGroup->name) ?>"
-                                                data-group-type="<?= Html::encode($tabGroup->group_type) ?>"
+                                                data-group-type="<?= Html::encode($tabGroup->menu_type) ?>"
                                                 data-icon="<?= Html::encode($tabGroup->icon) ?>"
                                                 data-status="<?= Html::encode($tabGroup->deleted) ?>"
                                                 data-position="<?= Html::encode($tabGroup->position) ?>">
@@ -110,7 +119,6 @@ $this->title = 'List Groups';
                                                 <i class="fa-regular fa-trash-can"></i>
                                             </button>
                                         </td>
-
                                     </tr>
                                     <?php endforeach; ?>
                                 </tbody>
@@ -134,42 +142,38 @@ $this->title = 'List Groups';
             </div>
             <div class="modal-body">
                 <form id="editTabGroupForm">
-                    <!-- Tên nhóm -->
+                    <!-- Tên Menu -->
                     <div class="mb-3">
-                        <label for="tabGroupName" class="form-label">Tên nhóm</label>
-                        <input type="text" class="form-control" id="tabGroupName" name="name" required>
+                        <label for="tabmenuName" class="form-label">Tên Menu</label>
+                        <input type="text" class="form-control" id="tabmenuName" name="name" required>
                     </div>
 
-                    <!-- Loại nhóm -->
+                    <!-- Loại Menu -->
                     <div class="mb-3">
-                        <label for="tabGroupType" class="form-label">Loại nhóm</label>
-                        <select class="form-select" id="tabGroupType" name="group_type" required>
+                        <label for="tabmenuType" class="form-label">Loại Menu</label>
+                        <select class="form-select" id="tabmenuType" name="menu_type" required>
                             <option value="menu_group">Sub Menu</option>
-                            <option value="sub_tab">Sub Tab</option>
+                            <option value="tab_menu">Sub Tab</option>
                         </select>
                     </div>
 
                     <!-- Icon -->
                     <div class="mb-3">
-                        <label for="icon-select" id="icon" class="form-label">Chọn icon</label>
-                        <div class="d-flex align-items-center">
-                            <div class="col-8">
-                                <!-- Hiển thị khu vực chọn icon -->
-                                <div id="icon-select-wrapper" class="d-flex align-items-center"
+                        <label for="icon-select" class="form-label">Chọn icon</label>
+                        <div class="row">
+                            <div class="col-12">
+                                <div id="icon-select-wrapper" class="d-flex align-items-center justify-content-between"
                                     style="cursor: pointer; border: 1px solid #ccc; padding: 8px; border-radius: 8px;">
                                     <span id="selected-icon-label">Chọn icon</span>
-                                    <svg id="selected-icon" class="stroke-icon ms-3" width="24" height="24">
-                                        <use
-                                            href="<?= Yii::getAlias('@web') ?>/images/icon-sprite.svg#<?= reset(array_keys($iconOptions)) ?>">
-                                        </use>
-                                    </svg>
+                                    <svg id="selected-icon" class="stroke-icon mx-2" width="24" height="24"></svg>
                                 </div>
 
                                 <!-- Danh sách icon -->
-                                <div id="icon-list" class="mt-2"
-                                    style="display: none !important; overflow-y: auto; max-height: 200px; border: 1px solid #ccc; border-radius: 8px;">
+                                <div id="icon-list" class="d-flex flex-wrap mt-2"
+                                    style="display: none; overflow-y: auto; max-height: 200px; border: 1px solid #ccc; border-radius: 8px;">
                                     <?php foreach ($iconOptions as $iconValue => $iconLabel): ?>
-                                    <div class="icon-item me-2 mb-2" data-icon="<?= Html::encode($iconValue) ?>"
+                                    <div class="icon-item col-2 col-md-2 col-lg-1 me-2 mb-2 text-center"
+                                        data-icon="<?= Html::encode($iconValue) ?>"
                                         style="cursor: pointer; padding: 4px;">
                                         <svg class="stroke-icon" width="40" height="40">
                                             <use
@@ -183,13 +187,12 @@ $this->title = 'List Groups';
                         </div>
                     </div>
 
-
                     <!-- Trạng thái -->
                     <div class="mb-3">
-                        <label for="tabGroupStatus" class="form-label">Trạng thái</label>
-                        <select class="form-select" id="tabGroupStatus" name="status" required>
-                            <option value="1">Hiển thị</option>
-                            <option value="3">Ẩn</option>
+                        <label for="tabMenustatus" class="form-label">Trạng thái</label>
+                        <select class="form-select" id="tabMenustatus" name="status" required>
+                            <option value="0" <?= $tabGroup->deleted == 0 ? 'selected' : '' ?>>Hiển thị</option>
+                            <option value="3" <?= $tabGroup->deleted == 3 ? 'selected' : '' ?>>Ẩn</option>
                         </select>
                     </div>
 
@@ -202,115 +205,75 @@ $this->title = 'List Groups';
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
-                <button type="button" class="btn btn-primary" id="saveTabGroupChanges">Lưu thay đổi</button>
+                <button type="button" class="btn btn-primary" id="saveTabMenuChanges">Lưu thay đổi</button>
             </div>
         </div>
     </div>
 </div>
-
 <script>
 $(document).ready(function() {
-    // Khi nhấn vào nút sửa
     $('.edit-btn').on('click', function() {
-        var groupId = $(this).data('tab-group-id');
-        var groupName = $(this).data('group-name');
-        var groupType = $(this).data('group-type');
+        var menuId = $(this).data('tab-group-id');
+        var menuName = $(this).data('group-name');
+        var menuType = $(this).data('group-type');
         var icon = $(this).data('icon');
         var status = $(this).data('status');
         var position = $(this).data('position');
 
-        // Điền giá trị vào các trường trong modal
-        $('#tabGroupName').val(groupName);
-        $('#tabGroupType').val(groupType); // Chọn loại nhóm
-        $('#icon-select').val(icon); // Chọn icon
-        $('#tabGroupStatus').val(status);
+        $('#tabmenuName').val(menuName);
+        $('#tabmenuType').val(menuType);
+        $('#tabMenustatus').val(status);
         $('#tabGroupPosition').val(position);
+        $('#editTabGroupForm').data('group-id', menuId);
 
-        // Lưu trữ ID nhóm vào form để sử dụng khi gửi
-        $('#editTabGroupForm').data('group-id', groupId);
+        $('#selected-icon').html('<use href="<?= Yii::getAlias('@web') ?>/images/icon-sprite.svg#' +
+            icon + '"></use>');
+        $('#selected-icon-label').text(icon);
     });
 
-    // Khi nhấn "Lưu thay đổi"
-    $('#saveTabGroupChanges').on('click', function() {
+    $('#icon-list').on('click', '.icon-item', function() {
+        var selectedIcon = $(this).data('icon');
+        $('#selected-icon').html('<use href="<?= Yii::getAlias('@web') ?>/images/icon-sprite.svg#' +
+            selectedIcon + '"></use>');
+        $('#selected-icon-label').text(selectedIcon);
+        $('#icon-list').hide(); // Ẩn danh sách icon
+    });
+
+    $('#saveTabMenuChanges').on('click', function() {
         var form = $('#editTabGroupForm');
-        var groupId = form.data('group-id');
-        var groupName = $('#tabGroupName').val();
-        var groupType = $('#tabGroupType').val();
-        var icon = $('#icon-select').val();
-        var status = $('#tabGroupStatus').val();
+        var menuId = form.data('group-id');
+        var menuName = $('#tabmenuName').val();
+        var menuType = $('#tabmenuType').val();
+        var icon = $('#selected-icon-label').text(); // Lấy icon đã chọn
+        var status = $('#tabMenustatus').val();
         var position = $('#tabGroupPosition').val();
 
         $.ajax({
-            url: '<?= \yii\helpers\Url::to(['settings/update-group']) ?>',
+            url: '<?= \yii\helpers\Url::to(['settings/create-or-update-group']) ?>',
             type: 'POST',
             headers: {
                 'X-CSRF-Token': $('meta[name="csrf-token"]').attr('content')
             },
             data: {
-                id: groupId,
-                name: groupName,
-                group_type: groupType,
+                id: menuId,
+                name: menuName,
+                menu_type: menuType,
                 icon: icon,
                 status: status,
                 position: position
             },
             success: function(response) {
                 $('#editModal').modal('hide');
-                location.reload(); // Tải lại trang để thấy thay đổi
+                location.reload();
             },
-            error: function() {
+            error: function(xhr, status, error) {
+                console.log('Lỗi AJAX: ', error);
                 alert('Có lỗi xảy ra, vui lòng thử lại.');
             }
         });
     });
-
-    // Cập nhật icon khi thay đổi
-    $('#icon-select').change(function() {
-        const selectedIcon = $(this).val();
-        const iconDisplay = $('#icon-display-edit svg use');
-        iconDisplay.attr('href', `<?= Yii::getAlias('@web') ?>/images/icon-sprite.svg#${selectedIcon}`);
-    });
 });
 
-$(document).ready(function() {
-    // Mở/Đóng danh sách icon khi nhấn vào khối chọn
-    $('#icon-select-wrapper').on('click', function() {
-        $('#icon-list').toggle(); // Hiện/ẩn danh sách icon
-    });
-
-    // Khi nhấn vào một icon, cập nhật icon đã chọn và thêm viền highlight
-    $('#icon-list .icon-item').on('click', function() {
-        var selectedIcon = $(this).data('icon'); // Lấy icon đã chọn
-
-        // Cập nhật tên của icon đã chọn vào ô chọn
-        $('#selected-icon-label').text('Icon: ' + selectedIcon);
-
-        // Thay đổi icon đã chọn
-        $('#selected-icon use').attr('href', '<?= Yii::getAlias('@web') ?>/images/icon-sprite.svg#' +
-            selectedIcon);
-
-        // Thêm viền highlight cho icon được chọn
-        $('#icon-list .icon-item').removeClass('selected');
-        $(this).addClass('selected');
-
-        // Cập nhật giá trị cho trường select (nếu bạn cần sử dụng)
-        $('#icon-select').val(selectedIcon);
-
-        // Đóng danh sách icon sau khi chọn
-        $('#icon-list').hide();
-    });
-
-    // Thêm viền highlight cho icon được chọn
-    $('#icon-list .icon-item').css({
-        'border': '1px solid transparent',
-        'border-radius': '8px',
-        'padding': '4px'
-    });
-
-    $('#icon-list .icon-item.selected').css({
-        'border': '2px solid #007bff' // Viền màu xanh dương cho icon được chọn
-    });
-});
 document.addEventListener('DOMContentLoaded', function() {
     // Check if there's a success message
     const successMessage = "<?= Yii::$app->session->getFlash('success') ?>";
@@ -332,12 +295,12 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 
-<!-- Modal Trash Bin -->
+<!-- Modal Thùng Rác -->
 <div class="modal fade" id="trashBinModal" tabindex="-1" aria-labelledby="trashBinModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="trashBinModalLabel">Trash Bin</h5>
+                <h5 class="modal-title" id="trashBinModalLabel">Thùng Rác</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
@@ -345,14 +308,14 @@ document.addEventListener('DOMContentLoaded', function() {
                 <table class="table table-bordered table-hover table-ui">
                     <thead>
                         <tr>
-                            <th>Tab name</th>
-                            <th style="width: 20%; text-align: center;">Type</th>
-                            <th style="width: 20%; text-align: center;">Action</th>
+                            <th>Tên Tab</th>
+                            <th style="width: 20%; text-align: center;">Loại</th>
+                            <th style="width: 20%; text-align: center;">Thao Tác</th>
                         </tr>
                     </thead>
                     <tbody id="trash-bin-list">
                         <?php $hasDeletedTabs = false; ?>
-                        <?php foreach ($tabGroups as $tab): ?>
+                        <?php foreach ($tabMenus as $tab): ?>
                         <?php if ($tab->deleted == 1): ?>
                         <?php $hasDeletedTabs = true; ?>
                         <tr>
@@ -389,7 +352,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 </table>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
             </div>
         </div>
     </div>
@@ -400,7 +363,7 @@ document.addEventListener('DOMContentLoaded', function() {
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="hideModalLabel">Show/Hidden Tab</h5>
+                <h5 class="modal-title" id="hideModalLabel">Hiện/Ẩn Tab</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cancel"></button>
             </div>
             <div class="modal-body">
@@ -408,12 +371,12 @@ document.addEventListener('DOMContentLoaded', function() {
                 <table class="table">
                     <thead>
                         <tr>
-                            <th>Tab name</th>
+                            <th>Tên Tab</th>
                             <th class="text-center">Show</i></th>
                         </tr>
                     </thead>
                     <tbody id="hide-tabs-list">
-                        <?php foreach ($tabGroups as $tab): ?>
+                        <?php foreach ($tabMenus as $tab): ?>
                         <?php if ($tab->deleted == 0 || $tab->deleted == 3): ?>
                         <tr>
                             <td>
@@ -434,25 +397,25 @@ document.addEventListener('DOMContentLoaded', function() {
                 </table>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-primary" id="confirm-hide-btn">Save</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                <button type="button" class="btn btn-primary" id="confirm-hide-btn">Lưu</button>
             </div>
         </div>
     </div>
 </div>
 
-<!-- Modal Sort tab -->
+<!-- Modal Sắp Xếp -->
 <div class="modal fade" id="sortModal" tabindex="-1" aria-labelledby="sortModalLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="sortModalLabel">Sort Tabs</h5>
+                <h5 class="modal-title" id="sortModalLabel">Sắp Xếps</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cancel"></button>
             </div>
             <div class="modal-body">
-                <p>Drag and drop to arrange tabs.</p>
+                <p>Kéo và thả để sắp xếp các tab.</p>
                 <ul class="list-group" id="sortable-tabs">
-                    <?php foreach ($tabGroups as $index => $tab): ?>
+                    <?php foreach ($tabMenus as $index => $tab): ?>
                     <li class="list-group-item d-flex justify-content-between align-items-center"
                         data-tab-id="<?= $tab->id ?>">
                         <span><?= htmlspecialchars($tab->name) ?></span>
@@ -462,8 +425,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 </ul>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-primary" id="confirm-sort-btn">Save</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                <button type="button" class="btn btn-primary" id="confirm-sort-btn">Lưu</button>
             </div>
         </div>
     </div>
@@ -474,18 +437,18 @@ document.addEventListener('DOMContentLoaded', function() {
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="deleteModalLabel">Confirm delete tab</h5>
+                <h5 class="modal-title" id="deleteModalLabel">Xác nhận xóa tab</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                Are you sure you want to delete this tab? This action cannot be undone.
+                Bạn có chắc chắn muốn xóa tab này không? Không thể hoàn tác hành động này.
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
                 <button type="button" class="btn btn-danger" id="confirm-delete-btn"
-                    data-tab-id="<?= htmlspecialchars($tabId) ?>">Delete</button>
+                    data-tab-id="<?= htmlspecialchars($tabId) ?>">Xóa</button>
                 <button type="button" class="btn btn-danger" id="confirm-delete-permanently-btn"
-                    data-tab-id="<?= htmlspecialchars($tabId) ?>">Delete permanently</button>
+                    data-tab-id="<?= htmlspecialchars($tabId) ?>">Xóa Vĩnh Viễn</button>
             </div>
         </div>
     </div>
@@ -498,7 +461,7 @@ document.addEventListener('DOMContentLoaded', function() {
             <small id="toast-timestamp"></small>
             <button class="btn-close" type="button" data-bs-dismiss="toast" aria-label="Close"></button>
         </div>
-        <div class="toast-body" id="toast-body">Notification</div>
+        <div class="toast-body" id="toast-body">Thông Báo</div>
     </div>
 </div>
 <script>
@@ -533,6 +496,9 @@ $(document).ready(function() {
             orderable: false,
             targets: -1
         }],
+        "order": [
+            [0, 'Desc']
+        ],
         "lengthChange": false,
         "autoWidth": false,
         "responsive": true,
@@ -695,7 +661,7 @@ $(document).ready(function() {
         const tabId = $(this).data('tab-id');
         var tableName = '<?= $tableName ?>';
 
-        if (confirm("Are you sure you want to delete permanenttly?")) {
+        if (confirm("Bạn có chắc chắn muốn xóa hoàn toàn không?")) {
             $.ajax({
                 url: '<?= \yii\helpers\Url::to(['tabs/delete-permanently-tab']) ?>',
                 method: 'POST',

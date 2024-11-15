@@ -66,23 +66,23 @@ class TabsController extends Controller
         ]);
     }
 
-    public function actionGroupView()
+    public function actionMenuView()
     {
-        $userId = Yii::$app->user->id; 
+        $userId = Yii::$app->user->id;
 
-        $groupId = Yii::$app->request->get('groupId'); 
+        $menuId = Yii::$app->request->get('menuId');
 
         $tabs = Tab::find()
-                ->where(['user_id' => $userId, 'deleted' => 0, 'group_id' => $groupId])
-                ->orderBy([
-                    'position' => SORT_ASC,
-                    'id' => SORT_DESC,
-                ])
-                ->all();;
+            ->where(['user_id' => $userId, 'deleted' => 0, 'menu_id' => $menuId])
+            ->orderBy([
+                'position' => SORT_ASC,
+                'id' => SORT_DESC,
+            ])
+            ->all();;
 
         $tableTabs = TableTab::find()->all();
 
-        return $this->render('group-view/index', [
+        return $this->render('menu-view/index', [
             'tabs' => $tabs,
             'tableTabs' => $tableTabs,
         ]);
@@ -377,12 +377,12 @@ class TabsController extends Controller
 
             if ($this->validateColumns($excelHeaders, $expectedColumns) === false) {
                 $errorMessage = "\nCác tiêu đề cột trong tệp Excel không khớp với các cột cơ sở dữ liệu. Vui lòng xem lại các chi tiết sau:\n\n";
-                
+
                 $errorMessage .= "Cột tệp trong tệp Excel:\n" . "<div class='d-flex gap-3'>" . implode("", array_map(function ($header) {
                     return "<div class='p-2 text-danger'>" . htmlspecialchars($header) . "</div>";
                 }, $excelHeaders)) . "</div>\n\n";
 
-                $errorMessage .= "Các cột dự kiến ​​trong bảng:\n" . "<div class='d-flex gap-3'>" . implode("", array_map(function ($column){
+                $errorMessage .= "Các cột dự kiến ​​trong bảng:\n" . "<div class='d-flex gap-3'>" . implode("", array_map(function ($column) {
                     return "<div class='p-2 text-success'>" . htmlspecialchars($column) . "</div>";
                 }, $expectedColumns)) . "</div>\n\n";
 
@@ -486,7 +486,6 @@ class TabsController extends Controller
                 $transaction->commit();
 
                 return $this->asJson(['success' => true]);
-
             } catch (\Exception $e) {
                 // Rollback transaction 
                 $transaction->rollBack();
@@ -495,8 +494,6 @@ class TabsController extends Controller
                     'message' => 'Đã xảy ra lỗi trong quá trình nhập: ' . $e->getMessage(),
                 ]);
             }
-
-
         }
 
         return $this->asJson(['success' => false, 'message' => 'Không thể tải tệp Excel lên']);
@@ -687,5 +684,4 @@ class TabsController extends Controller
             return $this->asJson(['success' => false, 'message' => 'Không tìm thấy tập tin']);
         }
     }
-
 }

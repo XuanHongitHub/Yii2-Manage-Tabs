@@ -1,4 +1,5 @@
 <?php
+
 /** @var yii\web\View $this */
 /** @var string $content */
 
@@ -6,17 +7,17 @@ use yii\bootstrap5\Html;
 
 use app\models\User;
 use app\models\Tab;
-use app\models\TabGroups;
+use app\models\TabMenus;
 
 $isAdmin = User::isUserAdmin(Yii::$app->user->identity->username);
 $currentUserId = Yii::$app->user->id;
 
-$tabGroups = TabGroups::find()
+$tabMenus = TabMenus::find()
     ->where(['deleted' => 0])
     ->all();
 
 $tabsWithoutGroup = Tab::find()
-    ->where(['group_id' => null, 'deleted' => 0, 'user_id' => $currentUserId])
+    ->where(['menu_id' => null, 'deleted' => 0, 'user_id' => $currentUserId])
     ->all();
 ?>
 
@@ -164,18 +165,10 @@ $tabsWithoutGroup = Tab::find()
                             </a>
                         </li>
 
-
-                        <!-- Tab SS -->
-                        <li class="sidebar-main-title pt-2">
-                            <div>
-                                <h6 class="lan-1">Groups</h6>
-                            </div>
-                        </li>
-                        <?php if (!empty($tabGroups)): ?>
-                        <?php foreach ($tabGroups as $group): ?>
+                        <?php if (!empty($tabMenus)): ?>
+                        <?php foreach ($tabMenus as $group): ?>
                         <li class="sidebar-list">
-                            <!-- Kiểm tra nếu là nhóm menu, hiển thị submenu -->
-                            <?php if ($group->group_type == 'menu_group'): ?>
+                            <?php if ($group->menu_type == 'menu_group'): ?>
                             <a class="sidebar-link sidebar-title" href="#">
                                 <svg class="stroke-icon">
                                     <use href="<?= Yii::getAlias('@web') ?>/images/icon-sprite.svg#<?= $group->icon ?>">
@@ -189,7 +182,7 @@ $tabsWithoutGroup = Tab::find()
                             </a>
                             <ul class="sidebar-submenu" style="display: none;">
                                 <?php foreach ($group->tabs as $tab): ?>
-                                <?php if ($tab->deleted == 0): ?>
+                                <?php if ($tab->deleted == 0 && $tab->user_id == $currentUserId): ?>
                                 <li>
                                     <a href="<?= \yii\helpers\Url::to(['tabs/tab-view', 'tabId' => $tab->id]) ?>"
                                         data-tab-id="<?= $tab->id ?>"
@@ -205,9 +198,8 @@ $tabsWithoutGroup = Tab::find()
                                 <?php endforeach; ?>
                             </ul>
                             <?php else: ?>
-                            <!-- Nếu không phải menu_group, hiển thị link trực tiếp tới trang cài đặt -->
                             <a class="sidebar-link sidebar-title link-nav"
-                                href="<?= \yii\helpers\Url::to(['tabs/group-view', 'groupId' => $group->id]) ?>"
+                                href="<?= \yii\helpers\Url::to(['tabs/menu-view', 'menuId' => $group->id]) ?>"
                                 data-group-id="<?= $group->id ?>">
                                 <svg class="stroke-icon">
                                     <use href="<?= Yii::getAlias('@web') ?>/images/icon-sprite.svg#<?= $group->icon ?>">
@@ -221,28 +213,6 @@ $tabsWithoutGroup = Tab::find()
                         <?php endforeach; ?>
                         <?php endif; ?>
 
-                        <!-- Không nhóm -->
-                        <li class="sidebar-main-title pt-2">
-                            <div>
-                                <h6 class="lan-1">Tabs</h6>
-                            </div>
-                        </li>
-                        <?php if (!empty($tabsWithoutGroup)): ?>
-                        <?php foreach ($tabsWithoutGroup as $item): ?>
-                        <li class="sidebar-list <?= Yii::$app->request->get('tabId') === $item->id ? 'active' : '' ?>">
-                            <a class="sidebar-link sidebar-title link-nav" data-tab-id="<?= $item->id ?>"
-                                href="<?= \yii\helpers\Url::to(['tabs/tab-view', 'tabId' => $item->id]) ?>">
-                                <svg class="stroke-icon">
-                                    <use href="<?= Yii::getAlias('@web') ?>/images/icon-sprite.svg#stroke-table">
-                                    </use>
-                                </svg>
-                                <span><?= $item->tab_name ?></span>
-                            </a>
-                        </li>
-                        <?php endforeach; ?>
-                        <?php endif; ?>
-
-                        <!-- Các mục khác nếu có -->
                     </ul>
                 </div>
                 <div class="right-arrow" id="right-arrow"><i data-feather="arrow-right"></i></div>

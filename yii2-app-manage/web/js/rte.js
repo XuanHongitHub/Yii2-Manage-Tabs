@@ -446,7 +446,7 @@ RTE_DefaultConfig.text_size = "Size";
 
 RTE_DefaultConfig.text_text = "Text";
 
-RTE_DefaultConfig.text_opennewwin = "Open in new tab";
+RTE_DefaultConfig.text_opennewwin = "Open in New Tab";
 
 RTE_DefaultConfig.text_insert = "Insert";
 RTE_DefaultConfig.text_update = "Update";

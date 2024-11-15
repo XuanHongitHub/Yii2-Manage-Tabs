@@ -3,9 +3,9 @@
 use yii\db\Migration;
 
 /**
- * Handles the creation of table `{{%tab_groups}}`.
+ * Handles the creation of table `{{%tab_menus}}`.
  */
-class m241113_043855_create_tab_groups_table extends Migration
+class m241113_043855_create_tab_menus_table extends Migration
 {
     /**
      * {@inheritdoc}
@@ -13,7 +13,7 @@ class m241113_043855_create_tab_groups_table extends Migration
     public function safeUp()
     {
         // Tạo bảng với bộ mã hóa UTF-8
-        $this->createTable('tab_groups', [
+        $this->createTable('tab_menus', [
             'id' => $this->primaryKey(),
             'name' => $this->string()->notNull()->unique(),
             'icon' => $this->string()->defaultValue(null),
@@ -24,8 +24,8 @@ class m241113_043855_create_tab_groups_table extends Migration
         ], 'CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci');
 
         $this->createIndex(
-            'idx-tab_groups-name',
-            'tab_groups',
+            'idx-tab_menus-name',
+            'tab_menus',
             'name',
             true
         );
@@ -37,9 +37,9 @@ class m241113_043855_create_tab_groups_table extends Migration
     public function safeDown()
     {
         // Xóa chỉ mục unique
-        $this->dropIndex('idx-tab_groups-name', 'tab_groups');
+        $this->dropIndex('idx-tab_menus-name', 'tab_menus');
 
         // Xóa bảng
-        $this->dropTable('tab_groups');
+        $this->dropTable('tab_menus');
     }
 }

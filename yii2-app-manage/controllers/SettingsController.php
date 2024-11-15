@@ -8,7 +8,7 @@ use yii\web\Response;
 use yii\web\Controller;
 use app\models\Tab;
 use app\models\TableTab;
-use app\models\TabGroups;
+use app\models\TabMenus;
 use yii\web\NotFoundHttpException;
 use yii\web\Exception;
 use yii\filters\AccessControl;
@@ -46,34 +46,30 @@ class SettingsController extends Controller
             ])
             ->all();
 
-        $tabGroups = TabGroups::find()->all();
+        $tabMenus = TabMenus::find()->all();
         return $this->render('index', [
             'tabs' => $tabs,
-            'tabGroups' => $tabGroups,
+            'tabMenus' => $tabMenus,
         ]);
     }
     public function actionCreate()
     {
-        $tabGroups = TabGroups::find()->all();
+        $tabMenus = TabMenus::find()->all();
 
         return $this->render('create', [
-            'tabGroups' => $tabGroups,
+            'tabMenus' => $tabMenus,
 
         ]);
     }
     public function actionGroup()
     {
 
-        return $this->render('group/create', [
-
-        ]);
+        return $this->render('group/create', []);
     }
     public function actionGroupIndex()
     {
 
-        return $this->render('group/index', [
-
-        ]);
+        return $this->render('menu/index', []);
     }
     public function actionCreateGroup()
     {
@@ -81,21 +77,21 @@ class SettingsController extends Controller
             $name = Yii::$app->request->post('name');
             $icon = Yii::$app->request->post('icon');
 
-            // Tạo một đối tượng nhóm tab mới
-            $tabGroup = new TabGroups();
+            // Tạo một đối tượng Menu tab mới
+            $tabGroup = new TabMenus();
             $tabGroup->name = $name;
             $tabGroup->icon = $icon;
 
             // Lưu vào cơ sở dữ liệu
             if ($tabGroup->save()) {
-                Yii::$app->session->setFlash('success', 'Nhóm tab đã được tạo thành công!');
+                Yii::$app->session->setFlash('success', 'Menu tab đã được tạo thành công!');
             } else {
-                Yii::$app->session->setFlash('error', 'Có lỗi xảy ra khi tạo nhóm tab.');
+                Yii::$app->session->setFlash('error', 'Có lỗi xảy ra khi tạo Menu tab.');
             }
         }
 
-        // Hiển thị trang tạo nhóm tab
-        return $this->redirect('group/index');
+        // Hiển thị trang tạo Menu tab
+        return $this->redirect('menu/index');
     }
     public function actionCreateTab()
     {
@@ -103,13 +99,13 @@ class SettingsController extends Controller
             $userId = Yii::$app->user->id;
             $tabType = Yii::$app->request->post('tab_type');
             $tabName = Yii::$app->request->post('tab_name');
-            $tabGroupId = Yii::$app->request->post('tab_group');
+            $tabmenuId = Yii::$app->request->post('tab_menu');
 
             $tab = new Tab();
             $tab->user_id = $userId;
             $tab->tab_type = $tabType;
             $tab->tab_name = $tabName;
-            $tab->group_id = $tabGroupId;
+            $tab->menu_id = $tabmenuId;
             $tab->deleted = 0;
             $tab->created_at = date('Y-m-d H:i:s');
             $tab->updated_at = date('Y-m-d H:i:s');
@@ -194,7 +190,6 @@ class SettingsController extends Controller
                     Yii::$app->session->setFlash('error', $e->getMessage());
                     return $this->redirect(['settings/create']);
                 }
-
             } elseif ($tabType === 'richtext') {
                 if (empty($tabName)) {
                     Yii::$app->session->setFlash('error', 'Tab name cannot be empty.');
@@ -345,5 +340,4 @@ class SettingsController extends Controller
 
         throw new NotFoundHttpException('The requested page does not exist.');
     }
-
 }

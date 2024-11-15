@@ -5,12 +5,12 @@ namespace app\models;
 use Yii;
 
 /**
- * This is the model class for table "tab_groups".
+ * This is the model class for table "tab_menus".
  *
  * @property int $id
  * @property string $name
  * @property string|null $icon
- * @property string $group_type
+ * @property string $menu_type
  * @property int|null $position
  * @property int|null $deleted
  * @property string $created_at
@@ -18,14 +18,14 @@ use Yii;
  *
  * @property Tab[] $tabs
  */
-class TabGroups extends \yii\db\ActiveRecord
+class TabMenus extends \yii\db\ActiveRecord
 {
     /**
      * {@inheritdoc}
      */
     public static function tableName()
     {
-        return 'tab_groups';
+        return 'tab_menus';
     }
 
     /**
@@ -35,7 +35,7 @@ class TabGroups extends \yii\db\ActiveRecord
     {
         return [
             [['name'], 'required'],
-            [['group_type'], 'string'],
+            [['menu_type'], 'string'],
             [['position', 'deleted'], 'integer'],
             [['created_at', 'updated_at'], 'safe'],
             [['name', 'icon'], 'string', 'max' => 255],
@@ -52,7 +52,7 @@ class TabGroups extends \yii\db\ActiveRecord
             'id' => 'ID',
             'name' => 'Name',
             'icon' => 'Icon',
-            'group_type' => 'Group Type',
+            'menu_type' => 'Group Type',
             'position' => 'Position',
             'deleted' => 'Deleted',
             'created_at' => 'Created At',
@@ -67,6 +67,6 @@ class TabGroups extends \yii\db\ActiveRecord
      */
     public function getTabs()
     {
-        return $this->hasMany(Tab::class, ['group_id' => 'id']);
+        return $this->hasMany(Tab::class, ['menu_id' => 'id']);
     }
 }

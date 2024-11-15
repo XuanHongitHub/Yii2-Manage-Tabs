@@ -446,13 +446,13 @@
 (function ($) {
   $(document).ready(function () {
     var currentTabId = new URL(window.location.href).searchParams.get('tabId'); // Lấy tabId từ URL
-    var currentGroupId = new URL(window.location.href).searchParams.get('groupId'); // Lấy groupId từ URL
+    var currentmenuId = new URL(window.location.href).searchParams.get('menuId'); // Lấy menuId từ URL
     var currentUrl = window.location.pathname; // Lấy đường dẫn URL hiện tại
 
     // Duyệt qua tất cả các liên kết trong sidebar
     $(".sidebar-wrapper nav ul li a").each(function () {
       var linkTabId = $(this).data('tab-id'); // Lấy tabId từ thuộc tính data-tabId
-      var linkGroupId = $(this).data('group-id'); // Lấy groupId từ thuộc tính data-group-id
+      var linkmenuId = $(this).data('group-id'); // Lấy menuId từ thuộc tính data-group-id
       var linkHref = $(this).attr('href'); // Lấy href của link
 
       // Kiểm tra xem đường dẫn của link có trùng với currentUrl không
@@ -469,11 +469,11 @@
         $(this).parents("li").addClass("active"); // Thêm class active vào <li> chứa tab
         $(this).parents("ul.sidebar-submenu").prev("a").addClass("active"); // Thêm active vào link cha
       }
-      // Kiểm tra xem groupId có trùng không và nếu có, đánh dấu nhóm active
-      else if (currentGroupId && linkGroupId == currentGroupId) {
-        $(this).addClass("active"); // Thêm class active vào nhóm tương ứng
-        $(this).parents("ul.sidebar-submenu").slideDown("normal"); // Mở submenu của nhóm
-        $(this).parents("li").addClass("active"); // Thêm class active vào <li> chứa nhóm
+      // Kiểm tra xem menuId có trùng không và nếu có, đánh dấu Menu active
+      else if (currentmenuId && linkmenuId == currentmenuId) {
+        $(this).addClass("active"); // Thêm class active vào Menu tương ứng
+        $(this).parents("ul.sidebar-submenu").slideDown("normal"); // Mở submenu của Menu
+        $(this).parents("li").addClass("active"); // Thêm class active vào <li> chứa Menu
         $(this).parents("ul.sidebar-submenu").prev("a").addClass("active"); // Thêm active vào link cha
       } else {
         $(this).removeClass("active"); // Loại bỏ class active nếu không khớp

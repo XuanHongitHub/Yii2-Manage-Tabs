@@ -8,7 +8,7 @@ use app\models\User;
 use yii\web\Response;
 use app\models\Tab;
 use app\models\TableTab;
-use app\models\TabGroups;
+use app\models\TabMenus;
 use yii\web\NotFoundHttpException;
 use yii\web\Exception;
 use yii\filters\AccessControl;
@@ -46,71 +46,105 @@ class SettingsController extends Controller
             ])
             ->all();
 
-        $tabGroups = TabGroups::find()->all();
+        $tabMenus = TabMenus::find()->all();
         return $this->render('tabs/index', [
             'tabs' => $tabs,
-            'tabGroups' => $tabGroups,
+            'tabMenus' => $tabMenus,
         ]);
     }
     public function actionTabsCreate()
     {
-        $tabGroups = TabGroups::find()->all();
+        $tabMenus = TabMenus::find()->all();
 
         return $this->render('tabs/create', [
-            'tabGroups' => $tabGroups,
+            'tabMenus' => $tabMenus,
 
         ]);
     }
-    public function actionGroupCreate()
+    public function actionMenuCreate()
     {
 
-        return $this->render('group/create', [
-
-        ]);
+        return $this->render('menu/create', []);
     }
-    public function actionGroupList()
+    public function actionMenuList()
     {
-        $tabGroups = TabGroups::find()->all();
-
-        return $this->render('group/index', [
-            'tabGroups' => $tabGroups,
-
+        $tabMenus = TabMenus::find()
+            ->orderBy([
+                'id' => SORT_DESC,
+            ])
+            ->asArray()
+            ->all();
+        // var_dump($tabMenus);
+        // exit;
+        return $this->render('menu/index', [
+            'tabMenus' => $tabMenus,
         ]);
     }
-    public function actionCreateGroup()
+    public function actionCreateOrUpdateMenu()
     {
         if (Yii::$app->request->isPost) {
-            $name = Yii::$app->request->post('name');
-            $icon = Yii::$app->request->post('icon');
-            $group_type = Yii::$app->request->post('group_type');
+            $data = Yii::$app->request->post();
 
-            $tabGroup = new TabGroups();
-            $tabGroup->name = $name;
-            $tabGroup->icon = $icon;
-            $tabGroup->group_type = $group_type;
+            $model = TabMenus::findOne($data['id']) ?? new TabMenus();
 
-            if ($tabGroup->save()) {
-                Yii::$app->session->setFlash('success', 'Nhóm tab đã được tạo thành công!');
+            $model->id = $data['id'];
+            $model->name = $data['name'];
+            $model->menu_type = $data['menu_type'];
+            $model->icon = $data['icon'];
+            $model->deleted = $data['status'];
+            $model->position = $data['position'];
+
+            if ($model->save()) {
+                Yii::$app->session->setFlash('success', 'Thành công.');
+                return $this->asJson(['success' => true, 'message' => 'Thành công.']);
             } else {
-                Yii::$app->session->setFlash('error', 'Có lỗi xảy ra khi tạo nhóm tab.');
+                return $this->asJson(['success' => false, 'message' => 'Có lỗi xảy ra.', 'errors' => $model->errors]);
             }
         }
 
-        return $this->redirect('group-create');
+        return $this->asJson(['success' => false, 'message' => 'Yêu cầu không hợp lệ.']);
     }
+
+
     public function actionCreateTab()
     {
         if (Yii::$app->request->isPost) {
             $userId = Yii::$app->user->id;
             $tabType = Yii::$app->request->post('tab_type');
             $tabName = Yii::$app->request->post('tab_name');
-            $tabGroupId = Yii::$app->request->post('tab_group');
+            $tabmenuId = Yii::$app->request->post('tab_menu');
+            $icon = Yii::$app->request->post('icon');
+
+            if (empty($tabName)) {
+                Yii::$app->session->setFlash('error', 'Tên tab không được để trống.');
+                return $this->redirect(['tabs-create']);
+            }
+            if (empty($tabmenuId)) {
+                if (empty($icon)) {
+                    Yii::$app->session->setFlash('error', 'Vui lòng chọn icon.');
+                    return $this->redirect(['tabs-create']);
+                }
+
+                $tabMenu = new TabMenus();
+                $tabMenu->name = $tabName;
+                $tabMenu->menu_type = 'none';
+                $tabMenu->icon = $icon;
+                Yii::error("icon: " . $icon);
+
+                if (!$tabMenu->save()) {
+                    Yii::$app->session->setFlash('error', 'Không thể tạo menu mới.');
+                    return $this->redirect(['tabs-create']);
+                }
+                $tabmenuId = $tabMenu->id;
+            } else {
+                $icon = '';
+            }
 
             $tab = new Tab();
             $tab->user_id = $userId;
             $tab->tab_type = $tabType;
             $tab->tab_name = $tabName;
-            $tab->group_id = $tabGroupId;
+            $tab->menu_id = $tabmenuId; // Gán menu_id vào Tab
             $tab->deleted = 0;
             $tab->created_at = date('Y-m-d H:i:s');
             $tab->updated_at = date('Y-m-d H:i:s');
@@ -122,15 +156,22 @@ class SettingsController extends Controller
                 $isNotNull = Yii::$app->request->post('is_not_null', []);
                 $isPrimary = Yii::$app->request->post('is_primary', []);
 
+                foreach ($isPrimary as $index => $primary) {
+                    if (isset($isPrimary[$index]) && $isPrimary[$index] == '1') {
+                        $isNotNull[$index] = '1';
+                    }
+                }
+
                 $validationResult = $this->validateTableCreation($tabName, $columns, $dataTypes, $dataSizes, $isNotNull);
                 if ($validationResult !== true) {
                     foreach ($validationResult as $error) {
                         Yii::$app->session->setFlash("error_{$error['field']}", $error['message']);
                     }
-                    Yii::$app->session->setFlash('tableCreationData', compact('tabName', 'columns', 'dataTypes', 'dataSizes', 'isNotNull', 'isPrimary'));
-                    return $this->render('create', [
+                    Yii::$app->session->setFlash('tableCreationData', compact('tabName', 'tabmenuId', 'columns', 'dataTypes', 'dataSizes', 'isNotNull', 'isPrimary'));
+                    return $this->render('tabs/create', [
                         'tableTabs' => [],
                         'tabName' => $tabName,
+                        'tabmenuId' => $tabmenuId,
                         'columns' => $columns,
                         'dataTypes' => $dataTypes,
                         'dataSizes' => $dataSizes,
@@ -142,7 +183,9 @@ class SettingsController extends Controller
                 $transaction = Yii::$app->db->beginTransaction();
                 try {
                     if ($tab->save()) {
+
                         foreach ($columns as $index => $column) {
+                            // $isNotNullValue = isset($isNotNull[$index]) && $isNotNull[$index] == '1' ? 1 : 0;
                             $tableTab = new TableTab([
                                 'tab_id' => $tab->id,
                                 'table_name' => $tabName,
@@ -152,18 +195,18 @@ class SettingsController extends Controller
                                 'updated_at' => date('Y-m-d H:i:s')
                             ]);
                             if (!$tableTab->save()) {
-                                Yii::$app->session->setFlash('error', 'Cannot save');
-                                return $this->redirect(['tabs-create']);
+                                throw new \Exception('Không thể lưu thông tin bảng.');
                             }
                         }
 
+                        // Tạo câu lệnh CREATE TABLE
                         $createTableQuery = "CREATE TABLE `$tabName`";
                         $columnDefs = [];
                         foreach ($columns as $index => $column) {
                             $columnName = preg_replace('/[^a-zA-Z0-9_]/', '_', $column);
                             $dataType = $dataTypes[$index];
                             $dataSize = isset($dataSizes[$index]) ? "($dataSizes[$index])" : '';
-                            $isNotNullColumn = isset($isNotNull[$index]) ? 'NOT NULL' : 'NULL';
+                            $isNotNullColumn = isset($isNotNull[$index]) && $isNotNull[$index] == '1' ? 'NOT NULL' : 'NULL';
 
                             if (in_array($dataType, ['VARCHAR', 'CHAR'])) {
                                 $columnDef = isset($isPrimary[$index]) && $isPrimary[$index] == '1'
@@ -185,26 +228,27 @@ class SettingsController extends Controller
                         $createTableQuery .= ' (' . implode(', ', $columnDefs) . ') CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci';
                         Yii::$app->db->createCommand($createTableQuery)->execute();
 
-                        Yii::$app->session->setFlash('success', 'Create Successful.');
-
+                        Yii::$app->session->setFlash('success', 'Tạo bảng thành công.');
                         $transaction->commit();
+
                         return $this->redirect(['tabs-create', 'id' => $tab->id]);
+                    } else {
+                        throw new \Exception('Không thể tạo tab.');
                     }
                 } catch (\Exception $e) {
                     $transaction->rollBack();
-                    Yii::$app->session->setFlash('error', $e->getMessage());
+                    Yii::$app->session->setFlash('error', 'Đã xảy ra lỗi: ' . $e->getMessage());
                     return $this->redirect(['tabs-create']);
                 }
-
             } elseif ($tabType === 'richtext') {
                 if (empty($tabName)) {
-                    Yii::$app->session->setFlash('error', 'Tab name cannot be empty.');
+                    Yii::$app->session->setFlash('error', 'Tên tab không được để trống.');
                     return $this->redirect(['tabs-create']);
                 }
 
                 $existingTab = Tab::findOne(['tab_name' => $tabName, 'tab_type' => 'richtext', 'user_id' => $userId]);
                 if ($existingTab) {
-                    Yii::$app->session->setFlash('error', 'Tab name already exists. Please choose a different name.');
+                    Yii::$app->session->setFlash('error', 'Tên tab đã tồn tại. Vui lòng chọn tên khác.');
                     return $this->redirect(['tabs-create']);
                 }
 
@@ -212,24 +256,22 @@ class SettingsController extends Controller
                     $filePath = Yii::getAlias('@runtime/richtext/' . $tab->id . '.txt');
                     try {
                         file_put_contents($filePath, '');
-                        Yii::$app->session->setFlash('success', 'Created successfully!');
+                        Yii::$app->session->setFlash('success', 'Tạo tab thành công!');
                     } catch (\Exception $e) {
-                        Yii::error('Cannot create file: ' . $e->getMessage());
-                        Yii::$app->session->setFlash('error', 'An error occurred while saving the file.');
+                        Yii::error('Không thể tạo file: ' . $e->getMessage());
+                        Yii::$app->session->setFlash('error', 'Đã xảy ra lỗi khi lưu file.');
                     }
                     return $this->redirect(['tabs-create']);
                 } else {
-                    Yii::$app->session->setFlash('error', 'An error occurred while creating the tab. Please try again.');
+                    Yii::$app->session->setFlash('error', 'Đã xảy ra lỗi khi tạo tab. Vui lòng thử lại.');
                     return $this->redirect(['tabs-create']);
                 }
             }
         }
-        return $this->render('create', [
+        return $this->render('tabs/create', [
             'tableTabs' => [],
         ]);
     }
-
-
 
     /**
      * Validate the table creation inputs.
@@ -304,17 +346,14 @@ class SettingsController extends Controller
                 }
             }
 
-            $isNotNullValue = $isNotNull[$index] ?? null;
-            if ($isNotNullValue !== null && !is_bool($isNotNullValue)) {
-                $errors[] = ['message' => "Invalid value for 'Not Null' on column '$column'.", 'field' => "is_not_null[$index]"];
-            }
+            // $isNotNullValue = isset($isNotNull[$index]) ? $isNotNull[$index] : null;
+            // if ($isNotNullValue !== null && !is_bool($isNotNullValue)) {
+            //     $errors[] = ['message' => "Giá trị không hợp lệ cho 'Not Null' của cột '$column'.", 'field' => "is_not_null[$index]"];
+            // }
         }
 
         return empty($errors) ? true : $errors;
     }
-
-
-
 
     public function actionDetail($id)
     {
@@ -348,7 +387,7 @@ class SettingsController extends Controller
     }
 
 
-       /** 
+    /** 
      * Delete Tab Action.
      *
      */
@@ -365,14 +404,18 @@ class SettingsController extends Controller
             );
 
             if ($affectedRows > 0) {
-                return $this->asJson(['success' => true, 'message' => 'Soft delete successful.']);
+                Yii::$app->session->setFlash('success', 'Xóa mềm thành công.');
+                return $this->asJson(['success' => true, 'message' => 'Xóa mềm thành công.']);
             } else {
-                return $this->asJson(['success' => false, 'message' => 'No records updated.']);
+                Yii::$app->session->setFlash('error', 'Không có bản ghi nào được cập nhật.');
+                return $this->asJson(['success' => false, 'message' => 'Không có bản ghi nào được cập nhật.']);
             }
         } else {
-            return $this->asJson(['success' => false, 'message' => 'Missing tabId.']);
+            Yii::$app->session->setFlash('error', 'Thiếu tabId.');
+            return $this->asJson(['success' => false, 'message' => 'Thiếu tabId.']);
         }
     }
+
     /** 
      * Update Restore Action.
      *
@@ -390,14 +433,18 @@ class SettingsController extends Controller
             );
 
             if ($affectedRows > 0) {
-                return $this->asJson(['success' => true, 'message' => 'Restore successful.']);
+                Yii::$app->session->setFlash('success', 'Khôi phục thành công.');
+                return $this->asJson(['success' => true, 'message' => 'Khôi phục thành công.']);
             } else {
-                return $this->asJson(['success' => false, 'message' => 'No records updated.']);
+                Yii::$app->session->setFlash('error', 'Không có bản ghi nào được cập nhật.');
+                return $this->asJson(['success' => false, 'message' => 'Không có bản ghi nào được cập nhật.']);
             }
         } else {
-            return $this->asJson(['success' => false, 'message' => 'Missing tabId.']);
+            Yii::$app->session->setFlash('error', 'Thiếu tabId.');
+            return $this->asJson(['success' => false, 'message' => 'Thiếu tabId.']);
         }
     }
+
     /** 
      * Delete Permanently Tab Action.
      *
@@ -411,13 +458,15 @@ class SettingsController extends Controller
         $tab = Tab::find()->where(['id' => $tabId])->one();
 
         if (!$tab) {
-            return $this->asJson(['success' => false, 'message' => 'Tab does not exist.']);
+            Yii::$app->session->setFlash('error', 'Tab không tồn tại.');
+            return $this->asJson(['success' => false, 'message' => 'Tab không tồn tại.']);
         }
         if ($tab->tab_type == 'table') {
             $tableName = $postData['tableName'];
 
             if (!preg_match('/^[a-zA-Z_][a-zA-Z0-9_]*$/', $tableName)) {
-                return $this->asJson(['success' => false, ' message' => 'Invalid table name.']);
+                Yii::$app->session->setFlash('error', 'Tên bảng không hợp lệ.');
+                return $this->asJson(['success' => false, 'message' => 'Tên bảng không hợp lệ.']);
             }
             $sql = "DROP TABLE IF EXISTS `$tableName`";
 
@@ -432,8 +481,10 @@ class SettingsController extends Controller
                 $deleteTabRecordSql = "DELETE FROM `$tabTable` WHERE `id` = :tabId";
                 Yii::$app->db->createCommand($deleteTabRecordSql)->bindValue(':tabId', $tabId)->execute();
 
-                return $this->asJson(['success' => true, 'message' => 'Table and data were successfully deleted.']);
+                Yii::$app->session->setFlash('success', 'Bảng và dữ liệu đã được xóa thành công.');
+                return $this->asJson(['success' => true, 'message' => 'Bảng và dữ liệu đã được xóa thành công.']);
             } catch (\Exception $e) {
+                Yii::$app->session->setFlash('error', $e->getMessage());
                 return $this->asJson(['success' => false, 'message' => $e->getMessage()]);
             }
         } elseif ($tab->tab_type == 'richtext') {
@@ -447,13 +498,17 @@ class SettingsController extends Controller
                 $deleteTabRecordSql = "DELETE FROM `$tabTable` WHERE `id` = :tabId";
                 Yii::$app->db->createCommand($deleteTabRecordSql)->bindValue(':tabId', $tabId)->execute();
 
-                return $this->asJson(['success' => true, 'message' => 'Richtext data was successfully deleted.']);
+                Yii::$app->session->setFlash('success', 'Dữ liệu richtext đã được xóa thành công.');
+                return $this->asJson(['success' => true, 'message' => 'Dữ liệu richtext đã được xóa thành công.']);
             } catch (\Exception $e) {
+                Yii::$app->session->setFlash('error', $e->getMessage());
                 return $this->asJson(['success' => false, 'message' => $e->getMessage()]);
             }
         }
-        return $this->asJson(['success' => false, 'message' => 'Invalid tab type.']);
+        Yii::$app->session->setFlash('error', 'Loại tab không hợp lệ.');
+        return $this->asJson(['success' => false, 'message' => 'Loại tab không hợp lệ.']);
     }
+
     /** 
      * Update Postion Action.
      *
@@ -469,21 +524,26 @@ class SettingsController extends Controller
                 if ($model) {
                     $model->position = $tab['position'];
                     if (!$model->save()) {
+                        Yii::$app->session->setFlash('error', 'Không thể lưu tab với ID: ' . $tab['id']);
                         return [
                             'success' => false,
-                            'message' => 'Unable to save tab with ID: ' . $tab['id'],
+                            'message' => 'Không thể lưu tab với ID: ' . $tab['id'],
                         ];
                     }
                 }
             }
+            Yii::$app->session->setFlash('success', 'Thứ tự đã được cập nhật thành công.');
             return ['success' => true];
         }
 
+        Yii::$app->session->setFlash('error', 'Dữ liệu không hợp lệ.');
         return [
             'success' => false,
-            'message' => 'Invalid data.'
+            'message' => 'Dữ liệu không hợp lệ.'
         ];
     }
+
+
     /** 
      * Update Show/Hide Tab Action.
      *
@@ -500,26 +560,33 @@ class SettingsController extends Controller
             }
         }
 
+        Yii::$app->session->setFlash('success', 'Trạng thái ẩn/hiện đã được cập nhật thành công.');
         return $this->asJson(['success' => true]);
     }
 
 
+    /** 
+     * Update Tab Menus Tab Action.
+     *
+     */
     public function actionUpdateTab()
-{
-    $tabId = Yii::$app->request->post('tab_id');
-    $groupId = Yii::$app->request->post('group_id');
-    $status = Yii::$app->request->post('status');
-    $position = Yii::$app->request->post('position');
+    {
+        $tabId = Yii::$app->request->post('tab_id');
+        $menuId = Yii::$app->request->post('menu_id');
+        $status = Yii::$app->request->post('status');
+        $position = Yii::$app->request->post('position');
 
-    $tab = Tab::findOne($tabId);
-    if ($tab) {
-        $tab->group_id = $groupId;
-        $tab->deleted = $status == 3 ? 3 : 0; 
-        $tab->save();
-        return json_encode(['status' => 'success']);
+        $tab = Tab::findOne($tabId);
+        if ($tab) {
+            $tab->menu_id = $menuId;
+            $tab->deleted = $status == 3 ? 3 : 0;
+            $tab->position = $position;
+            $tab->save();
+            Yii::$app->session->setFlash('success', 'Tab đã được cập nhật thành công.');
+            return json_encode(['status' => 'success']);
+        }
+
+        Yii::$app->session->setFlash('error', 'Không tìm thấy tab.');
+        return json_encode(['status' => 'error']);
     }
-
-    return json_encode(['status' => 'error']);
-}
-
 }

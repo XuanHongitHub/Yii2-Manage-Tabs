@@ -72,7 +72,7 @@ $config = [
             'rules' => [
                 '' => 'site/index',
                 'settings/group/create' => 'settings/group',
-                'settings/group/index' => 'settings/group-index',
+                'settings/menu/index' => 'settings/group-index',
 
             ],
         ],
