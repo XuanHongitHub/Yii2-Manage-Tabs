@@ -14,11 +14,10 @@ $currentUserId = Yii::$app->user->id;
 
 $tabMenus = TabMenus::find()
     ->where(['deleted' => 0])
+    ->orderBy(['position' => SORT_ASC])
     ->all();
 
-$tabsWithoutGroup = Tab::find()
-    ->where(['menu_id' => null, 'deleted' => 0, 'user_id' => $currentUserId])
-    ->all();
+
 ?>
 
 <!-- Page Header Start-->
@@ -45,26 +44,26 @@ $tabsWithoutGroup = Tab::find()
                 <li class="profile-nav onhover-dropdown p-0">
                     <div class="d-flex align-items-center profile-media">
                         <?php if (!Yii::$app->user->isGuest): ?>
-                        <svg style="margin-bottom: -5px; width: 30px !important; height: 30px !important;">
-                            <use href="<?= Yii::getAlias('@web') ?>/images/icon-sprite.svg#fill-user"></use>
-                        </svg>
-                        <div class="flex-grow-1">
-                            <span><?= Html::encode(Yii::$app->user->identity->username) ?></span>
-                            <p class="mb-0">
-                                <?php if (Yii::$app->user->identity->role == 10): ?>
-                                User
-                                <?php elseif (Yii::$app->user->identity->role == 20): ?>
-                                Admin
-                                <?php else: ?>
-                                <?= Html::encode(Yii::$app->user->identity->role) ?>
-                                <?php endif; ?>
-                                <i class="middle fa fa-angle-down"></i>
-                            </p>
+                            <svg style="margin-bottom: -5px; width: 30px !important; height: 30px !important;">
+                                <use href="<?= Yii::getAlias('@web') ?>/images/icon-sprite.svg#fill-user"></use>
+                            </svg>
+                            <div class="flex-grow-1">
+                                <span><?= Html::encode(Yii::$app->user->identity->username) ?></span>
+                                <p class="mb-0">
+                                    <?php if (Yii::$app->user->identity->role == 10): ?>
+                                        User
+                                    <?php elseif (Yii::$app->user->identity->role == 20): ?>
+                                        Admin
+                                    <?php else: ?>
+                                        <?= Html::encode(Yii::$app->user->identity->role) ?>
+                                    <?php endif; ?>
+                                    <i class="middle fa fa-angle-down"></i>
+                                </p>
 
-                        </div>
+                            </div>
                     </div>
                     <ul class="profile-dropdown onhover-show-div">
-                        <li><a href="<?= Yii::$app->urlManager->createUrl(['admin/settings/tabs-list']) ?>"><span><i
+                        <li><a href="<?= Yii::$app->urlManager->createUrl(['admin/tabs/tabs-list']) ?>"><span><i
                                         class="fa-solid fa-gear me-2"></i>Cài đặt</span></a></li>
                         <li><a href="<?= Yii::$app->urlManager->createUrl(['site/change-password']) ?>"><span><i
                                         class="fa-solid fa-key me-2"></i></i>Đổi mật khẩu</span></a></li>
@@ -78,7 +77,7 @@ $tabsWithoutGroup = Tab::find()
                             </form>
                         </li>
                     </ul>
-                    <?php else: ?>
+                <?php else: ?>
                     <div class="auth-buttons">
                         <a href="<?= Yii::$app->urlManager->createUrl(['site/login']) ?>" class="btn btn-primary me-1">
                             <i class="fa-solid fa-right-to-bracket"></i> Login
@@ -88,7 +87,7 @@ $tabsWithoutGroup = Tab::find()
                             <i class="fa-solid fa-user-plus"></i> Sign Up
                         </a>
                     </div>
-                    <?php endif; ?>
+                <?php endif; ?>
                 </li>
         </div>
 
@@ -133,85 +132,60 @@ $tabsWithoutGroup = Tab::find()
                             <div class="mobile-back text-end"><span>Back</span><i class="fa fa-angle-right ps-2"
                                     aria-hidden="true"></i></div>
                         </li>
-
-
-                        <li class="sidebar-list pt-4">
-                            <a class="sidebar-link sidebar-title link-nav"
-                                href="<?= \yii\helpers\Url::to(['site/index']) ?>">
-                                <svg class="stroke-icon">
-                                    <use href="<?= Yii::getAlias('@web') ?>/images/icon-sprite.svg#stroke-home">
-                                    </use>
-                                </svg>
-                                <svg class="fill-icon">
-                                    <use href="<?= Yii::getAlias('@web') ?>/images/icon-sprite.svg#fill-home">
-                                    </use>
-
-                                </svg><span> Trang chủ</span>
-                                <div class="according-menu"><i class="fa fa-angle-right"></i>
-                                </div>
-                            </a>
+                        <li class="sidebar-main-title pt-4">
+                            <div>
+                                <h6 class="lan-1">Menu </h6>
+                            </div>
                         </li>
-                        <li class="sidebar-list">
-                            <a class="sidebar-link sidebar-title link-nav"
-                                href="<?= \yii\helpers\Url::to(['admin/settings/tabs-list']) ?>">
-                                <svg class="stroke-icon">
-                                    <use
-                                        href="<?= Yii::getAlias('@web') ?>/images/icon-sprite.svg#stroke-knowledgebase">
-                                    </use>
-                                </svg>
-                                <span> Cài đặt</span>
-                                <div class="according-menu"><i class="fa fa-angle-right"></i>
-                                </div>
-                            </a>
-                        </li>
-
                         <?php if (!empty($tabMenus)): ?>
-                        <?php foreach ($tabMenus as $group): ?>
-                        <li class="sidebar-list">
-                            <?php if ($group->menu_type == 'menu_group'): ?>
-                            <a class="sidebar-link sidebar-title" href="#">
-                                <svg class="stroke-icon">
-                                    <use href="<?= Yii::getAlias('@web') ?>/images/icon-sprite.svg#<?= $group->icon ?>">
-                                    </use>
-                                </svg>
-                                <svg class="fill-icon">
-                                    <use href="<?= Yii::getAlias('@web') ?>/images/icon-sprite.svg#fill-editors"></use>
-                                </svg>
-                                <span><?= Html::encode($group->name) ?></span>
-                                <div class="according-menu"><i class="fa fa-angle-right"></i></div>
-                            </a>
-                            <ul class="sidebar-submenu" style="display: none;">
-                                <?php foreach ($group->tabs as $tab): ?>
-                                <?php if ($tab->deleted == 0 && $tab->user_id == $currentUserId): ?>
-                                <li>
-                                    <a href="<?= \yii\helpers\Url::to(['tabs/tab-view', 'tabId' => $tab->id]) ?>"
-                                        data-tab-id="<?= $tab->id ?>"
-                                        class="<?= Yii::$app->request->get('tabId') === $tab->id ? 'active' : '' ?>">
-                                        <svg class="svg-menu">
-                                            <use href="<?= Yii::getAlias('@web') ?>/images/icon-sprite.svg#right-3">
-                                            </use>
-                                        </svg>
-                                        <?= Html::encode($tab->tab_name) ?>
-                                    </a>
+                            <?php foreach ($tabMenus as $menu): ?>
+                                <li class="sidebar-list">
+                                    <?php if ($menu->menu_type == 'menu_group'): ?>
+                                        <a class="sidebar-link sidebar-title" href="#">
+                                            <svg class="stroke-icon">
+                                                <use href="<?= Yii::getAlias('@web') ?>/images/icon-sprite.svg#<?= $menu->icon ?>">
+                                                </use>
+                                            </svg>
+                                            <svg class="fill-icon">
+                                                <use href="<?= Yii::getAlias('@web') ?>/images/icon-sprite.svg#fill-editors"></use>
+                                            </svg>
+                                            <span><?= Html::encode($menu->name) ?></span>
+                                            <div class="according-menu"><i class="fa fa-angle-right"></i></div>
+                                        </a>
+                                        <ul class="sidebar-submenu" style="display: none;">
+                                            <?php foreach ($menu->tabs as $tab): ?>
+                                                <?php if ($tab->status == 0 && $tab->user_id == $currentUserId): ?>
+                                                    <li>
+                                                        <a href="<?= \yii\helpers\Url::to(['/tabs', 'tabId' => $tab->id]) ?>"
+                                                            data-tab-id="<?= $tab->id ?>"
+                                                            class="<?= Yii::$app->request->get('tabId') === $tab->id ? 'active' : '' ?>">
+                                                            <svg class="svg-menu">
+                                                                <use href="<?= Yii::getAlias('@web') ?>/images/icon-sprite.svg#right-3">
+                                                                </use>
+                                                            </svg>
+                                                            <?= Html::encode($tab->tab_name) ?>
+                                                        </a>
+                                                    </li>
+                                                <?php endif; ?>
+                                            <?php endforeach; ?>
+                                        </ul>
+                                    <?php else: ?>
+                                        <!-- Xử lý trường hợp mặc định cho menu -->
+                                        <a class="sidebar-link sidebar-title link-nav"
+                                            href="<?= \yii\helpers\Url::to(['/tabs', 'menuId' => $menu->id]) ?>"
+                                            data-group-id="<?= $menu->id ?>">
+                                            <svg class="stroke-icon">
+                                                <use href="<?= Yii::getAlias('@web') ?>/images/icon-sprite.svg#<?= $menu->icon ?>">
+                                                </use>
+                                            </svg>
+                                            <span><?= Html::encode($menu->name) ?></span>
+                                            <div class="according-menu"><i class="fa fa-angle-right"></i></div>
+                                        </a>
+                                    <?php endif; ?>
                                 </li>
-                                <?php endif; ?>
-                                <?php endforeach; ?>
-                            </ul>
-                            <?php else: ?>
-                            <a class="sidebar-link sidebar-title link-nav"
-                                href="<?= \yii\helpers\Url::to(['tabs/menu-view', 'menuId' => $group->id]) ?>"
-                                data-group-id="<?= $group->id ?>">
-                                <svg class="stroke-icon">
-                                    <use href="<?= Yii::getAlias('@web') ?>/images/icon-sprite.svg#<?= $group->icon ?>">
-                                    </use>
-                                </svg>
-                                <span><?= Html::encode($group->name) ?></span>
-                                <div class="according-menu"><i class="fa fa-angle-right"></i></div>
-                            </a>
-                            <?php endif; ?>
-                        </li>
-                        <?php endforeach; ?>
+                            <?php endforeach; ?>
                         <?php endif; ?>
+
 
                     </ul>
                 </div>

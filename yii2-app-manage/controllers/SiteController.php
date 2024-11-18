@@ -9,11 +9,13 @@ use yii\web\Response;
 use yii\filters\VerbFilter;
 use app\models\LoginForm;
 use app\models\SignupForm;
+use app\models\ChangePasswordForm;
 use app\models\ContactForm;
 use app\models\User;
 use app\models\Tab;
 use app\models\TableTab;
 use yii\db\Exception;
+
 class SiteController extends Controller
 {
     /**
@@ -80,15 +82,14 @@ class SiteController extends Controller
         $userId = Yii::$app->user->id;
 
         $tabs = Tab::find()
-        ->where(['user_id' => $userId])
-        ->andWhere(['tab_type' => 'richtext']) 
-        ->andWhere(['deleted' => 0])
-        ->orderBy([
-            'position' => SORT_ASC,
-            'id' => SORT_DESC,
-        ])
-        ->all();
-    
+            ->where(['user_id' => $userId])
+            ->andWhere(['deleted' => 0])
+            ->orderBy([
+                'position' => SORT_ASC,
+                'id' => SORT_DESC,
+            ])
+            ->all();
+
         // $tableTabs = TableTab::find()->all();
 
         return $this->render('index', [
@@ -117,47 +118,11 @@ class SiteController extends Controller
             ]);
         }
     }
-
     /**
-     * Logout action.
-     *
-     * @return Response
-     */
-    public function actionLogout()
-    {
-        Yii::$app->user->logout();
-
-        return $this->goHome();
-    }
-
-    /**
-     * Displays contact page.
-     *
-     * @return Response|string
-     */
-    public function actionContact()
-    {
-        $model = new ContactForm();
-        if ($model->load(Yii::$app->request->post()) && $model->contact(Yii::$app->params['adminEmail'])) {
-            Yii::$app->session->setFlash('contactFormSubmitted');
-
-            return $this->refresh();
-        }
-        return $this->render('contact', [
-            'model' => $model,
-        ]);
-    }
-
-    /**
-     * Displays about page.
+     * Action SignUp
      *
      * @return string
      */
-    public function actionAbout()
-    {
-        return $this->render('about');
-    }
-
     public function actionSignup()
     {
         $model = new SignupForm();
@@ -172,5 +137,35 @@ class SiteController extends Controller
             'model' => $model,
         ]);
     }
+    /**
+     * Action để hiển thị trang đổi mật khẩu.
+     *
+     * @return string
+     */
+    public function actionChangePassword()
+    {
+        $model = new ChangePasswordForm();
 
+        // Kiểm tra xem người dùng đã gửi form hay chưa
+        if ($model->load(Yii::$app->request->post()) && $model->changePassword()) {
+            Yii::$app->session->setFlash('success', 'Your password has been changed.');
+            return $this->goBack();
+        }
+
+        return $this->render('change-password', [
+            'model' => $model,
+        ]);
+    }
+
+    /**
+     * Logout action.
+     *
+     * @return Response
+     */
+    public function actionLogout()
+    {
+        Yii::$app->user->logout();
+
+        return $this->goHome();
+    }
 }

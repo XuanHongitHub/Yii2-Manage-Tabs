@@ -14,7 +14,7 @@ use yii\web\Exception;
 use yii\filters\AccessControl;
 
 
-class SettingsController extends Controller
+class TabsController extends Controller
 {
     public function behaviors()
     {
@@ -47,7 +47,7 @@ class SettingsController extends Controller
             ->all();
 
         $tabMenus = TabMenus::find()->all();
-        return $this->render('tabs/index', [
+        return $this->render('index', [
             'tabs' => $tabs,
             'tabMenus' => $tabMenus,
         ]);
@@ -56,55 +56,11 @@ class SettingsController extends Controller
     {
         $tabMenus = TabMenus::find()->all();
 
-        return $this->render('tabs/create', [
+        return $this->render('create', [
             'tabMenus' => $tabMenus,
 
         ]);
     }
-    public function actionMenuCreate()
-    {
-
-        return $this->render('menu/create', []);
-    }
-    public function actionMenuList()
-    {
-        $tabMenus = TabMenus::find()
-            ->orderBy([
-                'id' => SORT_DESC,
-            ])
-            ->asArray()
-            ->all();
-        // var_dump($tabMenus);
-        // exit;
-        return $this->render('menu/index', [
-            'tabMenus' => $tabMenus,
-        ]);
-    }
-    public function actionCreateOrUpdateMenu()
-    {
-        if (Yii::$app->request->isPost) {
-            $data = Yii::$app->request->post();
-
-            $model = TabMenus::findOne($data['id']) ?? new TabMenus();
-
-            $model->id = $data['id'];
-            $model->name = $data['name'];
-            $model->menu_type = $data['menu_type'];
-            $model->icon = $data['icon'];
-            $model->deleted = $data['status'];
-            $model->position = $data['position'];
-
-            if ($model->save()) {
-                Yii::$app->session->setFlash('success', 'Thành công.');
-                return $this->asJson(['success' => true, 'message' => 'Thành công.']);
-            } else {
-                return $this->asJson(['success' => false, 'message' => 'Có lỗi xảy ra.', 'errors' => $model->errors]);
-            }
-        }
-
-        return $this->asJson(['success' => false, 'message' => 'Yêu cầu không hợp lệ.']);
-    }
-
 
     public function actionCreateTab()
     {
@@ -112,7 +68,7 @@ class SettingsController extends Controller
             $userId = Yii::$app->user->id;
             $tabType = Yii::$app->request->post('tab_type');
             $tabName = Yii::$app->request->post('tab_name');
-            $tabmenuId = Yii::$app->request->post('tab_menu');
+            $tabmenuId = Yii::$app->request->post('menu_single');
             $icon = Yii::$app->request->post('icon');
 
             if (empty($tabName)) {
@@ -168,7 +124,7 @@ class SettingsController extends Controller
                         Yii::$app->session->setFlash("error_{$error['field']}", $error['message']);
                     }
                     Yii::$app->session->setFlash('tableCreationData', compact('tabName', 'tabmenuId', 'columns', 'dataTypes', 'dataSizes', 'isNotNull', 'isPrimary'));
-                    return $this->render('tabs/create', [
+                    return $this->render('create', [
                         'tableTabs' => [],
                         'tabName' => $tabName,
                         'tabmenuId' => $tabmenuId,
@@ -268,7 +224,7 @@ class SettingsController extends Controller
                 }
             }
         }
-        return $this->render('tabs/create', [
+        return $this->render('create', [
             'tableTabs' => [],
         ]);
     }
@@ -353,23 +309,6 @@ class SettingsController extends Controller
         }
 
         return empty($errors) ? true : $errors;
-    }
-
-    public function actionDetail($id)
-    {
-        $table = Tab::find()->where(['id' => $id])->one();
-        $tableName = $table->tab_name;
-
-        $charsetInfo = Yii::$app->db->createCommand("SHOW TABLE STATUS LIKE '$tableName'")->queryOne();
-        $collation = $charsetInfo['Collation'] ?? 'Không xác định';
-        $columns = Yii::$app->db->schema->getTableSchema($tableName)->columns;
-
-        return $this->render('_detail', [
-            'table' => $table,
-            'columns' => $columns,
-            'tableName' => $tableName,
-            'collation' => $collation,
-        ]);
     }
 
     public function actionDelete($id)
@@ -555,7 +494,7 @@ class SettingsController extends Controller
         foreach ($hideStatus as $tabId => $status) {
             $tab = Tab::findOne($tabId);
             if ($tab) {
-                $tab->deleted = $status;
+                $tab->status = $status;
                 $tab->save();
             }
         }
@@ -579,7 +518,7 @@ class SettingsController extends Controller
         $tab = Tab::findOne($tabId);
         if ($tab) {
             $tab->menu_id = $menuId;
-            $tab->deleted = $status == 3 ? 3 : 0;
+            $tab->status = $status == 1 ? 1 : 0;
             $tab->position = $position;
             $tab->save();
             Yii::$app->session->setFlash('success', 'Tab đã được cập nhật thành công.');

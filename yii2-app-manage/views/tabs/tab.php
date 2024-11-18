@@ -1,0 +1,166 @@
+<?php
+
+/** @var yii\web\View $this */
+
+$this->title = 'Tabs Data';
+?>
+<?php include Yii::getAlias('@app/views/layouts/_sidebar.php'); ?>
+
+<div class="page-body">
+    <div class="container-fluid">
+        <div class="page-title">
+            <div class="row">
+
+            </div>
+        </div>
+    </div>
+    <!-- Container-fluid starts -->
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-sm-12">
+
+                <div class="card">
+                    <div class="card-header card-no-border pb-0">
+                        <h4>
+                            <?= $tab_item ? $tab_item->tab_name : 'Tab này không tồn tại hoặc đã bị ẩn/xóa.'; ?>
+                        </h4>
+
+                    </div>
+                    <div class="card-body">
+                        <div class="tab-content">
+                            <div class="tab-pane fade show active" id="tab-data-current">
+                                <div class="table-responsive" id="table-data-current">
+                                    <!-- Data Loading -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+    <!-- Container-fluid Ends-->
+</div>
+<?php
+
+
+?>
+<script async>
+$(document).ready(function() {
+
+    var table_tabId = <?= !empty($tab_item) ? $tab_item->id : 'null' ?>;
+    if (table_tabId !== null) {
+        loadTabData(table_tabId);
+    } else {
+        console.log("No tabs available to load data.");
+    }
+
+    function loadTabData(tabId, page, search, pageSize) {
+        localStorage.clear();
+
+        $.ajax({
+            url: "<?= \yii\helpers\Url::to(['tabs/load-tab-data']) ?>",
+            type: "GET",
+            data: {
+                tabId: tabId,
+                page: page,
+                search: search,
+                pageSize: pageSize,
+            },
+            success: function(data) {
+                $('#table-data-current').html(data);
+                // Cập nhật trạng thái của tab hiện tại
+                $('.nav-link').removeClass('active');
+                $('.nav-item').removeClass('active');
+                $(`[data-id="${tabId}"]`).addClass('active');
+                $(`[data-id="${tabId}"]`).closest('.nav-item').addClass('active');
+            },
+            error: function(xhr, status, error) {
+                console.error('Error:', error);
+                alert('Đã xảy ra lỗi khi tải dữ liệu. Vui lòng thử lại sau.');
+            }
+        });
+    }
+
+
+    $(document).off('keydown', '#goToPageInput').on('keydown', '#goToPageInput',
+        function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                $('#goToPageButton').click();
+            }
+        });
+    $(document).off('click', '.pagination .paginate_button').on('click', '.pagination .paginate_button',
+        function(e) {
+            e.preventDefault();
+            var page = $(this).data('page');
+            var tabId = table_tabId;
+            var search = $('input[name="search"]').val();
+            var pageSize = $('#pageSize').val();
+
+            if (search && typeof search === 'string') {
+                search = search.trim();
+            }
+
+            loadData(tabId, page, search, pageSize);
+        });
+
+    $(document).off('click', '#goToPageButton').on('click', '#goToPageButton', function() {
+        var page = $('#goToPageInput').val();
+        var tabId = table_tabId;
+        var search = $('input[name="search"]').val();
+        var pageSize = $('#pageSize').val();
+
+        if (search && typeof search === 'string') {
+            search = search.trim();
+        }
+
+        if (page && !isNaN(page)) {
+            page = parseInt(page) - 1;
+            loadData(tabId, page, search, pageSize);
+        } else {
+            console.log('Invalid page number.');
+        }
+    });
+
+
+    $(document).off('click', '#lastPageButton').on('click', '#lastPageButton', function(e) {
+        e.preventDefault();
+
+        var page = $(this).data('page');
+        var tabId = table_tabId;
+        var search = $('input[name="search"]').val();
+        var pageSize = $('#pageSize').val();
+        var totalCount = $('#totalCount').val();
+
+        if (search && typeof search === 'string') {
+            search = search.trim();
+        }
+
+        lastPage = Math.ceil(totalCount / pageSize) - 1;
+
+        loadData(tabId, lastPage, search, pageSize);
+    });
+
+
+    $(document).off('change', '#pageSize').on('change', '#pageSize', function() {
+        var pageSize = $(this).val();
+
+        var tabId = table_tabId;
+        var search = $('input[name="search"]').val();
+
+        if (search && typeof search === 'string') {
+            search = search.trim();
+        }
+
+        if (pageSize && (pageSize === 'all' || !isNaN(pageSize))) {
+            loadData(tabId, 0, search, pageSize);
+        } else {
+            console.log('Invalid page size.');
+        }
+    });
+
+
+});
+</script>

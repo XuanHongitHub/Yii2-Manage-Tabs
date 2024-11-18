@@ -71,8 +71,6 @@ $config = [
             'showScriptName' => false,
             'rules' => [
                 '' => 'site/index',
-                'settings/group/create' => 'settings/group',
-                'settings/menu/index' => 'settings/group-index',
 
             ],
         ],

@@ -7,7 +7,7 @@
 use yii\bootstrap5\Html;
 use yii\bootstrap5\ActiveForm;
 
-$this->title = 'Signup';
+$this->title = 'Đăng Ký';
 ?>
 <div class="container-fluid p-0">
     <div class="row m-0">
@@ -22,7 +22,7 @@ $this->title = 'Signup';
                     </div>
                     <div class="login-main">
                         <h1><?= Html::encode($this->title) ?></h1>
-                        <p>Please fill out the following fields to signup:</p>
+                        <p>Vui lòng điền vào các trường sau để đăng ký:</p>
 
                         <?php $form = ActiveForm::begin([
                             'id' => 'form-signup',
@@ -44,8 +44,8 @@ $this->title = 'Signup';
 
                         <?php ActiveForm::end(); ?>
 
-                        <p class="mt-4 mb-0">Already have an account? <a class="ms-2"
-                                href="<?= Yii::$app->urlManager->createUrl(['site/login']) ?>">Login</a></p>
+                        <p class="mt-4 mb-0">Bạn đã có tài khoản? <a class="ms-2"
+                                href="<?= Yii::$app->urlManager->createUrl(['site/login']) ?>">Đăng nhập</a></p>
                     </div>
                 </div>
             </div>

@@ -8,11 +8,11 @@ use yii\web\Response;
 use yii\web\Controller;
 use app\models\Tab;
 use app\models\TableTab;
+use app\models\TabMenus;
 use yii\filters\VerbFilter;
 use yii\filters\AccessControl;
 use yii\db\Exception;
 use yii\data\Pagination;
-use yii\data\ActiveDataProvider;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use PhpOffice\PhpSpreadsheet\Style\Border;
@@ -20,6 +20,7 @@ use PhpOffice\PhpSpreadsheet\Style\Alignment;
 use PhpOffice\PhpSpreadsheet\Style\Font;
 use PhpOffice\PhpSpreadsheet\IOFactory;
 use yii\db\Schema;
+use yii\web\NotFoundHttpException;
 
 class TabsController extends Controller
 {
@@ -50,43 +51,47 @@ class TabsController extends Controller
      *
      * @return string
      */
-    public function actionTabView()
-    {
-        $userId = Yii::$app->user->id;
-        $tabId = Yii::$app->request->get('tabId');
-
-        $tab_item = Tab::find()
-            ->where(['user_id' => $userId, 'deleted' => 0, 'id' => $tabId])
-            ->one();
-        $tableTabs = TableTab::find()->all();
-
-        return $this->render('tab-view/index', [
-            'tab_item' => $tab_item,
-            'tableTabs' => $tableTabs,
-        ]);
-    }
-
-    public function actionMenuView()
+    public function actionIndex()
     {
         $userId = Yii::$app->user->id;
 
         $menuId = Yii::$app->request->get('menuId');
+        $tabId = Yii::$app->request->get('tabId');
 
-        $tabs = Tab::find()
-            ->where(['user_id' => $userId, 'deleted' => 0, 'menu_id' => $menuId])
-            ->orderBy([
-                'position' => SORT_ASC,
-                'id' => SORT_DESC,
-            ])
-            ->all();;
+        if ($menuId) {
+            $menu = TabMenus::findOne($menuId);
 
-        $tableTabs = TableTab::find()->all();
+            if ($menu) {
+                $tabs = Tab::find()
+                    ->where(['user_id' => $userId, 'status' => 0, 'menu_id' => $menuId])
+                    ->orderBy(['position' => SORT_ASC, 'id' => SORT_DESC])
+                    ->all();
 
-        return $this->render('menu-view/index', [
-            'tabs' => $tabs,
-            'tableTabs' => $tableTabs,
-        ]);
+                $tableTabs = TableTab::find()->all();
+
+                return $this->render('menu', [
+                    'tabs' => $tabs,
+                    'tableTabs' => $tableTabs,
+                ]);
+            }
+        }
+
+        if ($tabId) {
+            $tab_item = Tab::find()
+                ->where(['user_id' => $userId, 'status' => 0, 'id' => $tabId])
+                ->one();
+
+            $tableTabs = TableTab::find()->all();
+
+            return $this->render('tab', [
+                'tab_item' => $tab_item,
+                'tableTabs' => $tableTabs,
+            ]);
+        }
+
+        throw new NotFoundHttpException('Không tìm thấy dữ liệu phù hợp.');
     }
+
 
 
     /**

@@ -3,10 +3,8 @@
 use yii\helpers\Html;
 
 /** @var yii\web\View $this */
-/** @var app\models\TableTab[] $tableTabs */
-$tableCreationData = Yii::$app->session->getFlash('tableCreationData', []);
-
 $this->title = 'Danh Sách Menu';
+
 
 ?>
 <?php include Yii::getAlias('@app/views/layouts/_icon.php'); ?>
@@ -45,16 +43,13 @@ $this->title = 'Danh Sách Menu';
                                     data-bs-target="#trashBinModal">
                                     <i class="fas fa-trash me-1"></i> Thùng Rác
                                 </a>
-                                <a class="btn btn-success mb-2"
-                                    href="<?= \yii\helpers\Url::to(['settings/menu-create']) ?>">
-                                    <i class="fas fa-plus me-1"></i> Thêm Tab
+                                <a class="btn btn-success mb-2" href="#" data-bs-toggle="modal"
+                                    data-bs-target="#createMenuModal">
+                                    <i class="fas fa-plus me-1"></i> Thêm Menu
                                 </a>
                             </div>
-
                         </div>
-
                     </div>
-
                     <div class="card-body">
 
                         <div class="table-responsive">
@@ -73,53 +68,60 @@ $this->title = 'Danh Sách Menu';
                                     </tr>
                                 </thead>
                                 <tbody id="columnsContainer">
-                                    <?php foreach ($tabMenus as $tabGroup): ?>
+                                    <?php foreach ($tabMenus as $tabMenu): ?>
+                                    <?php if ($tabMenu->deleted != 1): ?>
+
                                     <tr>
-                                        <td><?= Html::encode($tabGroup->id) ?></td>
-                                        <td><?= Html::encode($tabGroup->name) ?></td>
+                                        <td><?= Html::encode($tabMenu->id) ?></td>
+                                        <td><?= Html::encode($tabMenu->name) ?></td>
                                         <td>
                                             <div class="col-2 d-flex align-items-center ms-3" id="icon-display">
                                                 <svg class="stroke-icon" width="24" height="24">
                                                     <use
-                                                        href="<?= Yii::getAlias('@web') ?>/images/icon-sprite.svg#<?= $tabGroup->icon ?>">
+                                                        href="<?= Yii::getAlias('@web') ?>/images/icon-sprite.svg#<?= $tabMenu->icon ?>">
                                                     </use>
                                                 </svg>
                                             </div>
                                         </td>
                                         <td class="text-center">
-                                            <?php if ($tabGroup->menu_type == 'menu_group'): ?>
+                                            <?php if ($tabMenu->menu_type == 'menu_group'): ?>
                                             <span class="badge badge-light-primary">Menu Con</span>
-                                            <?php elseif ($tabGroup->menu_type == 'tab_menu'): ?>
+                                            <?php elseif ($tabMenu->menu_type == 'menu_single'): ?>
                                             <span class="badge badge-light-danger">Tab Con</span>
                                             <?php else: ?>
                                             <span class="badge badge-light-dark">Không</span>
                                             <?php endif; ?>
                                         </td>
                                         <td class="text-center">
-                                            <?= $tabGroup->deleted == 3 ?
-                                                    '<span class="badge badge-warning">Ẩn</span>' : '<span class="badge badge-success">Hiện</span>'
-                                                ?>
+                                            <?= $tabMenu->status == 1 ?
+                                                        '<span class="badge badge-warning">Ẩn</span>' : '<span class="badge badge-success">Hiện</span>'
+                                                    ?>
                                         </td>
-                                        <td><?= Html::encode($tabGroup->position) ?></td>
+                                        <td><?= Html::encode($tabMenu->position) ?></td>
 
-                                        <td><?= Yii::$app->formatter->asDatetime($tabGroup->created_at) ?></td>
+                                        <td><?= Yii::$app->formatter->asDatetime($tabMenu->created_at) ?></td>
                                         <td class="d-flex text-nowrap justify-content-center">
                                             <button class="btn btn-sm btn-primary me-1 edit-btn" data-bs-toggle="modal"
-                                                data-bs-target="#editModal" data-tab-group-id="<?= $tabGroup->id ?>"
-                                                data-group-name="<?= Html::encode($tabGroup->name) ?>"
-                                                data-group-type="<?= Html::encode($tabGroup->menu_type) ?>"
-                                                data-icon="<?= Html::encode($tabGroup->icon) ?>"
-                                                data-status="<?= Html::encode($tabGroup->deleted) ?>"
-                                                data-position="<?= Html::encode($tabGroup->position) ?>">
+                                                data-bs-target="#editModal" data-tab-menu-id="<?= $tabMenu->id ?>"
+                                                data-menu-name="<?= Html::encode($tabMenu->name) ?>"
+                                                data-menu-type="<?= Html::encode($tabMenu->menu_type) ?>"
+                                                data-icon="<?= Html::encode($tabMenu->icon) ?>"
+                                                data-status="<?= Html::encode($tabMenu->status) ?>"
+                                                data-position="<?= Html::encode($tabMenu->position) ?>">
                                                 <i class="fas fa-edit"></i>
+                                            </button>
+                                            <button class="btn btn-sm btn-info me-1" data-bs-toggle="modal"
+                                                data-bs-target="#subTabModal" data-menu-id="<?= $tabMenu->id ?>">
+                                                <i class="fas fa-cogs"></i> Tab Con
                                             </button>
                                             <button href="#" data-bs-toggle="modal" data-bs-target="#deleteModal"
                                                 class="btn btn-danger btn-sm delete-btn"
-                                                data-tab-id="<?= $tabGroup->id ?>">
+                                                data-menu-id="<?= $tabMenu->id ?>">
                                                 <i class="fa-regular fa-trash-can"></i>
                                             </button>
                                         </td>
                                     </tr>
+                                    <?php endif; ?>
                                     <?php endforeach; ?>
                                 </tbody>
                             </table>
@@ -132,16 +134,16 @@ $this->title = 'Danh Sách Menu';
     </div>
 </div>
 
-<!-- Modal sửa Tab Group -->
+<!-- Modal sửa Menu  -->
 <div class="modal fade" id="editModal" tabindex="-1" aria-labelledby="editModalLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="editModalLabel">Sửa Tab Group</h5>
+                <h5 class="modal-title" id="editModalLabel">Sửa Menu</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                <form id="editTabGroupForm">
+                <form id="editMenuForm">
                     <!-- Tên Menu -->
                     <div class="mb-3">
                         <label for="tabmenuName" class="form-label">Tên Menu</label>
@@ -152,8 +154,9 @@ $this->title = 'Danh Sách Menu';
                     <div class="mb-3">
                         <label for="tabmenuType" class="form-label">Loại Menu</label>
                         <select class="form-select" id="tabmenuType" name="menu_type" required>
+                            <option value="none">-- Không --</option>
                             <option value="menu_group">Sub Menu</option>
-                            <option value="tab_menu">Sub Tab</option>
+                            <option value="menu_single">Sub Tab</option>
                         </select>
                     </div>
 
@@ -191,15 +194,15 @@ $this->title = 'Danh Sách Menu';
                     <div class="mb-3">
                         <label for="tabMenustatus" class="form-label">Trạng thái</label>
                         <select class="form-select" id="tabMenustatus" name="status" required>
-                            <option value="0" <?= $tabGroup->deleted == 0 ? 'selected' : '' ?>>Hiển thị</option>
-                            <option value="3" <?= $tabGroup->deleted == 3 ? 'selected' : '' ?>>Ẩn</option>
+                            <option value="0">Hiển thị</option>
+                            <option value="1">Ẩn</option>
                         </select>
                     </div>
 
                     <!-- Vị trí -->
                     <div class="mb-3">
-                        <label for="tabGroupPosition" class="form-label">Vị trí</label>
-                        <input type="number" class="form-control" id="tabGroupPosition" name="position" required>
+                        <label for="tabMenuPosition" class="form-label">Vị trí</label>
+                        <input type="number" class="form-control" id="tabMenuPosition" name="position" required>
                     </div>
                 </form>
             </div>
@@ -210,46 +213,104 @@ $this->title = 'Danh Sách Menu';
         </div>
     </div>
 </div>
+
+<!-- Modal Tab Menu Con -->
+<div class="modal fade" id="subTabModal" tabindex="-1" aria-labelledby="subTabModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="subTabModalLabel">Tab Menu Con</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="subTabForm">
+                    <div class="mb-3">
+                        <label for="selectedSubItems" class="form-label">Các Tab/Menu Con Đã Chọn</label>
+                        <ul id="selectedSubItems" class="list-group" name="selected_subitems[]">
+                            <li class="list-group-item text-center">
+                                <button type="button" class="btn btn-link" id="addNewItem">+ Thêm Tab/Menu</button>
+                            </li>
+                            <!-- Các mục đã chọn sẽ được hiển thị ở đây -->
+                        </ul>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+                <button type="button" class="btn btn-primary" id="saveSubTabChanges">Lưu thay đổi</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
 <script>
 $(document).ready(function() {
+    $('.btn-info').on('click', function() {
+        var menuId = $(this).data('menu-id');
+
+        $.ajax({
+            url: '<?= \yii\helpers\Url::to(['menus/get-child']) ?>',
+            type: 'GET',
+            headers: {
+                'X-CSRF-Token': $('meta[name="csrf-token"]').attr('content')
+            },
+            data: {
+                id: menuId
+            },
+            success: function(response) {
+                var parsedResponse = JSON.parse(response);
+                console.log("🚀 ~ parsedResponse:", parsedResponse);
+
+
+            },
+            error: function(xhr, status, error) {
+                console.log('Lỗi AJAX: ', error);
+                alert('Có lỗi xảy ra, vui lòng thử lại.');
+            }
+        });
+    });
+});
+
+$(document).ready(function() {
+    // Khi nhấn nút "sửa"
     $('.edit-btn').on('click', function() {
-        var menuId = $(this).data('tab-group-id');
-        var menuName = $(this).data('group-name');
-        var menuType = $(this).data('group-type');
+        // Lấy thông tin từ các data-* attributes của button
+        var menuId = $(this).data('tab-menu-id');
+        var menuName = $(this).data('menu-name');
+        var menuType = $(this).data('menu-type');
         var icon = $(this).data('icon');
         var status = $(this).data('status');
         var position = $(this).data('position');
 
+        // Điền các giá trị vào form trong modal
         $('#tabmenuName').val(menuName);
         $('#tabmenuType').val(menuType);
         $('#tabMenustatus').val(status);
-        $('#tabGroupPosition').val(position);
-        $('#editTabGroupForm').data('group-id', menuId);
+        $('#tabMenuPosition').val(position);
+        $('#editMenuForm').data('menu-id', menuId);
 
+        // Hiển thị icon đã chọn
         $('#selected-icon').html('<use href="<?= Yii::getAlias('@web') ?>/images/icon-sprite.svg#' +
             icon + '"></use>');
         $('#selected-icon-label').text(icon);
     });
 
-    $('#icon-list').on('click', '.icon-item', function() {
-        var selectedIcon = $(this).data('icon');
-        $('#selected-icon').html('<use href="<?= Yii::getAlias('@web') ?>/images/icon-sprite.svg#' +
-            selectedIcon + '"></use>');
-        $('#selected-icon-label').text(selectedIcon);
-        $('#icon-list').hide(); // Ẩn danh sách icon
-    });
-
+    // Lưu thay đổi menu
     $('#saveTabMenuChanges').on('click', function() {
-        var form = $('#editTabGroupForm');
-        var menuId = form.data('group-id');
+        var form = $('#editMenuForm');
+        var menuId = form.data('menu-id');
         var menuName = $('#tabmenuName').val();
         var menuType = $('#tabmenuType').val();
         var icon = $('#selected-icon-label').text(); // Lấy icon đã chọn
         var status = $('#tabMenustatus').val();
-        var position = $('#tabGroupPosition').val();
+        var position = $('#tabMenuPosition').val();
+        var selectedSubMenus = $('#selectedSubMenus').val(); // Lấy các menu con đã chọn
 
+        // Gửi dữ liệu tới server để cập nhật menu
         $.ajax({
-            url: '<?= \yii\helpers\Url::to(['settings/create-or-update-group']) ?>',
+            url: '<?= \yii\helpers\Url::to(['create-or-update-menu']) ?>',
             type: 'POST',
             headers: {
                 'X-CSRF-Token': $('meta[name="csrf-token"]').attr('content')
@@ -260,11 +321,12 @@ $(document).ready(function() {
                 menu_type: menuType,
                 icon: icon,
                 status: status,
-                position: position
+                position: position,
+                selected_submenus: selectedSubMenus // Gửi danh sách menu con đã chọn
             },
             success: function(response) {
                 $('#editModal').modal('hide');
-                location.reload();
+                location.reload(); // Tải lại trang sau khi lưu
             },
             error: function(xhr, status, error) {
                 console.log('Lỗi AJAX: ', error);
@@ -273,6 +335,8 @@ $(document).ready(function() {
         });
     });
 });
+
+
 
 document.addEventListener('DOMContentLoaded', function() {
     // Check if there's a success message
@@ -304,44 +368,46 @@ document.addEventListener('DOMContentLoaded', function() {
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                <p>Select the tab you want to restore or delete completely:</p>
+                <p>Chọn tab bạn muốn khôi phục hoặc xóa hoàn toàn:</p>
                 <table class="table table-bordered table-hover table-ui">
                     <thead>
                         <tr>
-                            <th>Tên Tab</th>
+                            <th>Tên Menu</th>
                             <th style="width: 20%; text-align: center;">Loại</th>
                             <th style="width: 20%; text-align: center;">Thao Tác</th>
                         </tr>
                     </thead>
                     <tbody id="trash-bin-list">
-                        <?php $hasDeletedTabs = false; ?>
+                        <?php $hasDeletedMenus = false; ?>
                         <?php foreach ($tabMenus as $tab): ?>
                         <?php if ($tab->deleted == 1): ?>
-                        <?php $hasDeletedTabs = true; ?>
+                        <?php $hasDeletedMenus = true; ?>
                         <tr>
                             <td><?= htmlspecialchars($tab->name) ?></td>
                             <td class="text-center">
-                                <?php if ($tab->tab_type == 'table'): ?>
-                                <span class="badge badge-light-primary">Table</span>
+                                <?php if ($tabMenu->menu_type == 'menu_group'): ?>
+                                <span class="badge badge-light-primary">Menu Con</span>
+                                <?php elseif ($tabMenu->menu_type == 'menu_single'): ?>
+                                <span class="badge badge-light-danger">Tab Con</span>
                                 <?php else: ?>
-                                <span class="badge badge-light-danger">Richtext</span>
+                                <span class="badge badge-light-dark">Không</span>
                                 <?php endif; ?>
                             </td>
                             <td class="text-nowrap">
                                 <button type="button" class="btn btn-warning restore-tab-btn" id="confirm-restore-btn"
-                                    data-tab-id="<?= htmlspecialchars($tab->id) ?>">
+                                    data-menu-id="<?= htmlspecialchars($tab->id) ?>">
                                     <i class="fa-solid fa-rotate-left"></i>
                                 </button>
                                 <button type="button" class="btn btn-danger delete-tab-btn" id="delete-permanently-btn"
                                     data-tab-name="<?= htmlspecialchars($tab->name) ?>"
-                                    data-tab-id="<?= htmlspecialchars($tab->id) ?>">
+                                    data-menu-id="<?= htmlspecialchars($tab->id) ?>">
                                     <i class="fa-regular fa-trash-can"></i>
                                 </button>
                             </td>
                         </tr>
                         <?php endif; ?>
                         <?php endforeach; ?>
-                        <?php if (!$hasDeletedTabs): ?>
+                        <?php if (!$hasDeletedMenus): ?>
                         <tr>
                             <td colspan="2" class="text-center text-muted">
                                 <em>There is nothing here.</em>
@@ -360,33 +426,43 @@ document.addEventListener('DOMContentLoaded', function() {
 
 <!-- Modal Hide tab -->
 <div class="modal fade" id="hideModal" tabindex="-1" aria-labelledby="hideModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="hideModalLabel">Hiện/Ẩn Tab</h5>
+                <h5 class="modal-title" id="hideModalLabel">Hiện/Ẩn Menu</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cancel"></button>
             </div>
             <div class="modal-body">
-                <p>Select the tab you want to hide or show:</p>
-                <table class="table">
+                <p class="pb-0 mb-0">Chọn tab bạn muốn ẩn hoặc hiển thị:</p>
+                <table class="table dataTable">
                     <thead>
                         <tr>
-                            <th>Tên Tab</th>
-                            <th class="text-center">Show</i></th>
+                            <th>Tên Menu</th>
+                            <th class="text-center" style="width: 45%">Loại</th>
+                            <th class="text-center" style="width: 8%">Hiện</i></th>
                         </tr>
                     </thead>
                     <tbody id="hide-tabs-list">
-                        <?php foreach ($tabMenus as $tab): ?>
-                        <?php if ($tab->deleted == 0 || $tab->deleted == 3): ?>
+                        <?php foreach ($tabMenus as $menu): ?>
+                        <?php if ($menu->deleted != 1): ?>
                         <tr>
-                            <td>
-                                <?= htmlspecialchars($tab->name) ?>
+                            <td class="py-0">
+                                <?= htmlspecialchars($menu->name) ?>
                             </td>
-                            <td class="text-center">
+                            <td class="text-center py-0">
+                                <?php if ($menu->menu_type == 'menu_group'): ?>
+                                <span class="badge badge-light-primary">Menu Con</span>
+                                <?php elseif ($menu->menu_type == 'menu_single'): ?>
+                                <span class="badge badge-light-danger">Tab Con</span>
+                                <?php else: ?>
+                                <span class="badge badge-light-dark">Không</span>
+                                <?php endif; ?>
+                            </td>
+                            <td class="py-0" class="text-center">
                                 <label class="switch mb-0 mt-1">
                                     <input class="form-check-input toggle-hide-btn" type="checkbox"
-                                        data-tab-id="<?= htmlspecialchars($tab->id) ?>"
-                                        <?php if ($tab->deleted == 0): ?> checked <?php endif; ?>>
+                                        data-menu-id="<?= htmlspecialchars($menu->id) ?>"
+                                        <?php if ($menu->status == 0): ?> checked <?php endif; ?>>
                                     <span class="switch-state"></span>
                                 </label>
                             </td>
@@ -409,18 +485,24 @@ document.addEventListener('DOMContentLoaded', function() {
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="sortModalLabel">Sắp Xếps</h5>
+                <h5 class="modal-title" id="sortModalLabel">Sắp Xếp</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cancel"></button>
             </div>
             <div class="modal-body">
-                <p>Kéo và thả để sắp xếp các tab.</p>
+                <p>Kéo và thả để sắp xếp các menu.</p>
+                <div class="form-check form-switch mb-3">
+                    <input class="form-check-input" type="checkbox" id="toggleStatusMenus" checked>
+                    <label class="form-check-label" for="toggleStatusMenus">Hiển thị Menu đã ẩn</label>
+                </div>
                 <ul class="list-group" id="sortable-tabs">
-                    <?php foreach ($tabMenus as $index => $tab): ?>
-                    <li class="list-group-item d-flex justify-content-between align-items-center"
-                        data-tab-id="<?= $tab->id ?>">
-                        <span><?= htmlspecialchars($tab->name) ?></span>
+                    <?php foreach ($tabMenus as $index => $menu): ?>
+                    <?php if ($menu->deleted != 1): ?>
+                    <li class="list-menu-item d-flex justify-content-between align-items-center tab-item"
+                        data-menu-id="<?= $menu->id ?>" data-status="<?= $menu->status ?>">
+                        <span><?= htmlspecialchars($menu->name) ?></span>
                         <span class="badge bg-secondary"><?= $index + 1 ?></span>
                     </li>
+                    <?php endif; ?>
                     <?php endforeach; ?>
                 </ul>
             </div>
@@ -446,9 +528,10 @@ document.addEventListener('DOMContentLoaded', function() {
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
                 <button type="button" class="btn btn-danger" id="confirm-delete-btn"
-                    data-tab-id="<?= htmlspecialchars($tabId) ?>">Xóa</button>
+                    data-menu-id="<?= htmlspecialchars($menuId) ?>">Xóa</button>
                 <button type="button" class="btn btn-danger" id="confirm-delete-permanently-btn"
-                    data-tab-id="<?= htmlspecialchars($tabId) ?>">Xóa Vĩnh Viễn</button>
+                    data-tab-name="<?= htmlspecialchars($menu->name) ?>"
+                    data-menu-id="<?= htmlspecialchars($menuId) ?>">Xóa Vĩnh Viễn</button>
             </div>
         </div>
     </div>
@@ -496,16 +579,34 @@ $(document).ready(function() {
             orderable: false,
             targets: -1
         }],
-        "order": [
-            [0, 'Desc']
-        ],
         "lengthChange": false,
         "autoWidth": false,
         "responsive": true,
         "paging": true,
         "searching": true,
         "ordering": true,
-
+        "language": {
+            "sEmptyTable": "Không có dữ liệu",
+            "sInfo": "Đang hiển thị _START_ đến _END_ trong tổng số _TOTAL_ mục",
+            "sInfoEmpty": "Đang hiển thị 0 đến 0 trong tổng số 0 mục",
+            "sInfoFiltered": "(Được lọc từ _MAX_ mục)",
+            "sInfoPostFix": "",
+            "sLengthMenu": "Hiển thị _MENU_ mục",
+            "sLoadingRecords": "Đang tải...",
+            "sProcessing": "Đang xử lý...",
+            "sSearch": "Tìm kiếm:",
+            "sZeroRecords": "Không tìm thấy kết quả nào",
+            "oPaginate": {
+                "sFirst": "Đầu tiên",
+                "sLast": "Cuối cùng",
+                "sNext": "Tiếp theo",
+                "sPrevious": "Trước"
+            },
+            "oAria": {
+                "sSortAscending": ": Sắp xếp cột tăng dần",
+                "sSortDescending": ": Sắp xếp cột giảm dần"
+            }
+        }
     });
 });
 $(document).ready(function() {
@@ -513,175 +614,187 @@ $(document).ready(function() {
         let hideStatus = {};
 
         $('.toggle-hide-btn').each(function() {
-            const tabId = $(this).data('tab-id');
+            const menuId = $(this).data('menu-id');
             const isChecked = $(this).is(':checked');
-            hideStatus[tabId] = isChecked ? 3 : 0;
+            hideStatus[menuId] = isChecked ? 0 : 1;
         });
 
-        $.ajax({
-            url: '<?= \yii\helpers\Url::to(['tabs/update-hide-status']) ?>',
-            method: 'POST',
-            headers: {
-                'X-CSRF-Token': $('meta[name="csrf-token"]').attr('content')
-            },
-            data: {
-                hideStatus: hideStatus
-            },
-            success: function(response) {
-                if (response.success) {
-                    location.reload();
-                } else {
-                    alert(response.message || "An error occurred while saving changes.");
+        if (confirm("Xác nhận thao tác?")) {
+
+            $.ajax({
+                url: '<?= \yii\helpers\Url::to(['menus/update-hide-status']) ?>',
+                method: 'POST',
+                headers: {
+                    'X-CSRF-Token': $('meta[name="csrf-token"]').attr('content')
+                },
+                data: {
+                    hideStatus: hideStatus
+                },
+                success: function(response) {
+                    if (response.success) {
+                        location.reload();
+                    } else {
+                        alert(response.message || "Có lỗi xảy ra khi lưu thay đổi.");
+                    }
+                },
+                error: function() {
+                    alert("Có lỗi xảy ra khi lưu thay đổi.");
                 }
-            },
-            error: function() {
-                alert("An error occurred while saving changes.");
+            });
+        }
+    });
+    $("#sortable-tabs").sortable();
+
+    // Lọc danh sách tab khi bật/tắt switch
+    $('#toggleStatusMenus').on('change', function() {
+        const showAll = $(this).is(':checked');
+
+        $('.tab-item').each(function() {
+            const isStatus = $(this).data('status') == 1;
+            if (isStatus) {
+                $(this).toggleClass('hidden-tab', !showAll);
             }
         });
     });
-    $("#sortable-tabs").sortable();
 
     $("#confirm-sort-btn").click(function() {
         var sortedData = [];
         $("#sortable-tabs li").each(function(index) {
-            var tabId = $(this).data("tab-id");
+            var menuId = $(this).data("menu-id");
             sortedData.push({
-                id: tabId,
+                id: menuId,
                 position: index + 1
             });
         });
+        if (confirm("Xác nhận sắp xếp?")) {
 
-        $.ajax({
-            url: '/tabs/update-sort-order',
-            method: 'POST',
-            headers: {
-                'X-CSRF-Token': $('meta[name="csrf-token"]').attr('content')
-            },
-            data: {
-                tabs: sortedData
-            },
-            success: function(response) {
-                if (response.success) {
-                    location.reload();
-                    $('#sortModal').modal('hide');
-                } else {
-                    alert(response.message || "Error.");
+            $.ajax({
+                url: '<?= \yii\helpers\Url::to(['menus/update-sort-order']) ?>',
+                method: 'POST',
+                headers: {
+                    'X-CSRF-Token': $('meta[name="csrf-token"]').attr('content')
+                },
+                data: {
+                    menus: sortedData
+                },
+                success: function(response) {
+                    if (response.success) {
+                        location.reload();
+                        $('#sortModal').modal('hide');
+                    } else {
+                        alert(response.message || "Lỗi.");
+                    }
+                },
+                error: function() {
+                    alert("Lỗi.");
                 }
-            },
-            error: function() {
-                alert("Error.");
-            }
-        });
+            });
+        }
     });
     $(document).on('click', '#confirm-restore-btn', function() {
-        const tabId = $(this).data('tab-id');
+        const menuId = $(this).data('menu-id');
 
-        $.ajax({
-            url: '<?= \yii\helpers\Url::to(['tabs/restore-tab']) ?>',
-            method: 'POST',
-            headers: {
-                'X-CSRF-Token': $('meta[name="csrf-token"]').attr('content')
-            },
-            data: {
-                tabId: tabId,
-            },
-            success: function(response) {
-                if (response.success) {
-                    location.reload();
-                    $('#trashBinModal').modal('hide');
-                } else {
-                    alert(response.message || "Restore table failed.");
-                }
-            },
-            error: function(error) {
-                alert("An error occurred while Restore table.");
-            }
-        });
-    });
-    $(document).ready(function() {
-        $(document).on('click', '#delete-permanently-btn', function() {
-            const tabId = $(this).data('tab-id');
-            const tableName = $(this).data('tab-name');
-
-            if (confirm("Are you sure you want to permanently delete this tab?")) {
-                $.ajax({
-                    url: '<?= \yii\helpers\Url::to(['tabs/delete-permanently-tab']) ?>',
-                    method: 'POST',
-                    headers: {
-                        'X-CSRF-Token': $('meta[name="csrf-token"]').attr('content')
-                    },
-                    data: {
-                        tabId: tabId,
-                        tableName: tableName,
-                    },
-                    success: function(response) {
-                        if (response.success) {
-                            location.reload();
-                        } else {
-                            alert(response.message || "Deletion failed.");
-                        }
-                    },
-                    error: function(error) {
-                        alert("An error occurred while deleting the tab.");
+        if (confirm("Bạn có chắc chắn muốn khôi phục menu này không?")) {
+            $.ajax({
+                url: '<?= \yii\helpers\Url::to(['menus/restore-menu']) ?>',
+                method: 'POST',
+                headers: {
+                    'X-CSRF-Token': $('meta[name="csrf-token"]').attr('content')
+                },
+                data: {
+                    menuId: menuId,
+                },
+                success: function(response) {
+                    if (response.success) {
+                        location.reload();
+                        $('#trashBinModal').modal('hide');
+                    } else {
+                        alert(response.message || "Khôi phục thất bại.");
                     }
-                });
-            }
-        });
+                },
+                error: function() {
+                    alert("Có lỗi xảy ra khi khôi phục.");
+                }
+            });
+        }
     });
 
-});
-$(document).ready(function() {
+    $(document).on('click', '#delete-permanently-btn', function() {
+        const menuId = $(this).data('menu-id');
+
+        if (confirm("Bạn có chắc chắn muốn xóa hoàn toàn menu này không?")) {
+            $.ajax({
+                url: '<?= \yii\helpers\Url::to(['menus/delete-permanently-menu']) ?>',
+                method: 'POST',
+                headers: {
+                    'X-CSRF-Token': $('meta[name="csrf-token"]').attr('content')
+                },
+                data: {
+                    menuId: menuId,
+                },
+                success: function(response) {
+                    if (response.success) {
+                        location.reload();
+                    } else {
+                        alert(response.message || "Xóa thất bại.");
+                    }
+                },
+                error: function() {
+                    alert("Có lỗi xảy ra khi xóa tab.");
+                }
+            });
+        }
+    });
+
     $('#confirm-delete-btn').on('click', function() {
-        const tabId = $(this).data('tab-id');
+        const menuId = $(this).data('menu-id');
 
         $.ajax({
-            url: '<?= \yii\helpers\Url::to(['tabs/delete-tab']) ?>',
+            url: '<?= \yii\helpers\Url::to(['menus/delete-menu']) ?>',
             method: 'POST',
             headers: {
                 'X-CSRF-Token': $('meta[name="csrf-token"]').attr('content')
             },
             data: {
-                tabId: tabId,
+                menuId: menuId,
             },
             success: function(response) {
                 if (response.success) {
                     location.reload();
                     $('#deleteModal').modal('hide');
                 } else {
-                    alert(response.message || "Deleting table failed.");
+                    alert(response.message || "Xóa menu thất bại.");
                 }
             },
-            error: function(error) {
-                alert("An error occurred while deleting table.");
+            error: function() {
+                alert("Có lỗi xảy ra khi xóa menu.");
             }
         });
     });
 
     $('#confirm-delete-permanently-btn').on('click', function() {
-        const tabId = $(this).data('tab-id');
-        var tableName = '<?= $tableName ?>';
+        const menuId = $(this).data('menu-id');
 
         if (confirm("Bạn có chắc chắn muốn xóa hoàn toàn không?")) {
             $.ajax({
-                url: '<?= \yii\helpers\Url::to(['tabs/delete-permanently-tab']) ?>',
+                url: '<?= \yii\helpers\Url::to(['menus/delete-permanently-menu']) ?>',
                 method: 'POST',
                 headers: {
                     'X-CSRF-Token': $('meta[name="csrf-token"]').attr('content')
                 },
                 data: {
-                    tabId: tabId,
-                    tableName: tableName,
+                    menuId: menuId,
                 },
                 success: function(response) {
                     if (response.success) {
                         location.reload();
                         $('#deleteModal').modal('hide');
                     } else {
-                        alert(response.message || "Deleting table failed.");
+                        alert(response.message || "Xóa menu thất bại.");
                     }
                 },
-                error: function(error) {
-                    alert("An error occurred while deleting table.");
+                error: function() {
+                    alert("Có lỗi xảy ra khi xóa menu.");
                 }
             });
         }
@@ -694,9 +807,9 @@ document.addEventListener("DOMContentLoaded", function() {
 
     deleteButtons.forEach(button => {
         button.addEventListener("click", function() {
-            const tabId = this.getAttribute("data-tab-id");
-            confirmDeleteBtn.setAttribute("data-tab-id", tabId);
-            confirmDeletePermanentlyBtn.setAttribute("data-tab-id", tabId);
+            const menuId = this.getAttribute("data-menu-id");
+            confirmDeleteBtn.setAttribute("data-menu-id", menuId);
+            confirmDeletePermanentlyBtn.setAttribute("data-menu-id", menuId);
         });
     });
 });

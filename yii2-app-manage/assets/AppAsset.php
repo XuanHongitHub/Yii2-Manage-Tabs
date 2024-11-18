@@ -1,4 +1,5 @@
 <?php
+
 /**
  * @link https://www.yiiframework.com/
  * @copyright Copyright (c) 2008 Yii Software LLC
@@ -45,6 +46,7 @@ class AppAsset extends AssetBundle
         'js/datatable.custom.js',
         'js/datatable.custom1.js',
         'js/rte.js',
+        // 'https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js',
         'https://richtexteditor.com/richtexteditor/plugins/all_plugins.js',
         'js/custom-notify.js',
         'js/script.js',

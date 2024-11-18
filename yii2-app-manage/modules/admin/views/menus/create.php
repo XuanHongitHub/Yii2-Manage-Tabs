@@ -49,7 +49,7 @@ $this->title = 'Create Group';
                             <div class="col-12 col-md-6 col-lg-2 col-xl-2 mb-3">
                                 <label for="menu_type" class="form-label">Chọn Menu loại</label>
                                 <select id="menu_type" class="form-select">
-                                    <option value="tab_menu" selected>Menu chứa Tab con</option>
+                                    <option value="menu_single" selected>Menu chứa Tab con</option>
                                     <option value="menu_group">Menu chứa Menu con</option>
                                 </select>
                             </div>
@@ -75,15 +75,15 @@ $this->title = 'Create Group';
                                     <div id="icon-list" class="d-flex flex-wrap mt-2"
                                         style="display: none; overflow-y: auto; max-height: 200px; border: 1px solid #ccc; border-radius: 8px;">
                                         <?php foreach ($iconOptions as $iconValue => $iconLabel): ?>
-                                        <div class="icon-item col-2 col-md-2 col-lg-1 me-2 mb-2 text-center"
-                                            data-icon="<?= Html::encode($iconValue) ?>"
-                                            style="cursor: pointer; padding: 4px">
-                                            <svg class="stroke-icon" width="40" height="40">
-                                                <use
-                                                    href="<?= Yii::getAlias('@web') ?>/images/icon-sprite.svg#<?= Html::encode($iconValue) ?>">
-                                                </use>
-                                            </svg>
-                                        </div>
+                                            <div class="icon-item col-2 col-md-2 col-lg-1 me-2 mb-2 text-center"
+                                                data-icon="<?= Html::encode($iconValue) ?>"
+                                                style="cursor: pointer; padding: 4px">
+                                                <svg class="stroke-icon" width="40" height="40">
+                                                    <use
+                                                        href="<?= Yii::getAlias('@web') ?>/images/icon-sprite.svg#<?= Html::encode($iconValue) ?>">
+                                                    </use>
+                                                </svg>
+                                            </div>
                                         <?php endforeach; ?>
                                     </div>
                                 </div>
@@ -104,57 +104,57 @@ $this->title = 'Create Group';
 </div>
 
 <script>
-$(document).ready(function() {
-    if ($('#icon-selected-value').val() === '') {
-        var firstIcon = $('#icon-list .icon-item').first().data('icon');
+    $(document).ready(function() {
+        if ($('#icon-selected-value').val() === '') {
+            var firstIcon = $('#icon-list .icon-item').first().data('icon');
 
-        $('#selected-icon-label').text('Icon: ' + firstIcon);
-        $('#selected-icon use').attr('href', '<?= Yii::getAlias('@web') ?>/images/icon-sprite.svg#' +
-            firstIcon);
-        $('#icon-selected-value').val(firstIcon);
-        $('#icon-list .icon-item').first().addClass('selected');
-    }
+            $('#selected-icon-label').text('Icon: ' + firstIcon);
+            $('#selected-icon use').attr('href', '<?= Yii::getAlias('@web') ?>/images/icon-sprite.svg#' +
+                firstIcon);
+            $('#icon-selected-value').val(firstIcon);
+            $('#icon-list .icon-item').first().addClass('selected');
+        }
 
-    $('.icon-item').on('click', function() {
-        var selectedIcon = $(this).data('icon');
-        $('#selected-icon-label').text(selectedIcon);
-        $('#selected-icon use').attr('href', '<?= Yii::getAlias('@web') ?>/images/icon-sprite.svg#' +
-            selectedIcon);
-        $('#icon-selected-value').val(selectedIcon);
-        $('#icon-list').hide();
-    });
+        $('.icon-item').on('click', function() {
+            var selectedIcon = $(this).data('icon');
+            $('#selected-icon-label').text(selectedIcon);
+            $('#selected-icon use').attr('href', '<?= Yii::getAlias('@web') ?>/images/icon-sprite.svg#' +
+                selectedIcon);
+            $('#icon-selected-value').val(selectedIcon);
+            $('#icon-list').hide();
+        });
 
-    $('#saveTabMenuChanges').on('click', function() {
-        var menuName = $('#name').val();
-        var menuType = $('#menu_type').val();
-        var icon = $('#icon-selected-value').val();
+        $('#saveTabMenuChanges').on('click', function() {
+            var menuName = $('#name').val();
+            var menuType = $('#menu_type').val();
+            var icon = $('#icon-selected-value').val();
 
-        $.ajax({
-            url: '<?= \yii\helpers\Url::to(['settings/create-or-update-menu']) ?>',
-            type: 'POST',
-            headers: {
-                'X-CSRF-Token': $('meta[name="csrf-token"]').attr('content')
-            },
-            data: {
-                name: menuName,
-                menu_type: menuType,
-                icon: icon,
-                status: 0,
-                position: 0
-            },
-            success: function(response) {
-                if (response.success) {
-                    window.location.href =
-                        '<?= \yii\helpers\Url::to(['settings/menu-list']) ?>';
-                } else {
-                    alert(response.message);
+            $.ajax({
+                url: '<?= \yii\helpers\Url::to(['create-or-update-menu']) ?>',
+                type: 'POST',
+                headers: {
+                    'X-CSRF-Token': $('meta[name="csrf-token"]').attr('content')
+                },
+                data: {
+                    name: menuName,
+                    menu_type: menuType,
+                    icon: icon,
+                    status: 0,
+                    position: 0
+                },
+                success: function(response) {
+                    if (response.success) {
+                        window.location.href =
+                            '<?= \yii\helpers\Url::to(['menu-list']) ?>';
+                    } else {
+                        alert(response.message);
+                    }
+                },
+                error: function(xhr, status, error) {
+                    alert('Có lỗi xảy ra. Vui lòng thử lại.');
+
                 }
-            },
-            error: function(xhr, status, error) {
-                alert('Có lỗi xảy ra. Vui lòng thử lại.');
-
-            }
+            });
         });
     });
-});
 </script>

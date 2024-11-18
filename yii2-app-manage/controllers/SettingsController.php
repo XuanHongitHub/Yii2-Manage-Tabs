@@ -69,7 +69,7 @@ class SettingsController extends Controller
     public function actionGroupIndex()
     {
 
-        return $this->render('menu/index', []);
+        return $this->render('index', []);
     }
     public function actionCreateGroup()
     {
@@ -78,12 +78,12 @@ class SettingsController extends Controller
             $icon = Yii::$app->request->post('icon');
 
             // Tạo một đối tượng Menu tab mới
-            $tabGroup = new TabMenus();
-            $tabGroup->name = $name;
-            $tabGroup->icon = $icon;
+            $tabMenu = new TabMenus();
+            $tabMenu->name = $name;
+            $tabMenu->icon = $icon;
 
             // Lưu vào cơ sở dữ liệu
-            if ($tabGroup->save()) {
+            if ($tabMenu->save()) {
                 Yii::$app->session->setFlash('success', 'Menu tab đã được tạo thành công!');
             } else {
                 Yii::$app->session->setFlash('error', 'Có lỗi xảy ra khi tạo Menu tab.');
@@ -91,7 +91,7 @@ class SettingsController extends Controller
         }
 
         // Hiển thị trang tạo Menu tab
-        return $this->redirect('menu/index');
+        return $this->redirect('index');
     }
     public function actionCreateTab()
     {
@@ -99,7 +99,7 @@ class SettingsController extends Controller
             $userId = Yii::$app->user->id;
             $tabType = Yii::$app->request->post('tab_type');
             $tabName = Yii::$app->request->post('tab_name');
-            $tabmenuId = Yii::$app->request->post('tab_menu');
+            $tabmenuId = Yii::$app->request->post('menu_single');
 
             $tab = new Tab();
             $tab->user_id = $userId;

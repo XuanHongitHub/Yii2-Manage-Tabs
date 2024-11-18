@@ -12,7 +12,9 @@ use Yii;
  * @property string|null $icon
  * @property string $menu_type
  * @property int|null $position
+ * @property int|null $status
  * @property int|null $deleted
+ * @property int|null $parent_id
  * @property string $created_at
  * @property string $updated_at
  *
@@ -36,7 +38,7 @@ class TabMenus extends \yii\db\ActiveRecord
         return [
             [['name'], 'required'],
             [['menu_type'], 'string'],
-            [['position', 'deleted'], 'integer'],
+            [['position', 'status', 'deleted', 'parent_id'], 'integer'],
             [['created_at', 'updated_at'], 'safe'],
             [['name', 'icon'], 'string', 'max' => 255],
             [['name'], 'unique'],
@@ -54,7 +56,9 @@ class TabMenus extends \yii\db\ActiveRecord
             'icon' => 'Icon',
             'menu_type' => 'Group Type',
             'position' => 'Position',
+            'status' => 'Status',
             'deleted' => 'Deleted',
+            'parent_id' => 'Parent ID',
             'created_at' => 'Created At',
             'updated_at' => 'Updated At',
         ];
