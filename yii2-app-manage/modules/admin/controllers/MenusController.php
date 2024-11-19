@@ -83,8 +83,17 @@ class MenusController extends Controller
 
     public function actionMenuCreate()
     {
+        $tabs = Tab::find()->where(['menu_id' => null])->all();
 
-        return $this->render('create', []);
+        $menus = Menu::find()
+            ->leftJoin('menu AS parent_menu', 'parent_menu.id = menu.parent_id') // Đặt alias cho bảng menu
+            ->where(['menu.parent_id' => null]) // Lọc các bản ghi không có parent_id (null)
+            ->all();
+
+        return $this->render('create', [
+            'tabs' => $tabs,
+            'menus' => $menus,
+        ]);
     }
     public function actionMenuList()
     {
