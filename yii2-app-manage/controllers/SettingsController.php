@@ -8,7 +8,7 @@ use yii\web\Response;
 use yii\web\Controller;
 use app\models\Tab;
 use app\models\TableTab;
-use app\models\TabMenus;
+use app\models\Menu;
 use yii\web\NotFoundHttpException;
 use yii\web\Exception;
 use yii\filters\AccessControl;
@@ -46,7 +46,7 @@ class SettingsController extends Controller
             ])
             ->all();
 
-        $tabMenus = TabMenus::find()->all();
+        $tabMenus = Menu::find()->all();
         return $this->render('index', [
             'tabs' => $tabs,
             'tabMenus' => $tabMenus,
@@ -54,7 +54,7 @@ class SettingsController extends Controller
     }
     public function actionCreate()
     {
-        $tabMenus = TabMenus::find()->all();
+        $tabMenus = Menu::find()->all();
 
         return $this->render('create', [
             'tabMenus' => $tabMenus,
@@ -78,7 +78,7 @@ class SettingsController extends Controller
             $icon = Yii::$app->request->post('icon');
 
             // Tạo một đối tượng Menu tab mới
-            $tabMenu = new TabMenus();
+            $tabMenu = new Menu();
             $tabMenu->name = $name;
             $tabMenu->icon = $icon;
 

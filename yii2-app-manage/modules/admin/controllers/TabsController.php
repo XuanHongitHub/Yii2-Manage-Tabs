@@ -8,7 +8,7 @@ use app\models\User;
 use yii\web\Response;
 use app\models\Tab;
 use app\models\TableTab;
-use app\models\TabMenus;
+use app\models\Menu;
 use yii\web\NotFoundHttpException;
 use yii\web\Exception;
 use yii\filters\AccessControl;
@@ -46,7 +46,7 @@ class TabsController extends Controller
             ])
             ->all();
 
-        $tabMenus = TabMenus::find()->all();
+        $tabMenus = Menu::find()->all();
         return $this->render('index', [
             'tabs' => $tabs,
             'tabMenus' => $tabMenus,
@@ -54,7 +54,7 @@ class TabsController extends Controller
     }
     public function actionTabsCreate()
     {
-        $tabMenus = TabMenus::find()->all();
+        $tabMenus = Menu::find()->all();
 
         return $this->render('create', [
             'tabMenus' => $tabMenus,
@@ -81,7 +81,7 @@ class TabsController extends Controller
                     return $this->redirect(['tabs-create']);
                 }
 
-                $tabMenu = new TabMenus();
+                $tabMenu = new Menu();
                 $tabMenu->name = $tabName;
                 $tabMenu->menu_type = 'none';
                 $tabMenu->icon = $icon;

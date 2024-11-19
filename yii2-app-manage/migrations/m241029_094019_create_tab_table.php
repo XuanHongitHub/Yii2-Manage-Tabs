@@ -3,7 +3,7 @@
 use yii\db\Migration;
 
 /**
- * Handles the creation of table `{{%tab}}` and `tab_menus`.
+ * Handles the creation of table `{{%tab}}` and `menu`.
  */
 class m241029_094019_create_tab_table extends Migration
 {
@@ -29,7 +29,7 @@ class m241029_094019_create_tab_table extends Migration
             'fk-tab-menu_id',
             'tab',
             'menu_id',
-            'tab_menus',
+            'menu',
             'id',
             'SET NULL'
         );
@@ -56,6 +56,6 @@ class m241029_094019_create_tab_table extends Migration
 
         $this->dropTable('tab');
 
-        $this->dropTable('tab_menus');
+        $this->dropTable('menu');
     }
 }

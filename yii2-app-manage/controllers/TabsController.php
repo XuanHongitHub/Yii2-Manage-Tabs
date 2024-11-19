@@ -8,7 +8,7 @@ use yii\web\Response;
 use yii\web\Controller;
 use app\models\Tab;
 use app\models\TableTab;
-use app\models\TabMenus;
+use app\models\Menu;
 use yii\filters\VerbFilter;
 use yii\filters\AccessControl;
 use yii\db\Exception;
@@ -59,7 +59,7 @@ class TabsController extends Controller
         $tabId = Yii::$app->request->get('tabId');
 
         if ($menuId) {
-            $menu = TabMenus::findOne($menuId);
+            $menu = Menu::findOne($menuId);
 
             if ($menu) {
                 $tabs = Tab::find()

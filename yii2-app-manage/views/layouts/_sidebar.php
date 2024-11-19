@@ -7,12 +7,12 @@ use yii\bootstrap5\Html;
 
 use app\models\User;
 use app\models\Tab;
-use app\models\TabMenus;
+use app\models\Menu;
 
 $isAdmin = User::isUserAdmin(Yii::$app->user->identity->username);
 $currentUserId = Yii::$app->user->id;
 
-$tabMenus = TabMenus::find()
+$tabMenus = Menu::find()
     ->where(['deleted' => 0])
     ->orderBy(['position' => SORT_ASC])
     ->all();

@@ -8,7 +8,7 @@ use app\models\User;
 use yii\web\Response;
 use app\models\Tab;
 use app\models\TableTab;
-use app\models\TabMenus;
+use app\models\Menu;
 use yii\web\NotFoundHttpException;
 use yii\web\Exception;
 use yii\filters\AccessControl;
@@ -36,7 +36,7 @@ class MenusController extends Controller
     }
     public function actionGetChild($id)
     {
-        $tabMenu = TabMenus::findOne($id);
+        $tabMenu = Menu::findOne($id);
 
         if ($tabMenu === null) {
             Yii::$app->response->statusCode = 404;
@@ -51,7 +51,7 @@ class MenusController extends Controller
             ->all();
 
         // Chỉ lấy id và name của TabMenu đã chọn làm con
-        $childMenus = TabMenus::find()
+        $childMenus = Menu::find()
             ->select(['id', 'name'])
             ->where(['parent_id' => $tabMenu->id])
             ->asArray()
@@ -65,7 +65,7 @@ class MenusController extends Controller
             ->all();
 
         // Chỉ lấy id và name của TabMenu có thể làm con
-        $potentialChildMenus = TabMenus::find()
+        $potentialChildMenus = Menu::find()
             ->select(['id', 'name'])
             ->where(['parent_id' => null])
             ->asArray()
@@ -88,7 +88,7 @@ class MenusController extends Controller
     }
     public function actionMenuList()
     {
-        $tabMenus = TabMenus::find()
+        $tabMenus = Menu::find()
             ->where(['parent_id' => NULL])
             ->orderBy([
                 'id' => SORT_DESC,
@@ -104,7 +104,7 @@ class MenusController extends Controller
         if (Yii::$app->request->isPost) {
             $data = Yii::$app->request->post();
 
-            $model = TabMenus::findOne($data['id']) ?? new TabMenus();
+            $model = Menu::findOne($data['id']) ?? new Menu();
 
             $model->id = $data['id'];
             $model->name = $data['name'];
@@ -135,7 +135,7 @@ class MenusController extends Controller
         }
 
         foreach ($hideStatus as $id => $status) {
-            $tabMenu = TabMenus::findOne($id);
+            $tabMenu = Menu::findOne($id);
             if ($tabMenu) {
                 $tabMenu->status = $status;
                 $tabMenu->save(false);
@@ -155,7 +155,7 @@ class MenusController extends Controller
         }
 
         foreach ($menus as $tab) {
-            $tabMenu = TabMenus::findOne($tab['id']);
+            $tabMenu = Menu::findOne($tab['id']);
             if ($tabMenu) {
                 $tabMenu->position = $tab['position'];
                 $tabMenu->save(false);
@@ -170,7 +170,7 @@ class MenusController extends Controller
         Yii::$app->response->format = Response::FORMAT_JSON;
 
         $menuId = Yii::$app->request->post('menuId');
-        $tabMenu = TabMenus::findOne($menuId);
+        $tabMenu = Menu::findOne($menuId);
 
         if (!$tabMenu) {
             return ['success' => false, 'message' => 'Không tìm thấy menu.'];
@@ -189,7 +189,7 @@ class MenusController extends Controller
         Yii::$app->response->format = Response::FORMAT_JSON;
 
         $menuId = Yii::$app->request->post('menuId');
-        $tabMenu = TabMenus::findOne($menuId);
+        $tabMenu = Menu::findOne($menuId);
 
         if (!$tabMenu) {
             Yii::$app->session->setFlash('error', 'Không tìm thấy menu.');
@@ -216,7 +216,7 @@ class MenusController extends Controller
         if (isset($postData['menuId'])) {
             $menuId = $postData['menuId'];
 
-            $affectedRows = TabMenus::updateAll(
+            $affectedRows = Menu::updateAll(
                 ['deleted' => 0],
                 ['id' => $menuId]
             );

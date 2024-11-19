@@ -5,7 +5,7 @@ namespace app\models;
 use Yii;
 
 /**
- * This is the model class for table "tab_menus".
+ * This is the model class for table "menu".
  *
  * @property int $id
  * @property string $name
@@ -20,14 +20,14 @@ use Yii;
  *
  * @property Tab[] $tabs
  */
-class TabMenus extends \yii\db\ActiveRecord
+class Menu extends \yii\db\ActiveRecord
 {
     /**
      * {@inheritdoc}
      */
     public static function tableName()
     {
-        return 'tab_menus';
+        return 'menu';
     }
 
     /**
