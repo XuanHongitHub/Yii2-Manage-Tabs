@@ -45308,3 +45308,29 @@ footer p .footer-icon {
 .hidden-tab {
   display: none !important;
 }
+
+@media (min-width: 200px) and (max-width: 300px) {
+  .custom-col {
+    width: 100%;
+  }
+
+  .custom-col .icon-item .seleted {
+    padding: 4px 30px 0px 4px !important;
+  }
+}
+
+@media (min-width: 1200px) and (max-width: 1662px) {
+  .custom-col {
+    width: 50%;
+  }
+}
+
+.toggle-icon {
+  cursor: pointer;
+  font-size: 1.2em;
+  color: #4171cb;
+}
+
+.toggle-icon i {
+  transition: transform 0.2s;
+}

@@ -60,7 +60,7 @@ Select2Asset::register($this);
                         </div>
                     </div>
                     <ul class="profile-dropdown onhover-show-div">
-                        <li><a href="<?= Yii::$app->urlManager->createUrl(['admin/tabs/tabs-list']) ?>"><span><i
+                        <li><a href="<?= Yii::$app->urlManager->createUrl(['admin/tabs/index']) ?>"><span><i
                                         class="fa-solid fa-gear me-2"></i>Cài đặt</span></a></li>
                         <li><a href="<?= Yii::$app->urlManager->createUrl(['site/change-password']) ?>"><span><i
                                         class="fa-solid fa-key me-2"></i></i>Đổi mật khẩu</span></a></li>
@@ -147,7 +147,7 @@ Select2Asset::register($this);
                                 <div class="according-menu"><i class="fa fa-angle-right"></i></div>
                             </a>
                             <ul class="sidebar-submenu" style="display: none;">
-                                <li><a href="<?= \yii\helpers\Url::to(['tabs/tabs-list']) ?>">
+                                <li><a href="<?= \yii\helpers\Url::to(['tabs/index']) ?>">
                                         <svg class="svg-menu">
                                             <use href="<?= Yii::getAlias('@web') ?>/images/icon-sprite.svg#right-3">
                                             </use>
@@ -170,12 +170,12 @@ Select2Asset::register($this);
                                 <div class="according-menu"><i class="fa fa-angle-right"></i></div>
                             </a>
                             <ul class="sidebar-submenu" style="display: none;">
-                                <li><a href="<?= \yii\helpers\Url::to(['menus/menu-list']) ?>">
+                                <li><a href="<?= \yii\helpers\Url::to(['menus/index']) ?>">
                                         <svg class="svg-menu">
                                             <use href="<?= Yii::getAlias('@web') ?>/images/icon-sprite.svg#right-3">
                                             </use>
                                         </svg>Danh sách</a></li>
-                                <li><a href="<?= \yii\helpers\Url::to(['menus/menu-create']) ?>">
+                                <li><a href="<?= \yii\helpers\Url::to(['menus/create']) ?>">
                                         <svg class="svg-menu">
                                             <use href="<?= Yii::getAlias('@web') ?>/images/icon-sprite.svg#right-3">
                                             </use>

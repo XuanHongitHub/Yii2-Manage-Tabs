@@ -47,6 +47,7 @@ $this->title = 'Thêm Menu';
                                 <label for="name" class="form-label">Tên Menu</label>
                                 <input type="text" id="name" class="form-control" value="">
                             </div>
+
                             <!-- Icon -->
                             <div class="col-12 col-md-8 col-lg-6 col-xl-4 custom-col mb-3 mb-3">
                                 <label for="icon-select" class="form-label">Chọn icon</label>
@@ -62,6 +63,22 @@ $this->title = 'Thêm Menu';
                                                     href="<?= isset($selectedIcon) ? Yii::getAlias('@web') . "/images/icon-sprite.svg#{$selectedIcon}" : '' ?>">
                                                 </use>
                                             </svg>
+                                        </div>
+
+                                        <!-- Danh sách icon -->
+                                        <div id="icon-list" class="d-flex flex-wrap mt-2"
+                                            style="display: none; overflow-y: auto; max-height: 200px; border: 1px solid #ccc; border-radius: 8px;">
+                                            <?php foreach ($iconOptions as $iconValue => $iconLabel): ?>
+                                            <div class="icon-item col-2 col-md-2 col-lg-1 me-2 mb-2 text-center"
+                                                data-icon="<?= Html::encode($iconValue) ?>"
+                                                style="cursor: pointer; padding: 4px">
+                                                <svg class="stroke-icon" width="40" height="40">
+                                                    <use
+                                                        href="<?= Yii::getAlias('@web') ?>/images/icon-sprite.svg#<?= Html::encode($iconValue) ?>">
+                                                    </use>
+                                                </svg>
+                                            </div>
+                                            <?php endforeach; ?>
                                         </div>
                                     </div>
                                 </div>
@@ -88,16 +105,16 @@ $this->title = 'Thêm Menu';
                                 <select id="tabs" class="form-select input-air-primary digits form-multi-select"
                                     multiple="">
                                     <?php foreach ($tabs as $tab): ?>
-                                        <option value="<?= $tab->id ?>"><?= $tab->tab_name ?></option>
+                                    <option value="<?= $tab->id ?>"><?= $tab->tab_name ?></option>
                                     <?php endforeach; ?>
                                 </select>
                             </div>
                             <div class="col-12 col-md-6 col-lg-4 col-xl-3 mb-3">
-                                <label for="menus" class="form-label">Chọn Page</label>
+                                <label for="menus" class="form-label">Chọn Menu</label>
                                 <select id="menus" class="form-select input-air-primary digits form-multi-select"
                                     multiple="">
-                                    <?php foreach ($menus as $page): ?>
-                                        <option value="<?= $page->id ?>"><?= $page->name ?></option>
+                                    <?php foreach ($menus as $menu): ?>
+                                    <option value="<?= $menu->id ?>"><?= $menu->name ?></option>
                                     <?php endforeach; ?>
                                 </select>
                             </div>
@@ -113,54 +130,60 @@ $this->title = 'Thêm Menu';
 </div>
 
 <script>
-    $(document).ready(function() {
-        // Khởi tạo select2 cho các select có class .form-multi-select
-        $('.form-multi-select').select2({
-            placeholder: 'Chọn Tab',
-            allowClear: true
-        });
+$(document).ready(function() {
+    // Khởi tạo select2 cho các select có class .form-multi-select
+    $('.form-multi-select').select2({
+        placeholder: 'Chọn Tab',
+        allowClear: true
+    });
 
-        $('#menu_type').on('change', function() {
-            var menuType = $(this).val();
-            if (menuType === 'none') {
-                $('#tabs').prop('multiple', false);
-            } else {
-                $('#tabs').prop('multiple', true);
+    $('#menu_type').on('change', function() {
+        var menuType = $(this).val();
+        if (menuType === 'none') {
+            $('#tabs').prop('multiple', false);
+        } else {
+            $('#tabs').prop('multiple', true);
+        }
+    });
+
+    $('#saveTabMenuChanges').on('click', function() {
+        var menuName = $('#name').val();
+        var menuType = $('#menu_type').val();
+        var icon = $('#icon-selected-value').val();
+        var selectedTabs = $('#tabs').val();
+        var selectedMenus = $('#menus').val();
+
+        console.log("🚀 ~ $ ~ selectedTabs:", selectedTabs);
+        console.log("🚀 ~ $ ~ selectedMenus:", selectedMenus);
+
+        $.ajax({
+            url: '<?= \yii\helpers\Url::to(['create-or-update-menu']) ?>',
+            type: 'POST',
+            headers: {
+                'X-CSRF-Token': $('meta[name="csrf-token"]').attr('content')
+            },
+            data: {
+                name: menuName,
+                menu_type: menuType,
+                icon: icon,
+                status: 0,
+                position: 0,
+                selectedTabs: selectedTabs,
+                selectedMenus: selectedMenus
+
+            },
+            success: function(response) {
+                if (response.success) {
+                    window.location.href =
+                        '<?= \yii\helpers\Url::to(['index']) ?>';
+                } else {
+                    alert(response.message);
+                }
+            },
+            error: function(xhr, status, error) {
+                alert('Lỗi khi lưu menu.');
             }
         });
-
-        $('#saveTabMenuChanges').on('click', function() {
-            var menuName = $('#name').val();
-            var menuType = $('#menu_type').val();
-            var icon = $('#icon-selected-value').val();
-            var selectedTabs = $('#tabs').val();
-
-            $.ajax({
-                url: '<?= \yii\helpers\Url::to(['create-or-update-menu']) ?>',
-                type: 'POST',
-                headers: {
-                    'X-CSRF-Token': $('meta[name="csrf-token"]').attr('content')
-                },
-                data: {
-                    name: menuName,
-                    menu_type: menuType,
-                    icon: icon,
-                    status: 0,
-                    position: 0,
-                    selectedTabs: selectedTabs
-                },
-                success: function(response) {
-                    if (response.success) {
-                        window.location.href =
-                            '<?= \yii\helpers\Url::to(['index']) ?>';
-                    } else {
-                        alert(response.message);
-                    }
-                },
-                error: function(xhr, status, error) {
-                    alert('Lỗi khi lưu menu.');
-                }
-            });
-        });
     });
+});
 </script>

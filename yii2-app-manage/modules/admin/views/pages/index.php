@@ -300,7 +300,7 @@ document.addEventListener('DOMContentLoaded', function() {
                             <th class="text-center" style="width: 12%">Hiện</i></th>
                         </tr>
                     </thead>
-                    <tbody id="hide-tabs-list">
+                    <tbody id="hide-index">
                         <?php foreach ($pages as $page): ?>
                         <?php if ($page->deleted != 1): ?>
                         <tr>

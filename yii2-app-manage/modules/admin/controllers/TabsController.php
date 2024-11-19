@@ -35,7 +35,7 @@ class TabsController extends Controller
         ];
     }
 
-    public function actionTabsList()
+    public function actionIndex()
     {
         $userId = Yii::$app->user->id;
         $tabs = Tab::find()

@@ -314,7 +314,7 @@ $this->title = 'List Tabs';
                             <th class="text-center" style="width: 8%">Hiện</i></th>
                         </tr>
                     </thead>
-                    <tbody id="hide-tabs-list">
+                    <tbody id="hide-index">
                         <?php foreach ($tabs as $tab): ?>
                             <?php if ($tab->deleted == 0): ?>
                                 <tr>

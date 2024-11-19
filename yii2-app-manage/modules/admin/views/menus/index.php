@@ -51,11 +51,11 @@ $this->title = 'Danh Sách Menu';
                         </div>
                     </div>
                     <div class="card-body">
-
                         <div class="table-responsive">
                             <table class="display border table-bordered dataTable no-footer">
                                 <thead>
                                     <tr>
+                                        <th></th>
                                         <th>ID</th>
                                         <th>Tên Menu</th>
                                         <th>Icon</th>
@@ -68,65 +68,143 @@ $this->title = 'Danh Sách Menu';
                                     </tr>
                                 </thead>
                                 <tbody id="columnsContainer">
-                                    <?php foreach ($tabMenus as $tabMenu): ?>
-                                    <?php if ($tabMenu->deleted != 1): ?>
-
-                                    <tr>
-                                        <td><?= Html::encode($tabMenu->id) ?></td>
-                                        <td><?= Html::encode($tabMenu->name) ?></td>
+                                    <?php 
+                                        $menuParents = array_filter($tabMenus, fn($menu) => $menu->parent_id === null);
+                                        $menuChildren = array_filter($tabMenus, fn($menu) => $menu->parent_id !== null);
+                                    ?>
+                                    <?php foreach ($menuParents as $parentMenu): ?>
+                                    <?php if ($parentMenu->deleted != 1): ?>
+                                    <tr class="parent-row" data-parent-id="<?= Html::encode($parentMenu->id) ?>">
+                                        <td class="toggle-icon text-center">
+                                            <?php 
+                                                $hasChildren = array_filter($menuChildren, fn($child) => $child->parent_id == $parentMenu->id);
+                                            ?>
+                                            <?php if (!empty($hasChildren)): ?>
+                                            <i class="fas fa-plus-circle"></i>
+                                            <?php endif; ?>
+                                        </td>
+                                        <td>
+                                            <?= Html::encode($parentMenu->id) ?>
+                                        </td>
+                                        <td><?= Html::encode($parentMenu->name) ?></td>
                                         <td>
                                             <div class="col-2 d-flex align-items-center ms-3" id="icon-display">
                                                 <svg class="stroke-icon" width="24" height="24">
                                                     <use
-                                                        href="<?= Yii::getAlias('@web') ?>/images/icon-sprite.svg#<?= $tabMenu->icon ?>">
+                                                        href="<?= Yii::getAlias('@web') ?>/images/icon-sprite.svg#<?= $parentMenu->icon ?>">
                                                     </use>
                                                 </svg>
                                             </div>
                                         </td>
                                         <td class="text-center">
-                                            <?php if ($tabMenu->menu_type == 'menu_group'): ?>
+                                            <?php if ($parentMenu->menu_type == 'menu_group'): ?>
                                             <span class="badge badge-light-primary">Menu Con</span>
-                                            <?php elseif ($tabMenu->menu_type == 'menu_single'): ?>
+                                            <?php elseif ($parentMenu->menu_type == 'menu_single'): ?>
                                             <span class="badge badge-light-danger">Tab Con</span>
                                             <?php else: ?>
                                             <span class="badge badge-light-dark">Không</span>
                                             <?php endif; ?>
                                         </td>
                                         <td class="text-center">
-                                            <?= $tabMenu->status == 1 ?
-                                                        '<span class="badge badge-warning">Ẩn</span>' : '<span class="badge badge-success">Hiện</span>'
-                                                    ?>
+                                            <?= $parentMenu->status == 1 ? 
+                                                '<span class="badge badge-warning">Ẩn</span>' : 
+                                                '<span class="badge badge-success">Hiện</span>' ?>
                                         </td>
-                                        <td><?= Html::encode($tabMenu->position) ?></td>
-
-                                        <td><?= Yii::$app->formatter->asDatetime($tabMenu->created_at) ?></td>
+                                        <td><?= Html::encode($parentMenu->position) ?></td>
+                                        <td><?= Yii::$app->formatter->asDatetime($parentMenu->created_at) ?></td>
                                         <td class="d-flex text-nowrap justify-content-center">
+                                            <!-- Thao tác -->
                                             <button class="btn btn-sm btn-primary me-1 edit-btn" data-bs-toggle="modal"
-                                                data-bs-target="#editModal" data-tab-menu-id="<?= $tabMenu->id ?>"
-                                                data-menu-name="<?= Html::encode($tabMenu->name) ?>"
-                                                data-menu-type="<?= Html::encode($tabMenu->menu_type) ?>"
-                                                data-icon="<?= Html::encode($tabMenu->icon) ?>"
-                                                data-status="<?= Html::encode($tabMenu->status) ?>"
-                                                data-position="<?= Html::encode($tabMenu->position) ?>">
+                                                data-bs-target="#editModal" data-tab-menu-id="<?= $parentMenu->id ?>"
+                                                data-menu-name="<?= Html::encode($parentMenu->name) ?>"
+                                                data-menu-type="<?= Html::encode($parentMenu->menu_type) ?>"
+                                                data-icon="<?= Html::encode($parentMenu->icon) ?>"
+                                                data-status="<?= Html::encode($parentMenu->status) ?>"
+                                                data-position="<?= Html::encode($parentMenu->position) ?>">
                                                 <i class="fas fa-edit"></i>
                                             </button>
                                             <button class="btn btn-sm btn-info me-1" data-bs-toggle="modal"
-                                                data-bs-target="#subTabModal" data-menu-id="<?= $tabMenu->id ?>">
-                                                <i class="fas fa-cogs"></i> Tab Con
+                                                data-bs-target="#subTabModal" data-menu-id="<?= $parentMenu->id ?>">
+                                                <i class="fas fa-cogs"></i>
                                             </button>
                                             <button href="#" data-bs-toggle="modal" data-bs-target="#deleteModal"
                                                 class="btn btn-danger btn-sm delete-btn"
-                                                data-menu-id="<?= $tabMenu->id ?>">
+                                                data-menu-id="<?= $parentMenu->id ?>">
                                                 <i class="fa-regular fa-trash-can"></i>
                                             </button>
                                         </td>
                                     </tr>
+
+                                    <!-- Hiển thị menu con -->
+                                    <?php foreach ($menuChildren as $childMenu): ?>
+                                    <?php if ($childMenu->parent_id == $parentMenu->id): ?>
+                                    <tr class="child-row" data-parent-id="<?= Html::encode($parentMenu->id) ?>"
+                                        style="display: none;">
+                                        <td data-order="">
+                                            <!-- Không hiển thị gì -->
+                                        </td>
+                                        <td data-order="<?= Html::encode($childMenu->id) ?>">--</td>
+                                        <td data-order="<?= Html::encode($childMenu->name) ?>">
+                                            <?= Html::encode($childMenu->name) ?></td>
+                                        <td data-order="<?= Html::encode($childMenu->icon) ?>">
+                                            <div class="col-2 d-flex align-items-center ms-3" id="icon-display">
+                                                <svg class="stroke-icon" width="24" height="24">
+                                                    <use
+                                                        href="<?= Yii::getAlias('@web') ?>/images/icon-sprite.svg#<?= $childMenu->icon ?>">
+                                                    </use>
+                                                </svg>
+                                            </div>
+                                        </td>
+                                        <td class="text-center" data-order="<?= $childMenu->menu_type ?>">
+                                            <?php if ($childMenu->menu_type == 'menu_group'): ?>
+                                            <span class="badge badge-light-primary">Menu Con</span>
+                                            <?php elseif ($childMenu->menu_type == 'menu_single'): ?>
+                                            <span class="badge badge-light-danger">Tab Con</span>
+                                            <?php else: ?>
+                                            <span class="badge badge-light-dark">Không</span>
+                                            <?php endif; ?>
+                                        </td>
+                                        <td class="text-center" data-order="<?= $childMenu->status ?>">
+                                            <?= $childMenu->status == 1 ? 
+                                                '<span class="badge badge-warning">Ẩn</span>' : 
+                                                '<span class="badge badge-success">Hiện</span>' ?>
+                                        </td>
+                                        <td data-order="<?= Html::encode($childMenu->position) ?>">
+                                            <?= Html::encode($childMenu->position) ?>
+                                        </td>
+                                        <td data-order="<?= $childMenu->created_at ?>">
+                                            <?= Yii::$app->formatter->asDatetime($childMenu->created_at) ?>
+                                        </td>
+                                        <td class="d-flex text-nowrap justify-content-center" data-order="">
+                                            <button class="btn btn-sm btn-primary me-1 edit-btn" data-bs-toggle="modal"
+                                                data-bs-target="#editModal" data-tab-menu-id="<?= $childMenu->id ?>"
+                                                data-menu-name="<?= Html::encode($childMenu->name) ?>"
+                                                data-menu-type="<?= Html::encode($childMenu->menu_type) ?>"
+                                                data-icon="<?= Html::encode($childMenu->icon) ?>"
+                                                data-status="<?= Html::encode($childMenu->status) ?>"
+                                                data-position="<?= Html::encode($childMenu->position) ?>">
+                                                <i class="fas fa-edit"></i>
+                                            </button>
+                                            <button class="btn btn-sm btn-info me-1" data-bs-toggle="modal"
+                                                data-bs-target="#subTabModal" data-menu-id="<?= $childMenu->id ?>">
+                                                <i class="fas fa-cogs"></i>
+                                            </button>
+                                            <button href="#" data-bs-toggle="modal" data-bs-target="#deleteModal"
+                                                class="btn btn-danger btn-sm delete-btn"
+                                                data-menu-id="<?= $childMenu->id ?>">
+                                                <i class="fa-regular fa-trash-can"></i>
+                                            </button>
+                                        </td>
+                                    </tr>
+
+                                    <?php endif; ?>
+                                    <?php endforeach; ?>
                                     <?php endif; ?>
                                     <?php endforeach; ?>
                                 </tbody>
+
                             </table>
                         </div>
-
                     </div>
                 </div>
             </div>
@@ -134,446 +212,40 @@ $this->title = 'Danh Sách Menu';
     </div>
 </div>
 
-<!-- Modal sửa Menu  -->
-<div class="modal fade" id="editModal" tabindex="-1" aria-labelledby="editModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="editModalLabel">Sửa Menu</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <form id="editMenuForm">
-                    <!-- Tên Menu -->
-                    <div class="mb-3">
-                        <label for="tabmenuName" class="form-label">Tên Menu</label>
-                        <input type="text" class="form-control" id="tabmenuName" name="name" required>
-                    </div>
+<style>
+.child-row {
+    background-color: #ffffff !important;
+    color: #4171cb;
+    font-size: 0.9em;
+    display: none;
+}
 
-                    <!-- Loại Menu -->
-                    <div class="mb-3">
-                        <label for="tabmenuType" class="form-label">Loại Menu</label>
-                        <select class="form-select" id="tabmenuType" name="menu_type" required>
-                            <option value="none">-- Không --</option>
-                            <option value="menu_group">Sub Menu</option>
-                            <option value="menu_single">Sub Tab</option>
-                        </select>
-                    </div>
+.child-row td {
+    padding-left: 2rem;
+}
 
-                    <!-- Icon -->
-                    <div class="mb-3">
-                        <label for="icon-select" class="form-label">Chọn icon</label>
-                        <div class="row">
-                            <div class="col-12">
-                                <div id="icon-select-wrapper" class="d-flex align-items-center justify-content-between"
-                                    style="cursor: pointer; border: 1px solid #ccc; padding: 8px; border-radius: 8px;">
-                                    <span id="selected-icon-label">Chọn icon</span>
-                                    <svg id="selected-icon" class="stroke-icon mx-2" width="24" height="24"></svg>
-                                </div>
+.shown+.child-row {
+    display: table-row;
+}
 
-                                <!-- Danh sách icon -->
-                                <div id="icon-list" class="d-flex flex-wrap mt-2"
-                                    style="display: none; overflow-y: auto; max-height: 200px; border: 1px solid #ccc; border-radius: 8px;">
-                                    <?php foreach ($iconOptions as $iconValue => $iconLabel): ?>
-                                    <div class="icon-item col-2 col-md-2 col-lg-1 me-2 mb-2 text-center"
-                                        data-icon="<?= Html::encode($iconValue) ?>"
-                                        style="cursor: pointer; padding: 4px;">
-                                        <svg class="stroke-icon" width="40" height="40">
-                                            <use
-                                                href="<?= Yii::getAlias('@web') ?>/images/icon-sprite.svg#<?= Html::encode($iconValue) ?>">
-                                            </use>
-                                        </svg>
-                                    </div>
-                                    <?php endforeach; ?>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+.child-table {
+    display: none;
+    background-color: #f9f9f9;
+}
 
-                    <!-- Trạng thái -->
-                    <div class="mb-3">
-                        <label for="tabMenustatus" class="form-label">Trạng thái</label>
-                        <select class="form-select" id="tabMenustatus" name="status" required>
-                            <option value="0">Hiển thị</option>
-                            <option value="1">Ẩn</option>
-                        </select>
-                    </div>
+.child-table td {
+    padding: 1rem;
+}
 
-                    <!-- Vị trí -->
-                    <div class="mb-3">
-                        <label for="tabMenuPosition" class="form-label">Vị trí</label>
-                        <input type="number" class="form-control" id="tabMenuPosition" name="position" required>
-                    </div>
-                </form>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
-                <button type="button" class="btn btn-primary" id="saveTabMenuChanges">Lưu thay đổi</button>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Modal Tab Menu Con -->
-<div class="modal fade" id="subTabModal" tabindex="-1" aria-labelledby="subTabModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-xl">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="subTabModalLabel">Tab Menu Con</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <form id="subTabForm">
-                    <div class="mb-3">
-                        <label for="selectedSubItems" class="form-label">Các Tab/Menu Con Đã Chọn</label>
-                        <ul id="selectedSubItems" class="list-group" name="selected_subitems[]">
-                            <li class="list-group-item text-center">
-                                <button type="button" class="btn btn-link" id="addNewItem">+ Thêm Tab/Menu</button>
-                            </li>
-                            <!-- Các mục đã chọn sẽ được hiển thị ở đây -->
-                        </ul>
-                    </div>
-                </form>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
-                <button type="button" class="btn btn-primary" id="saveSubTabChanges">Lưu thay đổi</button>
-            </div>
-        </div>
-    </div>
-</div>
-
-
+.child-table table {
+    width: 100%;
+    background-color: #ffffff;
+}
+</style>
 
 <script>
 $(document).ready(function() {
-    $('.btn-info').on('click', function() {
-        var menuId = $(this).data('menu-id');
-
-        $.ajax({
-            url: '<?= \yii\helpers\Url::to(['menus/get-child']) ?>',
-            type: 'GET',
-            headers: {
-                'X-CSRF-Token': $('meta[name="csrf-token"]').attr('content')
-            },
-            data: {
-                id: menuId
-            },
-            success: function(response) {
-                var parsedResponse = JSON.parse(response);
-                console.log("🚀 ~ parsedResponse:", parsedResponse);
-
-
-            },
-            error: function(xhr, status, error) {
-                console.log('Lỗi AJAX: ', error);
-                alert('Có lỗi xảy ra, vui lòng thử lại.');
-            }
-        });
-    });
-});
-
-$(document).ready(function() {
-    // Khi nhấn nút "sửa"
-    $('.edit-btn').on('click', function() {
-        // Lấy thông tin từ các data-* attributes của button
-        var menuId = $(this).data('tab-menu-id');
-        var menuName = $(this).data('menu-name');
-        var menuType = $(this).data('menu-type');
-        var icon = $(this).data('icon');
-        var status = $(this).data('status');
-        var position = $(this).data('position');
-
-        // Điền các giá trị vào form trong modal
-        $('#tabmenuName').val(menuName);
-        $('#tabmenuType').val(menuType);
-        $('#tabMenustatus').val(status);
-        $('#tabMenuPosition').val(position);
-        $('#editMenuForm').data('menu-id', menuId);
-
-        // Hiển thị icon đã chọn
-        $('#selected-icon').html('<use href="<?= Yii::getAlias('@web') ?>/images/icon-sprite.svg#' +
-            icon + '"></use>');
-        $('#selected-icon-label').text(icon);
-    });
-
-    // Lưu thay đổi menu
-    $('#saveTabMenuChanges').on('click', function() {
-        var form = $('#editMenuForm');
-        var menuId = form.data('menu-id');
-        var menuName = $('#tabmenuName').val();
-        var menuType = $('#tabmenuType').val();
-        var icon = $('#selected-icon-label').text(); // Lấy icon đã chọn
-        var status = $('#tabMenustatus').val();
-        var position = $('#tabMenuPosition').val();
-        var selectedSubMenus = $('#selectedSubMenus').val(); // Lấy các menu con đã chọn
-
-        // Gửi dữ liệu tới server để cập nhật menu
-        $.ajax({
-            url: '<?= \yii\helpers\Url::to(['create-or-update-menu']) ?>',
-            type: 'POST',
-            headers: {
-                'X-CSRF-Token': $('meta[name="csrf-token"]').attr('content')
-            },
-            data: {
-                id: menuId,
-                name: menuName,
-                menu_type: menuType,
-                icon: icon,
-                status: status,
-                position: position,
-                selected_submenus: selectedSubMenus // Gửi danh sách menu con đã chọn
-            },
-            success: function(response) {
-                $('#editModal').modal('hide');
-                location.reload(); // Tải lại trang sau khi lưu
-            },
-            error: function(xhr, status, error) {
-                console.log('Lỗi AJAX: ', error);
-                alert('Có lỗi xảy ra, vui lòng thử lại.');
-            }
-        });
-    });
-});
-
-
-
-document.addEventListener('DOMContentLoaded', function() {
-    // Check if there's a success message
-    const successMessage = "<?= Yii::$app->session->getFlash('success') ?>";
-    const errorMessage = "<?= Yii::$app->session->getFlash('error') ?>";
-    if (successMessage) {
-        document.getElementById('toast-body').textContent = successMessage;
-        document.getElementById('toast-timestamp').textContent = new Date().toLocaleTimeString();
-        const toastElement = document.getElementById('liveToast');
-        const toast = new bootstrap.Toast(toastElement);
-        toast.show();
-    }
-    if (errorMessage) {
-        document.getElementById('toast-body').textContent = errorMessage;
-        document.getElementById('toast-timestamp').textContent = new Date().toLocaleTimeString();
-        const toastElement = document.getElementById('liveToast');
-        const toast = new bootstrap.Toast(toastElement);
-        toast.show();
-    }
-});
-</script>
-
-<!-- Modal Thùng Rác -->
-<div class="modal fade" id="trashBinModal" tabindex="-1" aria-labelledby="trashBinModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="trashBinModalLabel">Thùng Rác</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <p>Chọn tab bạn muốn khôi phục hoặc xóa hoàn toàn:</p>
-                <table class="table table-bordered table-hover table-ui">
-                    <thead>
-                        <tr>
-                            <th>Tên Menu</th>
-                            <th style="width: 20%; text-align: center;">Loại</th>
-                            <th style="width: 20%; text-align: center;">Thao Tác</th>
-                        </tr>
-                    </thead>
-                    <tbody id="trash-bin-list">
-                        <?php $hasDeletedMenus = false; ?>
-                        <?php foreach ($tabMenus as $tab): ?>
-                        <?php if ($tab->deleted == 1): ?>
-                        <?php $hasDeletedMenus = true; ?>
-                        <tr>
-                            <td><?= htmlspecialchars($tab->name) ?></td>
-                            <td class="text-center">
-                                <?php if ($tabMenu->menu_type == 'menu_group'): ?>
-                                <span class="badge badge-light-primary">Menu Con</span>
-                                <?php elseif ($tabMenu->menu_type == 'menu_single'): ?>
-                                <span class="badge badge-light-danger">Tab Con</span>
-                                <?php else: ?>
-                                <span class="badge badge-light-dark">Không</span>
-                                <?php endif; ?>
-                            </td>
-                            <td class="text-nowrap">
-                                <button type="button" class="btn btn-warning restore-tab-btn" id="confirm-restore-btn"
-                                    data-menu-id="<?= htmlspecialchars($tab->id) ?>">
-                                    <i class="fa-solid fa-rotate-left"></i>
-                                </button>
-                                <button type="button" class="btn btn-danger delete-tab-btn" id="delete-permanently-btn"
-                                    data-tab-name="<?= htmlspecialchars($tab->name) ?>"
-                                    data-menu-id="<?= htmlspecialchars($tab->id) ?>">
-                                    <i class="fa-regular fa-trash-can"></i>
-                                </button>
-                            </td>
-                        </tr>
-                        <?php endif; ?>
-                        <?php endforeach; ?>
-                        <?php if (!$hasDeletedMenus): ?>
-                        <tr>
-                            <td colspan="2" class="text-center text-muted">
-                                <em>There is nothing here.</em>
-                            </td>
-                        </tr>
-                        <?php endif; ?>
-                    </tbody>
-                </table>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Modal Hide tab -->
-<div class="modal fade" id="hideModal" tabindex="-1" aria-labelledby="hideModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg modal-dialog-scrollable">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="hideModalLabel">Hiện/Ẩn Menu</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cancel"></button>
-            </div>
-            <div class="modal-body">
-                <p class="pb-0 mb-0">Chọn tab bạn muốn ẩn hoặc hiển thị:</p>
-                <table class="table dataTable">
-                    <thead>
-                        <tr>
-                            <th>Tên Menu</th>
-                            <th class="text-center" style="width: 45%">Loại</th>
-                            <th class="text-center" style="width: 8%">Hiện</i></th>
-                        </tr>
-                    </thead>
-                    <tbody id="hide-tabs-list">
-                        <?php foreach ($tabMenus as $menu): ?>
-                        <?php if ($menu->deleted != 1): ?>
-                        <tr>
-                            <td class="py-0">
-                                <?= htmlspecialchars($menu->name) ?>
-                            </td>
-                            <td class="text-center py-0">
-                                <?php if ($menu->menu_type == 'menu_group'): ?>
-                                <span class="badge badge-light-primary">Menu Con</span>
-                                <?php elseif ($menu->menu_type == 'menu_single'): ?>
-                                <span class="badge badge-light-danger">Tab Con</span>
-                                <?php else: ?>
-                                <span class="badge badge-light-dark">Không</span>
-                                <?php endif; ?>
-                            </td>
-                            <td class="py-0" class="text-center">
-                                <label class="switch mb-0 mt-1">
-                                    <input class="form-check-input toggle-hide-btn" type="checkbox"
-                                        data-menu-id="<?= htmlspecialchars($menu->id) ?>"
-                                        <?php if ($menu->status == 0): ?> checked <?php endif; ?>>
-                                    <span class="switch-state"></span>
-                                </label>
-                            </td>
-                        </tr>
-                        <?php endif; ?>
-                        <?php endforeach; ?>
-                    </tbody>
-                </table>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
-                <button type="button" class="btn btn-primary" id="confirm-hide-btn">Lưu</button>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Modal Sắp Xếp -->
-<div class="modal fade" id="sortModal" tabindex="-1" aria-labelledby="sortModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="sortModalLabel">Sắp Xếp</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cancel"></button>
-            </div>
-            <div class="modal-body">
-                <p>Kéo và thả để sắp xếp các menu.</p>
-                <div class="form-check form-switch mb-3">
-                    <input class="form-check-input" type="checkbox" id="toggleStatusMenus" checked>
-                    <label class="form-check-label" for="toggleStatusMenus">Hiển thị Menu đã ẩn</label>
-                </div>
-                <ul class="list-group" id="sortable-tabs">
-                    <?php foreach ($tabMenus as $index => $menu): ?>
-                    <?php if ($menu->deleted != 1): ?>
-                    <li class="list-menu-item d-flex justify-content-between align-items-center tab-item"
-                        data-menu-id="<?= $menu->id ?>" data-status="<?= $menu->status ?>">
-                        <span><?= htmlspecialchars($menu->name) ?></span>
-                        <span class="badge bg-secondary"><?= $index + 1 ?></span>
-                    </li>
-                    <?php endif; ?>
-                    <?php endforeach; ?>
-                </ul>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
-                <button type="button" class="btn btn-primary" id="confirm-sort-btn">Lưu</button>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Modal Confirm Delete -->
-<div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="deleteModalLabel">Xác nhận xóa tab</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                Bạn có chắc chắn muốn xóa tab này không? Không thể hoàn tác hành động này.
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
-                <button type="button" class="btn btn-danger" id="confirm-delete-btn"
-                    data-menu-id="<?= htmlspecialchars($menuId) ?>">Xóa</button>
-                <button type="button" class="btn btn-danger" id="confirm-delete-permanently-btn"
-                    data-tab-name="<?= htmlspecialchars($menu->name) ?>"
-                    data-menu-id="<?= htmlspecialchars($menuId) ?>">Xóa Vĩnh Viễn</button>
-            </div>
-        </div>
-    </div>
-</div>
-
-<div class="toast-container position-fixed top-0 end-0 p-3 toast-index toast-rtl">
-    <div class="toast fade" id="liveToast" role="alert" aria-live="assertive" aria-atomic="true">
-        <div class="toast-header">
-            <strong class="me-auto">Thông báo</strong>
-            <small id="toast-timestamp"></small>
-            <button class="btn-close" type="button" data-bs-dismiss="toast" aria-label="Close"></button>
-        </div>
-        <div class="toast-body" id="toast-body">Thông Báo</div>
-    </div>
-</div>
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    // Check if there's a success message
-    const successMessage = "<?= Yii::$app->session->getFlash('success') ?>";
-    const errorMessage = "<?= Yii::$app->session->getFlash('error') ?>";
-    if (successMessage) {
-        document.getElementById('toast-body').textContent = successMessage;
-        document.getElementById('toast-timestamp').textContent = new Date().toLocaleTimeString();
-        const toastElement = document.getElementById('liveToast');
-        const toast = new bootstrap.Toast(toastElement);
-        toast.show();
-    }
-    if (errorMessage) {
-        document.getElementById('toast-body').textContent = errorMessage;
-        document.getElementById('toast-timestamp').textContent = new Date().toLocaleTimeString();
-        const toastElement = document.getElementById('liveToast');
-        const toast = new bootstrap.Toast(toastElement);
-        toast.show();
-    }
-});
-</script>
-
-
-
-<script>
-$(document).ready(function() {
-    $('.dataTable').DataTable({
+    const table = $('.dataTable').DataTable({
         order: [],
         columnDefs: [{
             orderable: false,
@@ -584,31 +256,43 @@ $(document).ready(function() {
         "responsive": true,
         "paging": true,
         "searching": true,
-        "ordering": true,
+        "ordering": false,
         "language": {
             "sEmptyTable": "Không có dữ liệu",
             "sInfo": "Đang hiển thị _START_ đến _END_ trong tổng số _TOTAL_ mục",
             "sInfoEmpty": "Đang hiển thị 0 đến 0 trong tổng số 0 mục",
             "sInfoFiltered": "(Được lọc từ _MAX_ mục)",
-            "sInfoPostFix": "",
-            "sLengthMenu": "Hiển thị _MENU_ mục",
-            "sLoadingRecords": "Đang tải...",
-            "sProcessing": "Đang xử lý...",
-            "sSearch": "Tìm kiếm:",
-            "sZeroRecords": "Không tìm thấy kết quả nào",
             "oPaginate": {
                 "sFirst": "Đầu tiên",
                 "sLast": "Cuối cùng",
                 "sNext": "Tiếp theo",
                 "sPrevious": "Trước"
-            },
-            "oAria": {
-                "sSortAscending": ": Sắp xếp cột tăng dần",
-                "sSortDescending": ": Sắp xếp cột giảm dần"
             }
         }
     });
+
+    // Xử lý sự kiện click cho hàng cha
+    $('.parent-row').on('click', function() {
+        const parentRow = $(this);
+        const parentId = parentRow.data('parent-id');
+        const toggleIcon = parentRow.find('.toggle-icon i');
+
+        // Tìm các hàng con liên quan
+        $(`.child-row[data-parent-id='${parentId}']`).each(function() {
+            const childRow = $(this);
+            if (childRow.is(':visible')) {
+                childRow.hide(); // Ẩn hàng con
+                toggleIcon.removeClass('fa-minus-circle').addClass(
+                    'fa-plus-circle'); // Biểu tượng thu gọn
+            } else {
+                childRow.show(); // Hiển thị hàng con
+                toggleIcon.removeClass('fa-plus-circle').addClass(
+                    'fa-minus-circle'); // Biểu tượng mở rộng
+            }
+        });
+    });
 });
+
 $(document).ready(function() {
     $('#confirm-hide-btn').click(function() {
         let hideStatus = {};
@@ -812,5 +496,508 @@ document.addEventListener("DOMContentLoaded", function() {
             confirmDeletePermanentlyBtn.setAttribute("data-menu-id", menuId);
         });
     });
+});
+</script>
+<!-- Modal sửa Menu  -->
+<div class="modal fade" id="editModal" tabindex="-1" aria-labelledby="editModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="editModalLabel">Sửa Menu</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="editMenuForm">
+                    <!-- Tên Menu -->
+                    <div class="mb-3">
+                        <label for="tabmenuName" class="form-label">Tên Menu</label>
+                        <input type="text" class="form-control" id="tabmenuName" name="name" required>
+                    </div>
+
+                    <!-- Loại Menu -->
+                    <div class="mb-3">
+                        <label for="tabmenuType" class="form-label">Loại Menu</label>
+                        <select class="form-select" id="tabmenuType" name="menu_type" required>
+                            <option value="none">-- Không --</option>
+                            <option value="menu_group">Sub Menu</option>
+                            <option value="menu_single">Sub Tab</option>
+                        </select>
+                    </div>
+
+                    <!-- Icon -->
+                    <div class="mb-3">
+                        <label for="icon-select" class="form-label">Chọn icon</label>
+                        <div class="row">
+                            <div class="col-12">
+                                <div id="icon-select-wrapper" class="d-flex align-items-center justify-content-between"
+                                    style="cursor: pointer; border: 1px solid #ccc; padding: 8px; border-radius: 8px;">
+                                    <span id="selected-icon-label">Chọn icon</span>
+                                    <svg id="selected-icon" class="stroke-icon mx-2" width="24" height="24"></svg>
+                                </div>
+
+                                <!-- Danh sách icon -->
+                                <div id="icon-list" class="d-flex flex-wrap mt-2"
+                                    style="display: none; overflow-y: auto; max-height: 200px; border: 1px solid #ccc; border-radius: 8px;">
+                                    <?php foreach ($iconOptions as $iconValue => $iconLabel): ?>
+                                    <div class="icon-item col-2 col-md-2 col-lg-1 me-2 mb-2 text-center"
+                                        data-icon="<?= Html::encode($iconValue) ?>"
+                                        style="cursor: pointer; padding: 4px;">
+                                        <svg class="stroke-icon" width="40" height="40">
+                                            <use
+                                                href="<?= Yii::getAlias('@web') ?>/images/icon-sprite.svg#<?= Html::encode($iconValue) ?>">
+                                            </use>
+                                        </svg>
+                                    </div>
+                                    <?php endforeach; ?>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Trạng thái -->
+                    <div class="mb-3">
+                        <label for="tabMenustatus" class="form-label">Trạng thái</label>
+                        <select class="form-select" id="tabMenustatus" name="status" required>
+                            <option value="0">Hiển thị</option>
+                            <option value="1">Ẩn</option>
+                        </select>
+                    </div>
+
+                    <!-- Vị trí -->
+                    <div class="mb-3">
+                        <label for="tabMenuPosition" class="form-label">Vị trí</label>
+                        <input type="number" class="form-control" id="tabMenuPosition" name="position" required>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+                <button type="button" class="btn btn-primary" id="saveTabMenuChanges">Lưu thay đổi</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Tab Menu Con -->
+<div class="modal fade" id="subTabModal" tabindex="-1" aria-labelledby="subTabModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="subTabModalLabel">Chỉnh sửa Menu con</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label for="submenu-tabs" class="form-label">Chọn Tab</label>
+                    <select id="submenu-tabs" class="form-select form-multi-select" multiple>
+                        <!-- Options sẽ được thêm qua AJAX -->
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label for="submenu-menus" class="form-label">Chọn Menu</label>
+                    <select id="submenu-menus" class="form-select form-multi-select" multiple>
+                        <!-- Options sẽ được thêm qua AJAX -->
+                    </select>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+                <button type="button" class="btn btn-primary" id="saveSubMenuChanges">Lưu thay đổi</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+<script>
+$(document).ready(function() {
+
+    // Khởi tạo lại Select2 sau khi thêm các mục vào danh sách
+    $('.form-multi-select').select2({
+        placeholder: 'Chọn',
+        allowClear: true
+    });
+    // Mở modal submenu và nạp dữ liệu
+    $('.btn-info').on('click', function() {
+        var menuId = $(this).data('menu-id');
+        $('#submenu-tabs').empty();
+        $('#submenu-menus').empty();
+
+        // AJAX lấy danh sách tab/menu con hiện tại và các mục tiềm năng
+        $.ajax({
+            url: '<?= \yii\helpers\Url::to(['menus/get-submenu']) ?>',
+            type: 'GET',
+            data: {
+                menu_id: menuId
+            },
+            success: function(response) {
+                console.log("🚀 ~ $ ~ response:", response);
+                if (response.success) {
+                    // Nạp dữ liệu tab/menu con đã liên kết
+                    response.childTabs.forEach(tab => {
+                        $('#submenu-tabs').append(
+                            `<option value="${tab.id}" selected>${tab.tab_name}</option>`
+                        );
+                    });
+                    response.childMenus.forEach(menu => {
+                        $('#submenu-menus').append(
+                            `<option value="${menu.id}" selected>${menu.name}</option>`
+                        );
+                    });
+
+                    // Xử lý các mục tiềm năng chưa được liên kết (potentialTabs, potentialMenus)
+                    response.potentialTabs.forEach(tab => {
+                        $('#select2-tabs-results').append(
+                            `<li class="select2-results__option select2-results__option--selectable" role="option" data-select2-id="select2-data-${tab.id}">${tab.tab_name}</li>`
+                        );
+                    });
+
+                    response.potentialMenus.forEach(menu => {
+                        $('#select2-menus-results').append(
+                            `<li class="select2-results__option select2-results__option--selectable" role="option" data-select2-id="select2-data-${menu.id}">${menu.name}</li>`
+                        );
+                    });
+
+
+                    // Hiển thị modal
+                    $('#subTabModal').modal('show');
+                } else {
+                    alert(response.message || 'Không thể tải dữ liệu.');
+                }
+            },
+
+            error: function(xhr, status, error) {
+                console.log('Lỗi AJAX:', error);
+                alert('Có lỗi xảy ra khi tải dữ liệu.');
+            }
+        });
+    });
+
+    // Lưu thay đổi khi nhấn nút "Lưu thay đổi"
+    $('#saveSubMenuChanges').on('click', function() {
+        var selectedTabs = $('#submenu-tabs').val();
+        var selectedMenus = $('#submenu-menus').val();
+        // Gửi dữ liệu tới server để lưu thay đổi
+        $.ajax({
+            url: '<?= \yii\helpers\Url::to(['menus/save-submenu']) ?>',
+            type: 'POST',
+            headers: {
+                'X-CSRF-Token': $('meta[name="csrf-token"]').attr('content')
+            },
+            data: {
+                selectedTabs: selectedTabs,
+                selectedMenus: selectedMenus
+            },
+            success: function(response) {
+                if (response.success) {
+                    alert('Cập nhật thành công!');
+                    $('#subTabModal').modal('hide');
+                } else {
+                    alert(response.message);
+                }
+            },
+            error: function(xhr, status, error) {
+                console.log('Lỗi AJAX: ', error);
+                alert('Có lỗi xảy ra, vui lòng thử lại.');
+            }
+        });
+    });
+});
+
+
+$(document).ready(function() {
+    // Khi nhấn nút "sửa"
+    $('.edit-btn').on('click', function() {
+        // Lấy thông tin từ các data-* attributes của button
+        var menuId = $(this).data('tab-menu-id');
+        var menuName = $(this).data('menu-name');
+        var menuType = $(this).data('menu-type');
+        var icon = $(this).data('icon');
+        var status = $(this).data('status');
+        var position = $(this).data('position');
+
+        // Điền các giá trị vào form trong modal
+        $('#tabmenuName').val(menuName);
+        $('#tabmenuType').val(menuType);
+        $('#tabMenustatus').val(status);
+        $('#tabMenuPosition').val(position);
+        $('#editMenuForm').data('menu-id', menuId);
+
+        // Hiển thị icon đã chọn
+        $('#selected-icon').html('<use href="<?= Yii::getAlias('@web') ?>/images/icon-sprite.svg#' +
+            icon + '"></use>');
+        $('#selected-icon-label').text(icon);
+    });
+
+    // Lưu thay đổi menu
+    $('#saveTabMenuChanges').on('click', function() {
+        var form = $('#editMenuForm');
+        var menuId = form.data('menu-id');
+        var menuName = $('#tabmenuName').val();
+        var menuType = $('#tabmenuType').val();
+        var icon = $('#selected-icon-label').text(); // Lấy icon đã chọn
+        var status = $('#tabMenustatus').val();
+        var position = $('#tabMenuPosition').val();
+        var selectedSubMenus = $('#selectedSubMenus').val(); // Lấy các menu con đã chọn
+
+        // Gửi dữ liệu tới server để cập nhật menu
+        $.ajax({
+            url: '<?= \yii\helpers\Url::to(['create-or-update-menu']) ?>',
+            type: 'POST',
+            headers: {
+                'X-CSRF-Token': $('meta[name="csrf-token"]').attr('content')
+            },
+            data: {
+                id: menuId,
+                name: menuName,
+                menu_type: menuType,
+                icon: icon,
+                status: status,
+                position: position,
+                selected_submenus: selectedSubMenus // Gửi danh sách menu con đã chọn
+            },
+            success: function(response) {
+                $('#editModal').modal('hide');
+                location.reload(); // Tải lại trang sau khi lưu
+            },
+            error: function(xhr, status, error) {
+                console.log('Lỗi AJAX: ', error);
+                alert('Có lỗi xảy ra, vui lòng thử lại.');
+            }
+        });
+    });
+});
+
+
+
+document.addEventListener('DOMContentLoaded', function() {
+    // Check if there's a success message
+    const successMessage = "<?= Yii::$app->session->getFlash('success') ?>";
+    const errorMessage = "<?= Yii::$app->session->getFlash('error') ?>";
+    if (successMessage) {
+        document.getElementById('toast-body').textContent = successMessage;
+        document.getElementById('toast-timestamp').textContent = new Date().toLocaleTimeString();
+        const toastElement = document.getElementById('liveToast');
+        const toast = new bootstrap.Toast(toastElement);
+        toast.show();
+    }
+    if (errorMessage) {
+        document.getElementById('toast-body').textContent = errorMessage;
+        document.getElementById('toast-timestamp').textContent = new Date().toLocaleTimeString();
+        const toastElement = document.getElementById('liveToast');
+        const toast = new bootstrap.Toast(toastElement);
+        toast.show();
+    }
+});
+</script>
+
+<!-- Modal Thùng Rác -->
+<div class="modal fade" id="trashBinModal" tabindex="-1" aria-labelledby="trashBinModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="trashBinModalLabel">Thùng Rác</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Chọn tab bạn muốn khôi phục hoặc xóa hoàn toàn:</p>
+                <table class="table table-bordered table-hover table-ui">
+                    <thead>
+                        <tr>
+                            <th>Tên Menu</th>
+                            <th style="width: 20%; text-align: center;">Loại</th>
+                            <th style="width: 20%; text-align: center;">Thao Tác</th>
+                        </tr>
+                    </thead>
+                    <tbody id="trash-bin-list">
+                        <?php $hasDeletedMenus = false; ?>
+                        <?php foreach ($tabMenus as $tab): ?>
+                        <?php if ($tab->deleted == 1): ?>
+                        <?php $hasDeletedMenus = true; ?>
+                        <tr>
+                            <td><?= htmlspecialchars($tab->name) ?></td>
+                            <td class="text-center">
+                                <?php if ($tabMenu->menu_type == 'menu_group'): ?>
+                                <span class="badge badge-light-primary">Menu Con</span>
+                                <?php elseif ($tabMenu->menu_type == 'menu_single'): ?>
+                                <span class="badge badge-light-danger">Tab Con</span>
+                                <?php else: ?>
+                                <span class="badge badge-light-dark">Không</span>
+                                <?php endif; ?>
+                            </td>
+                            <td class="text-nowrap">
+                                <button type="button" class="btn btn-warning restore-tab-btn" id="confirm-restore-btn"
+                                    data-menu-id="<?= htmlspecialchars($tab->id) ?>">
+                                    <i class="fa-solid fa-rotate-left"></i>
+                                </button>
+                                <button type="button" class="btn btn-danger delete-tab-btn" id="delete-permanently-btn"
+                                    data-tab-name="<?= htmlspecialchars($tab->name) ?>"
+                                    data-menu-id="<?= htmlspecialchars($tab->id) ?>">
+                                    <i class="fa-regular fa-trash-can"></i>
+                                </button>
+                            </td>
+                        </tr>
+                        <?php endif; ?>
+                        <?php endforeach; ?>
+                        <?php if (!$hasDeletedMenus): ?>
+                        <tr>
+                            <td colspan="2" class="text-center text-muted">
+                                <em>There is nothing here.</em>
+                            </td>
+                        </tr>
+                        <?php endif; ?>
+                    </tbody>
+                </table>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Hide tab -->
+<div class="modal fade" id="hideModal" tabindex="-1" aria-labelledby="hideModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="hideModalLabel">Hiện/Ẩn Menu</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cancel"></button>
+            </div>
+            <div class="modal-body">
+                <p class="pb-0 mb-0">Chọn tab bạn muốn ẩn hoặc hiển thị:</p>
+                <table class="table dataTable">
+                    <thead>
+                        <tr>
+                            <th>Tên Menu</th>
+                            <th class="text-center" style="width: 45%">Loại</th>
+                            <th class="text-center" style="width: 8%">Hiện</i></th>
+                        </tr>
+                    </thead>
+                    <tbody id="hide-index">
+                        <?php foreach ($tabMenus as $menu): ?>
+                        <?php if ($menu->deleted != 1): ?>
+                        <tr>
+                            <td class="py-0">
+                                <?= htmlspecialchars($menu->name) ?>
+                            </td>
+                            <td class="text-center py-0">
+                                <?php if ($menu->menu_type == 'menu_group'): ?>
+                                <span class="badge badge-light-primary">Menu Con</span>
+                                <?php elseif ($menu->menu_type == 'menu_single'): ?>
+                                <span class="badge badge-light-danger">Tab Con</span>
+                                <?php else: ?>
+                                <span class="badge badge-light-dark">Không</span>
+                                <?php endif; ?>
+                            </td>
+                            <td class="py-0" class="text-center">
+                                <label class="switch mb-0 mt-1">
+                                    <input class="form-check-input toggle-hide-btn" type="checkbox"
+                                        data-menu-id="<?= htmlspecialchars($menu->id) ?>"
+                                        <?php if ($menu->status == 0): ?> checked <?php endif; ?>>
+                                    <span class="switch-state"></span>
+                                </label>
+                            </td>
+                        </tr>
+                        <?php endif; ?>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                <button type="button" class="btn btn-primary" id="confirm-hide-btn">Lưu</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Sắp Xếp -->
+<div class="modal fade" id="sortModal" tabindex="-1" aria-labelledby="sortModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="sortModalLabel">Sắp Xếp</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cancel"></button>
+            </div>
+            <div class="modal-body">
+                <p>Kéo và thả để sắp xếp các menu.</p>
+                <div class="form-check form-switch mb-3">
+                    <input class="form-check-input" type="checkbox" id="toggleStatusMenus" checked>
+                    <label class="form-check-label" for="toggleStatusMenus">Hiển thị Menu đã ẩn</label>
+                </div>
+                <ul class="list-group" id="sortable-tabs">
+                    <?php foreach ($tabMenus as $index => $menu): ?>
+                    <?php if ($menu->deleted != 1): ?>
+                    <li class="list-menu-item d-flex justify-content-between align-items-center tab-item"
+                        data-menu-id="<?= $menu->id ?>" data-status="<?= $menu->status ?>">
+                        <span><?= htmlspecialchars($menu->name) ?></span>
+                        <span class="badge bg-secondary"><?= $index + 1 ?></span>
+                    </li>
+                    <?php endif; ?>
+                    <?php endforeach; ?>
+                </ul>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                <button type="button" class="btn btn-primary" id="confirm-sort-btn">Lưu</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Confirm Delete -->
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteModalLabel">Xác nhận xóa tab</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                Bạn có chắc chắn muốn xóa tab này không? Không thể hoàn tác hành động này.
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                <button type="button" class="btn btn-danger" id="confirm-delete-btn"
+                    data-menu-id="<?= htmlspecialchars($menuId) ?>">Xóa</button>
+                <button type="button" class="btn btn-danger" id="confirm-delete-permanently-btn"
+                    data-tab-name="<?= htmlspecialchars($menu->name) ?>"
+                    data-menu-id="<?= htmlspecialchars($menuId) ?>">Xóa Vĩnh Viễn</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="toast-container position-fixed top-0 end-0 p-3 toast-index toast-rtl">
+    <div class="toast fade" id="liveToast" role="alert" aria-live="assertive" aria-atomic="true">
+        <div class="toast-header">
+            <strong class="me-auto">Thông báo</strong>
+            <small id="toast-timestamp"></small>
+            <button class="btn-close" type="button" data-bs-dismiss="toast" aria-label="Close"></button>
+        </div>
+        <div class="toast-body" id="toast-body">Thông Báo</div>
+    </div>
+</div>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Check if there's a success message
+    const successMessage = "<?= Yii::$app->session->getFlash('success') ?>";
+    const errorMessage = "<?= Yii::$app->session->getFlash('error') ?>";
+    if (successMessage) {
+        document.getElementById('toast-body').textContent = successMessage;
+        document.getElementById('toast-timestamp').textContent = new Date().toLocaleTimeString();
+        const toastElement = document.getElementById('liveToast');
+        const toast = new bootstrap.Toast(toastElement);
+        toast.show();
+    }
+    if (errorMessage) {
+        document.getElementById('toast-body').textContent = errorMessage;
+        document.getElementById('toast-timestamp').textContent = new Date().toLocaleTimeString();
+        const toastElement = document.getElementById('liveToast');
+        const toast = new bootstrap.Toast(toastElement);
+        toast.show();
+    }
 });
 </script>
