@@ -37,9 +37,7 @@ class TabsController extends Controller
 
     public function actionIndex()
     {
-        $userId = Yii::$app->user->id;
         $tabs = Tab::find()
-            ->where(['user_id' => $userId])
             ->orderBy([
                 'position' => SORT_ASC,
                 'id' => SORT_DESC,
@@ -54,12 +52,7 @@ class TabsController extends Controller
     }
     public function actionTabsCreate()
     {
-        $tabMenus = Menu::find()->all();
-
-        return $this->render('create', [
-            'tabMenus' => $tabMenus,
-
-        ]);
+        return $this->render('create', []);
     }
 
     public function actionCreateTab()
@@ -68,39 +61,18 @@ class TabsController extends Controller
             $userId = Yii::$app->user->id;
             $tabType = Yii::$app->request->post('tab_type');
             $tabName = Yii::$app->request->post('tab_name');
-            $tabmenuId = Yii::$app->request->post('menu_single');
             $icon = Yii::$app->request->post('icon');
 
             if (empty($tabName)) {
                 Yii::$app->session->setFlash('error', 'Tên tab không được để trống.');
                 return $this->redirect(['tabs-create']);
             }
-            if (empty($tabmenuId)) {
-                if (empty($icon)) {
-                    Yii::$app->session->setFlash('error', 'Vui lòng chọn icon.');
-                    return $this->redirect(['tabs-create']);
-                }
-
-                $tabMenu = new Menu();
-                $tabMenu->name = $tabName;
-                $tabMenu->menu_type = 'none';
-                $tabMenu->icon = $icon;
-                Yii::error("icon: " . $icon);
-
-                if (!$tabMenu->save()) {
-                    Yii::$app->session->setFlash('error', 'Không thể tạo menu mới.');
-                    return $this->redirect(['tabs-create']);
-                }
-                $tabmenuId = $tabMenu->id;
-            } else {
-                $icon = '';
-            }
 
             $tab = new Tab();
             $tab->user_id = $userId;
             $tab->tab_type = $tabType;
             $tab->tab_name = $tabName;
-            $tab->menu_id = $tabmenuId; // Gán menu_id vào Tab
+            $tab->menu_id = NULL; // Gán menu_id vào Tab
             $tab->deleted = 0;
             $tab->created_at = date('Y-m-d H:i:s');
             $tab->updated_at = date('Y-m-d H:i:s');
@@ -123,11 +95,10 @@ class TabsController extends Controller
                     foreach ($validationResult as $error) {
                         Yii::$app->session->setFlash("error_{$error['field']}", $error['message']);
                     }
-                    Yii::$app->session->setFlash('tableCreationData', compact('tabName', 'tabmenuId', 'columns', 'dataTypes', 'dataSizes', 'isNotNull', 'isPrimary'));
+                    Yii::$app->session->setFlash('tableCreationData', compact('tabName', 'columns', 'dataTypes', 'dataSizes', 'isNotNull', 'isPrimary'));
                     return $this->render('create', [
                         'tableTabs' => [],
                         'tabName' => $tabName,
-                        'tabmenuId' => $tabmenuId,
                         'columns' => $columns,
                         'dataTypes' => $dataTypes,
                         'dataSizes' => $dataSizes,
@@ -505,7 +476,7 @@ class TabsController extends Controller
 
 
     /** 
-     * Update Tab Menus Tab Action.
+     * Update Tab Action.
      *
      */
     public function actionUpdateTab()

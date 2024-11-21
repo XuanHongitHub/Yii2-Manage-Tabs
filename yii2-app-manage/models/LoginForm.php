@@ -26,10 +26,10 @@ class LoginForm extends Model
     public function rules()
     {
         return [
-            [['username', 'password'], 'required'],
+            [['username', 'password'], 'required', 'message' => 'Tên người dùng không được để trống.'],
             ['rememberMe', 'boolean'],
             // password is validated by validatePassword()
-            ['password', 'validatePassword'],
+            ['password', 'validatePassword', 'message' => 'Mật khẩu cũ không được để trống.'],
         ];
     }
 

@@ -12,6 +12,7 @@ use app\models\Menu;
 use yii\web\NotFoundHttpException;
 use yii\web\Exception;
 use yii\filters\AccessControl;
+use yii\db\Query;
 
 
 class MenusController extends Controller
@@ -49,53 +50,58 @@ class MenusController extends Controller
     }
     public function actionCreate()
     {
-        $tabs = Tab::find()->where(['menu_id' => null])->all();
-
         $menus = Menu::find()
-            ->leftJoin('menu AS parent_menu', 'parent_menu.id = menu.parent_id') // Đặt alias cho bảng menu
-            ->where(['menu.parent_id' => null]) // Lọc các bản ghi không có parent_id (null)
+            ->leftJoin('menu AS parent_menu', 'parent_menu.id = menu.parent_id')
+            ->where(['menu.parent_id' => null])
+            ->andWhere(['menu.status' => 0])
+            ->andWhere(['menu.deleted' => 0])
+            ->andWhere([
+                'not in',
+                'menu.id',
+                (new Query())
+                    ->select('parent_id')
+                    ->from('menu')
+                    ->where(['not', ['parent_id' => null]])
+            ])
             ->all();
 
         return $this->render('create', [
-            'tabs' => $tabs,
             'menus' => $menus,
         ]);
     }
 
-    public function actionCreateOrUpdateMenu()
+    public function actionStoreMenu()
     {
         if (Yii::$app->request->isPost) {
             $data = Yii::$app->request->post();
-    
+
             $model = Menu::findOne($data['id']) ?? new Menu();
             $transaction = Yii::$app->db->beginTransaction();
-    
+
             try {
                 $model->id = $data['id'] ?? null;
                 $model->name = $data['name'];
-                $model->menu_type = $data['menu_type'];
+                $model->parent_id = $data['parentId'];
                 $model->icon = $data['icon'];
-                $model->status = $data['status'];
-                $model->position = $data['position'];
-    
+
                 if (!$model->save()) {
                     throw new \Exception('Không thể lưu menu.', 1);
                 }
-    
-                // Liên kết Tabs với Menu
-                $selectedTabs = $data['selectedTabs'] ?? [];
-                if (!empty($selectedTabs)) {
-                    Tab::updateAll(['menu_id' => null], ['menu_id' => $model->id]); // Xóa liên kết cũ
-                    Tab::updateAll(['menu_id' => $model->id], ['id' => $selectedTabs]); // Thêm liên kết mới
-                }
-    
-                // Liên kết Menu con với Menu cha
-                $selectedMenus = $data['selectedMenus'] ?? [];
-                if (!empty($selectedMenus)) {
-                    Menu::updateAll(['parent_id' => null], ['parent_id' => $model->id]); // Xóa liên kết cũ
-                    Menu::updateAll(['parent_id' => $model->id], ['id' => $selectedMenus]); // Thêm liên kết mới
-                }
-    
+
+                // // Liên kết Tabs với Menu
+                // $selectedTabs = $data['selectedTabs'] ?? [];
+                // if (!empty($selectedTabs)) {
+                //     Tab::updateAll(['menu_id' => null], ['menu_id' => $model->id]); // Xóa liên kết cũ
+                //     Tab::updateAll(['menu_id' => $model->id], ['id' => $selectedTabs]); // Thêm liên kết mới
+                // }
+
+                // // Liên kết Menu con với Menu cha
+                // $selectedMenus = $data['selectedMenus'] ?? [];
+                // if (!empty($selectedMenus)) {
+                //     Menu::updateAll(['parent_id' => null], ['parent_id' => $model->id]); // Xóa liên kết cũ
+                //     Menu::updateAll(['parent_id' => $model->id], ['id' => $selectedMenus]); // Thêm liên kết mới
+                // }
+
                 $transaction->commit();
                 return $this->asJson(['success' => true, 'message' => 'Thành công.']);
             } catch (\Exception $e) {
@@ -103,53 +109,155 @@ class MenusController extends Controller
                 return $this->asJson(['success' => false, 'message' => $e->getMessage()]);
             }
         }
-    
+
         return $this->asJson(['success' => false, 'message' => 'Yêu cầu không hợp lệ.']);
     }
-    
+
+    public function actionUpdateMenu()
+    {
+        if (Yii::$app->request->isPost) {
+            $data = Yii::$app->request->post();
+
+            $model = Menu::findOne($data['id']) ?? new Menu();
+            $transaction = Yii::$app->db->beginTransaction();
+
+            try {
+                $model->id = $data['id'] ?? null;
+                $model->name = $data['name'];
+                $model->menu_type = $data['menu_type'];
+                $model->icon = $data['icon'];
+                $model->status = $data['status'];
+                $model->position = $data['position'];
+
+                if (!$model->save()) {
+                    throw new \Exception('Không thể lưu menu.', 1);
+                }
+
+                // Liên kết Tabs với Menu
+                $selectedTabs = $data['selectedTabs'] ?? [];
+                if (!empty($selectedTabs)) {
+                    Tab::updateAll(['menu_id' => null], ['menu_id' => $model->id]); // Xóa liên kết cũ
+                    Tab::updateAll(['menu_id' => $model->id], ['id' => $selectedTabs]); // Thêm liên kết mới
+                }
+
+                // Liên kết Menu con với Menu cha
+                $selectedMenus = $data['selectedMenus'] ?? [];
+                if (!empty($selectedMenus)) {
+                    Menu::updateAll(['parent_id' => null], ['parent_id' => $model->id]); // Xóa liên kết cũ
+                    Menu::updateAll(['parent_id' => $model->id], ['id' => $selectedMenus]); // Thêm liên kết mới
+                }
+
+                $transaction->commit();
+                return $this->asJson(['success' => true, 'message' => 'Thành công.']);
+            } catch (\Exception $e) {
+                $transaction->rollBack();
+                return $this->asJson(['success' => false, 'message' => $e->getMessage()]);
+            }
+        }
+
+        return $this->asJson(['success' => false, 'message' => 'Yêu cầu không hợp lệ.']);
+    }
+
     public function actionGetSubmenu($menu_id)
     {
         Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+        $menu = Menu::findOne($menu_id);
+        if (!$menu) {
+            return [
+                'success' => false,
+                'message' => 'Menu không tồn tại.'
+            ];
+        }
 
-        // Lấy menu con đã liên kết
-        $childTabs = Tab::find()->where(['menu_id' => $menu_id])->all();
-        $childMenus = Menu::find()->where(['parent_id' => $menu_id])->all();
+        $childTabs = Tab::find()
+            ->where(['menu_id' => $menu_id])
+            ->andWhere(['status' => 0])  // Thêm điều kiện cho status
+            ->andWhere(['deleted' => 0])
+            ->all();
+
+        $childMenus = Menu::find()
+            ->where(['parent_id' => $menu_id])
+            ->andWhere(['status' => 0])  // Thêm điều kiện cho status
+            ->andWhere(['deleted' => 0])
+            ->all();
 
         // Lấy các tab/menu tiềm năng (chưa liên kết)
-        $potentialTabs = Tab::find()->where(['menu_id' => null])->all();
+        $potentialTabs = Tab::find()
+            ->where(['menu_id' => null])
+            ->andWhere(['status' => 0])  // Thêm điều kiện cho status
+            ->andWhere(['deleted' => 0])
+            ->all();
+
         $potentialMenus = Menu::find()
-        ->leftJoin('menu AS parent_menu', 'parent_menu.id = menu.parent_id')  // Đặt alias cho bảng menu
-        ->where(['menu.parent_id' => null])  // Lọc các bản ghi không có parent_id (null)
-        // ->andWhere(['!=', 'id', $menu_id])
-        ->all();
+            ->leftJoin('menu AS parent_menu', 'parent_menu.id = menu.parent_id') // Đặt alias cho bảng menu
+            ->where(['menu.parent_id' => null]) // Lọc các bản ghi không có parent_id (null)
+            ->andWhere([
+                'not in',
+                'menu.id',
+                (new Query())
+                    ->select('parent_id')
+                    ->from('menu')
+                    ->where(['not', ['parent_id' => null]]) // Chỉ lấy các parent_id đã tồn tại
+            ])
+            ->andWhere(['menu.status' => 0])  // Thêm điều kiện cho status
+            ->andWhere(['menu.deleted' => 0])
+            ->all();
 
 
         return [
             'success' => true,
+            'isChildMenu' => $menu->parent_id !== null,
+            'menuType' => $menu->menu_type,
             'childTabs' => array_map(fn($tab) => ['id' => $tab->id, 'tab_name' => $tab->tab_name], $childTabs),
             'childMenus' => array_map(fn($menu) => ['id' => $menu->id, 'name' => $menu->name], $childMenus),
             'potentialTabs' => array_map(fn($tab) => ['id' => $tab->id, 'tab_name' => $tab->tab_name], $potentialTabs),
             'potentialMenus' => array_map(fn($menu) => ['id' => $menu->id, 'name' => $menu->name], $potentialMenus),
         ];
     }
-    public function actionSaveSubmenu()
+    public function actionSaveSubMenu()
     {
-        Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+        if (Yii::$app->request->isPost) {
+            $data = Yii::$app->request->post();
 
-        $menuId = Yii::$app->request->post('menu_id');
-        $selectedTabs = Yii::$app->request->post('selectedTabs', []);
-        $selectedMenus = Yii::$app->request->post('selectedMenus', []);
+            if (empty($data['menuId'])) {
+                return $this->asJson(['success' => false, 'message' => 'menuId menu không được để trống.']);
+            }
 
-        // Xóa liên kết cũ
-        Tab::updateAll(['menu_id' => null], ['menu_id' => $menuId]);
-        Menu::updateAll(['parent_id' => null], ['parent_id' => $menuId]);
+            $model = Menu::findOne($data['menuId']);
+            if (!$model) {
+                return $this->asJson(['success' => false, 'message' => 'Menu không tồn tại.']);
+            }
 
-        // Thêm liên kết mới
-        Tab::updateAll(['menu_id' => $menuId], ['id' => $selectedTabs]);
-        Menu::updateAll(['parent_id' => $menuId], ['id' => $selectedMenus]);
+            $transaction = Yii::$app->db->beginTransaction();
+            try {
 
-        return ['success' => true];
+                if (!$model->save()) {
+                    throw new \Exception('Không thể lưu menu.');
+                }
+
+                $selectedTabs = $data['selectedTabs'] ?? [];
+                if (!empty($selectedTabs)) {
+                    Tab::updateAll(['menu_id' => null], ['menu_id' => $model->id]); // Xóa liên kết cũ
+                    Tab::updateAll(['menu_id' => $model->id], ['id' => $selectedTabs]); // Thêm liên kết mới
+                }
+
+                $selectedMenus = $data['selectedMenus'] ?? [];
+                if (!empty($selectedMenus)) {
+                    Menu::updateAll(['parent_id' => null], ['parent_id' => $model->id]); // Xóa liên kết cũ
+                    Menu::updateAll(['parent_id' => $model->id], ['id' => $selectedMenus]); // Thêm liên kết mới
+                }
+
+                $transaction->commit();
+                return $this->asJson(['success' => true, 'message' => 'Cập nhật thành công.']);
+            } catch (\Exception $e) {
+                $transaction->rollBack();
+                return $this->asJson(['success' => false, 'message' => $e->getMessage()]);
+            }
+        }
+
+        return $this->asJson(['success' => false, 'message' => 'Yêu cầu không hợp lệ.']);
     }
+
     // Status
     public function actionUpdateHideStatus()
     {

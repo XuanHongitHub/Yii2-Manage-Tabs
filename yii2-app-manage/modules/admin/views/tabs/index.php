@@ -63,7 +63,7 @@ $this->title = 'List Tabs';
                                         <th>ID</th>
                                         <th>Tên</th>
                                         <th class="text-center">Loại</th>
-                                        <th class="text-center">Group</th>
+                                        <th class="text-center">Menu</th>
                                         <th class="text-center">Trạng thái</th>
                                         <th>Vị trí</th>
                                         <th>Ngày tạo</th>
@@ -72,48 +72,48 @@ $this->title = 'List Tabs';
                                 </thead>
                                 <tbody id="columnsContainer">
                                     <?php foreach ($tabs as $tab): ?>
-                                        <?php if ($tab->deleted != 1): ?>
-                                            <tr>
-                                                <td><?= Html::encode($tab->id) ?></td>
-                                                <td><?= Html::encode($tab->tab_name) ?></td>
-                                                <td class="text-center">
-                                                    <?php if ($tab->tab_type == 'table'): ?>
-                                                        <span class="badge badge-light-primary">Table</span>
-                                                    <?php else: ?>
-                                                        <span class="badge badge-light-danger">Richtext</span>
-                                                    <?php endif; ?>
-                                                </td>
-                                                <td class="text-center">
-                                                    <?= $tab && $tab->menu_id ? Menu::findOne($tab->menu_id)->name : ''; ?>
-                                                </td>
+                                    <?php if ($tab->deleted != 1): ?>
+                                    <tr>
+                                        <td><?= Html::encode($tab->id) ?></td>
+                                        <td><?= Html::encode($tab->tab_name) ?></td>
+                                        <td class="text-center">
+                                            <?php if ($tab->tab_type == 'table'): ?>
+                                            <span class="badge badge-light-primary">Table</span>
+                                            <?php else: ?>
+                                            <span class="badge badge-light-danger">Richtext</span>
+                                            <?php endif; ?>
+                                        </td>
+                                        <td class="text-center">
+                                            <?= $tab && $tab->menu_id ? Menu::findOne($tab->menu_id)->name : ''; ?>
+                                        </td>
 
-                                                </td>
-                                                <td class="text-center">
-                                                    <?= $tab->status == 1 ?
+                                        </td>
+                                        <td class="text-center">
+                                            <?= $tab->status == 1 ?
                                                         '<span class="badge badge-warning">Ẩn</span>' : '<span class="badge badge-success">Hiện</span>'
                                                     ?>
-                                                </td>
-                                                <td><?= Html::encode($tab->position) ?></td>
-                                                <td><?= Html::encode(Yii::$app->formatter->asDate($tab->created_at)) ?></td>
-                                                <td class="d-flex text-nowrap justify-content-center">
-                                                    <button class="btn btn-primary btn-sm edit-btn me-1" data-bs-toggle="modal"
-                                                        data-bs-target="#editModal"
-                                                        data-tab-id="<?= htmlspecialchars($tab->id) ?>"
-                                                        data-tab-name="<?= htmlspecialchars($tab->tab_name) ?>"
-                                                        data-tab-type="<?= htmlspecialchars($tab->tab_type) ?>"
-                                                        data-group-id="<?= htmlspecialchars($tab->menu_id) ?>"
-                                                        data-status="<?= htmlspecialchars($tab->status) ?>"
-                                                        data-position="<?= htmlspecialchars($tab->position) ?>">
-                                                        <i class="fa-solid fa-pen-to-square"></i>
-                                                    </button>
-                                                    <button href="#" data-bs-toggle="modal" data-bs-target="#deleteModal"
-                                                        class="btn btn-danger btn-sm delete-btn"
-                                                        data-tab-id="<?= htmlspecialchars($tab->id) ?>">
-                                                        <i class="fa-regular fa-trash-can"></i>
-                                                    </button>
-                                                </td>
-                                            </tr>
-                                        <?php endif; ?>
+                                        </td>
+                                        <td><?= Html::encode($tab->position) ?></td>
+                                        <td><?= Html::encode(Yii::$app->formatter->asDate($tab->created_at)) ?></td>
+                                        <td class="d-flex text-nowrap justify-content-center">
+                                            <button class="btn btn-primary btn-sm edit-btn me-1" data-bs-toggle="modal"
+                                                data-bs-target="#editModal"
+                                                data-tab-id="<?= htmlspecialchars($tab->id) ?>"
+                                                data-tab-name="<?= htmlspecialchars($tab->tab_name) ?>"
+                                                data-tab-type="<?= htmlspecialchars($tab->tab_type) ?>"
+                                                data-menu-id="<?= htmlspecialchars($tab->menu_id) ?>"
+                                                data-status="<?= htmlspecialchars($tab->status) ?>"
+                                                data-position="<?= htmlspecialchars($tab->position) ?>">
+                                                <i class="fa-solid fa-pen-to-square"></i>
+                                            </button>
+                                            <button href="#" data-bs-toggle="modal" data-bs-target="#deleteModal"
+                                                class="btn btn-danger btn-sm delete-btn"
+                                                data-tab-id="<?= htmlspecialchars($tab->id) ?>">
+                                                <i class="fa-regular fa-trash-can"></i>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                    <?php endif; ?>
 
                                     <?php endforeach; ?>
                                 </tbody>
@@ -148,15 +148,15 @@ $this->title = 'List Tabs';
                         <input class="form-control" id="editTabType" name="tab_type" disabled>
                     </div>
                     <div class="mb-3">
-                        <label for="editGroup" class="form-label">Group</label>
-                        <select class="form-select" id="editGroup" name="menu_id">
+                        <label for="editMenu" class="form-label">Menu</label>
+                        <select class="form-select" id="editMenu" name="menu_id">
                             <option class="txt-primary" value="" <?= $tab->menu_id === null ? 'selected' : '' ?>>--
                                 Không --</option>
 
                             <?php foreach ($tabMenus as $menu): ?>
-                                <option value="<?= $menu->id ?>" <?= $menu->id == $tab->menu_id ? 'selected' : '' ?>>
-                                    <?= Html::encode($menu->name) ?>
-                                </option>
+                            <option value="<?= $menu->id ?>" <?= $menu->id == $tab->menu_id ? 'selected' : '' ?>>
+                                <?= Html::encode($menu->name) ?>
+                            </option>
                             <?php endforeach; ?>
                         </select>
                     </div>
@@ -184,53 +184,53 @@ $this->title = 'List Tabs';
 </div>
 
 <script>
-    $(document).ready(function() {
-        // Khi nhấn vào nút sửa
-        $('.edit-btn').on('click', function() {
-            var tabId = $(this).data('tab-id');
-            var tabName = $(this).data('tab-name');
-            var tabType = $(this).data('tab-type');
-            var menuId = $(this).data('group-id');
-            var status = $(this).data('status');
-            var position = $(this).data('position');
+$(document).ready(function() {
+    // Khi nhấn vào nút sửa
+    $('.edit-btn').on('click', function() {
+        var tabId = $(this).data('tab-id');
+        var tabName = $(this).data('tab-name');
+        var tabType = $(this).data('tab-type');
+        var menuId = $(this).data('menu-id');
+        var status = $(this).data('status');
+        var position = $(this).data('position');
 
-            $('#editTabName').val(tabName);
-            $('#editTabType').val(tabType);
-            $('#editGroup').val(menuId);
-            $('#editStatus').val(status);
-            $('#editPosition').val(position);
-            $('#editTabForm').data('tab-id', tabId);
-        });
+        $('#editTabName').val(tabName);
+        $('#editTabType').val(tabType);
+        $('#editMenu').val(menuId);
+        $('#editStatus').val(status);
+        $('#editPosition').val(position);
+        $('#editTabForm').data('tab-id', tabId);
+    });
 
-        $('#saveTabChanges').on('click', function() {
-            var form = $('#editTabForm');
-            var tabId = form.data('tab-id');
-            var menuId = $('#editGroup').val();
-            var status = $('#editStatus').val();
-            var position = $('#editPosition').val();
+    $('#saveTabChanges').on('click', function() {
+        var form = $('#editTabForm');
+        var tabId = form.data('tab-id');
+        var menuId = $('#editMenu').val();
+        var status = $('#editStatus').val();
+        var position = $('#editPosition').val();
 
-            $.ajax({
-                url: '<?= \yii\helpers\Url::to(['tabs/update-tab']) ?>',
-                type: 'POST',
-                headers: {
-                    'X-CSRF-Token': $('meta[name="csrf-token"]').attr('content')
-                },
-                data: {
-                    tab_id: tabId,
-                    menu_id: menuId,
-                    status: status,
-                    position: position
-                },
-                success: function(response) {
-                    $('#editModal').modal('hide');
-                    location.reload();
-                },
-                error: function() {
-                    alert('Có lỗi xảy ra, vui lòng thử lại.');
-                }
-            });
+        $.ajax({
+            url: '<?= \yii\helpers\Url::to(['tabs/update-tab']) ?>',
+            type: 'POST',
+            headers: {
+                'X-CSRF-Token': $('meta[name="csrf-token"]').attr('content')
+            },
+            data: {
+                tab_id: tabId,
+                menu_id: menuId,
+                status: status,
+                position: position
+            },
+            success: function(response) {
+                $('#editModal').modal('hide');
+                location.reload();
+            },
+            error: function() {
+                alert('Có lỗi xảy ra, vui lòng thử lại.');
+            }
         });
     });
+});
 </script>
 
 <!-- Modal Thùng Rác -->
@@ -254,37 +254,37 @@ $this->title = 'List Tabs';
                     <tbody id="trash-bin-list">
                         <?php $hasDeletedTabs = false; ?>
                         <?php foreach ($tabs as $tab): ?>
-                            <?php if ($tab->deleted == 1): ?>
-                                <?php $hasDeletedTabs = true; ?>
-                                <tr>
-                                    <td><?= htmlspecialchars($tab->tab_name) ?></td>
-                                    <td class="text-center">
-                                        <?php if ($tab->tab_type == 'table'): ?>
-                                            <span class="badge badge-light-primary">Table</span>
-                                        <?php else: ?>
-                                            <span class="badge badge-light-danger">Richtext</span>
-                                        <?php endif; ?>
-                                    </td>
-                                    <td class="text-nowrap">
-                                        <button type="button" class="btn btn-warning restore-tab-btn" id="confirm-restore-btn"
-                                            data-tab-id="<?= htmlspecialchars($tab->id) ?>">
-                                            <i class="fa-solid fa-rotate-left"></i>
-                                        </button>
-                                        <button type="button" class="btn btn-danger delete-tab-btn" id="delete-permanently-btn"
-                                            data-tab-name="<?= htmlspecialchars($tab->tab_name) ?>"
-                                            data-tab-id="<?= htmlspecialchars($tab->id) ?>">
-                                            <i class="fa-regular fa-trash-can"></i>
-                                        </button>
-                                    </td>
-                                </tr>
-                            <?php endif; ?>
+                        <?php if ($tab->deleted == 1): ?>
+                        <?php $hasDeletedTabs = true; ?>
+                        <tr>
+                            <td><?= htmlspecialchars($tab->tab_name) ?></td>
+                            <td class="text-center">
+                                <?php if ($tab->tab_type == 'table'): ?>
+                                <span class="badge badge-light-primary">Table</span>
+                                <?php else: ?>
+                                <span class="badge badge-light-danger">Richtext</span>
+                                <?php endif; ?>
+                            </td>
+                            <td class="text-nowrap">
+                                <button type="button" class="btn btn-warning restore-tab-btn" id="confirm-restore-btn"
+                                    data-tab-id="<?= htmlspecialchars($tab->id) ?>">
+                                    <i class="fa-solid fa-rotate-left"></i>
+                                </button>
+                                <button type="button" class="btn btn-danger delete-tab-btn" id="delete-permanently-btn"
+                                    data-tab-name="<?= htmlspecialchars($tab->tab_name) ?>"
+                                    data-tab-id="<?= htmlspecialchars($tab->id) ?>">
+                                    <i class="fa-regular fa-trash-can"></i>
+                                </button>
+                            </td>
+                        </tr>
+                        <?php endif; ?>
                         <?php endforeach; ?>
                         <?php if (!$hasDeletedTabs): ?>
-                            <tr>
-                                <td colspan="2" class="text-center text-muted">
-                                    <em>There is nothing here.</em>
-                                </td>
-                            </tr>
+                        <tr>
+                            <td colspan="2" class="text-center text-muted">
+                                <em>There is nothing here.</em>
+                            </td>
+                        </tr>
                         <?php endif; ?>
                     </tbody>
                 </table>
@@ -316,28 +316,28 @@ $this->title = 'List Tabs';
                     </thead>
                     <tbody id="hide-index">
                         <?php foreach ($tabs as $tab): ?>
-                            <?php if ($tab->deleted == 0): ?>
-                                <tr>
-                                    <td class="py-0">
-                                        <?= htmlspecialchars($tab->tab_name) ?>
-                                    </td>
-                                    <td class="text-center py-0">
-                                        <?php if ($tab->tab_type == 'table'): ?>
-                                            <span class="badge badge-light-primary">Table</span>
-                                        <?php else: ?>
-                                            <span class="badge badge-light-danger">Richtext</span>
-                                        <?php endif; ?>
-                                    </td>
-                                    <td class="py-0" class="text-center">
-                                        <label class="switch mb-0 mt-1">
-                                            <input class="form-check-input toggle-hide-btn" type="checkbox"
-                                                data-tab-id="<?= htmlspecialchars($tab->id) ?>"
-                                                <?php if ($tab->deleted == 0): ?> checked <?php endif; ?>>
-                                            <span class="switch-state"></span>
-                                        </label>
-                                    </td>
-                                </tr>
-                            <?php endif; ?>
+                        <?php if ($tab->deleted == 0): ?>
+                        <tr>
+                            <td class="py-0">
+                                <?= htmlspecialchars($tab->tab_name) ?>
+                            </td>
+                            <td class="text-center py-0">
+                                <?php if ($tab->tab_type == 'table'): ?>
+                                <span class="badge badge-light-primary">Table</span>
+                                <?php else: ?>
+                                <span class="badge badge-light-danger">Richtext</span>
+                                <?php endif; ?>
+                            </td>
+                            <td class="py-0" class="text-center">
+                                <label class="switch mb-0 mt-1">
+                                    <input class="form-check-input toggle-hide-btn" type="checkbox"
+                                        data-tab-id="<?= htmlspecialchars($tab->id) ?>"
+                                        <?php if ($tab->deleted == 0): ?> checked <?php endif; ?>>
+                                    <span class="switch-state"></span>
+                                </label>
+                            </td>
+                        </tr>
+                        <?php endif; ?>
                         <?php endforeach; ?>
                     </tbody>
                 </table>
@@ -366,13 +366,13 @@ $this->title = 'List Tabs';
                 </div>
                 <ul class="list-group" id="sortable-tabs">
                     <?php foreach ($tabs as $index => $tab): ?>
-                        <?php if ($tab->deleted != 1): ?>
-                            <li class="list-group-item d-flex justify-content-between align-items-center tab-item"
-                                data-tab-id="<?= $tab->id ?>" data-status="<?= $tab->status ?>">
-                                <span><?= htmlspecialchars($tab->tab_name) ?></span>
-                                <span class="badge bg-secondary"><?= $index + 1 ?></span>
-                            </li>
-                        <?php endif; ?>
+                    <?php if ($tab->deleted != 1): ?>
+                    <li class="list-group-item d-flex justify-content-between align-items-center tab-item"
+                        data-tab-id="<?= $tab->id ?>" data-status="<?= $tab->status ?>">
+                        <span><?= htmlspecialchars($tab->tab_name) ?></span>
+                        <span class="badge bg-secondary"><?= $index + 1 ?></span>
+                    </li>
+                    <?php endif; ?>
                     <?php endforeach; ?>
                 </ul>
             </div>
@@ -418,218 +418,247 @@ $this->title = 'List Tabs';
     </div>
 </div>
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        // Check if there's a success message
-        const successMessage = "<?= Yii::$app->session->getFlash('success') ?>";
-        const errorMessage = "<?= Yii::$app->session->getFlash('error') ?>";
-        if (successMessage) {
-            document.getElementById('toast-body').textContent = successMessage;
-            document.getElementById('toast-timestamp').textContent = new Date().toLocaleTimeString();
-            const toastElement = document.getElementById('liveToast');
-            const toast = new bootstrap.Toast(toastElement);
-            toast.show();
-        }
-        if (errorMessage) {
-            document.getElementById('toast-body').textContent = errorMessage;
-            document.getElementById('toast-timestamp').textContent = new Date().toLocaleTimeString();
-            const toastElement = document.getElementById('liveToast');
-            const toast = new bootstrap.Toast(toastElement);
-            toast.show();
-        }
-    });
+document.addEventListener('DOMContentLoaded', function() {
+    // Check if there's a success message
+    const successMessage = "<?= Yii::$app->session->getFlash('success') ?>";
+    const errorMessage = "<?= Yii::$app->session->getFlash('error') ?>";
+    if (successMessage) {
+        document.getElementById('toast-body').textContent = successMessage;
+        document.getElementById('toast-timestamp').textContent = new Date().toLocaleTimeString();
+        const toastElement = document.getElementById('liveToast');
+        const toast = new bootstrap.Toast(toastElement);
+        toast.show();
+    }
+    if (errorMessage) {
+        document.getElementById('toast-body').textContent = errorMessage;
+        document.getElementById('toast-timestamp').textContent = new Date().toLocaleTimeString();
+        const toastElement = document.getElementById('liveToast');
+        const toast = new bootstrap.Toast(toastElement);
+        toast.show();
+    }
+});
 </script>
 
 
 
 <script>
-    $(document).ready(function() {
-        $('.dataTable').DataTable({
-            order: [],
-            columnDefs: [{
-                orderable: false,
-                targets: -1
-            }],
-            "lengthChange": false,
-            "autoWidth": false,
-            "responsive": true,
-            "paging": true,
-            "searching": true,
-            "ordering": true,
-            "language": {
-                "sEmptyTable": "Không có dữ liệu",
-                "sInfo": "Đang hiển thị _START_ đến _END_ trong tổng số _TOTAL_ mục",
-                "sInfoEmpty": "Đang hiển thị 0 đến 0 trong tổng số 0 mục",
-                "sInfoFiltered": "(Được lọc từ _MAX_ mục)",
-                "sInfoPostFix": "",
-                "sLengthMenu": "Hiển thị _MENU_ mục",
-                "sLoadingRecords": "Đang tải...",
-                "sProcessing": "Đang xử lý...",
-                "sSearch": "Tìm kiếm:",
-                "sZeroRecords": "Không tìm thấy kết quả nào",
-                "oPaginate": {
-                    "sFirst": "Đầu tiên",
-                    "sLast": "Cuối cùng",
-                    "sNext": "Tiếp theo",
-                    "sPrevious": "Trước"
+$(document).ready(function() {
+    $('.dataTable').DataTable({
+        order: [],
+        columnDefs: [{
+            orderable: false,
+            targets: -1
+        }],
+        "lengthChange": false,
+        "autoWidth": false,
+        "responsive": true,
+        "paging": true,
+        "searching": true,
+        "ordering": true,
+        "language": {
+            "sEmptyTable": "Không có dữ liệu",
+            "sInfo": "Đang hiển thị _START_ đến _END_ trong tổng số _TOTAL_ mục",
+            "sInfoEmpty": "Đang hiển thị 0 đến 0 trong tổng số 0 mục",
+            "sInfoFiltered": "(Được lọc từ _MAX_ mục)",
+            "sInfoPostFix": "",
+            "sLengthMenu": "Hiển thị _MENU_ mục",
+            "sLoadingRecords": "Đang tải...",
+            "sProcessing": "Đang xử lý...",
+            "sSearch": "Tìm kiếm:",
+            "sZeroRecords": "Không tìm thấy kết quả nào",
+            "oPaginate": {
+                "sFirst": "Đầu tiên",
+                "sLast": "Cuối cùng",
+                "sNext": "Tiếp theo",
+                "sPrevious": "Trước"
+            },
+            "oAria": {
+                "sSortAscending": ": Sắp xếp cột tăng dần",
+                "sSortDescending": ": Sắp xếp cột giảm dần"
+            }
+        }
+    });
+});
+
+$(document).ready(function() {
+    $('#confirm-hide-btn').click(function() {
+        let hideStatus = {};
+
+        $('.toggle-hide-btn').each(function() {
+            const tabId = $(this).data('tab-id');
+            const isChecked = $(this).is(':checked');
+            hideStatus[tabId] = isChecked ? 0 : 3;
+        });
+
+        if (confirm("Xác nhận thao tác?")) {
+
+            $.ajax({
+                url: '<?= \yii\helpers\Url::to(['tabs/update-hide-status']) ?>',
+                method: 'POST',
+                headers: {
+                    'X-CSRF-Token': $('meta[name="csrf-token"]').attr('content')
                 },
-                "oAria": {
-                    "sSortAscending": ": Sắp xếp cột tăng dần",
-                    "sSortDescending": ": Sắp xếp cột giảm dần"
+                data: {
+                    hideStatus: hideStatus
+                },
+                success: function(response) {
+                    if (response.success) {
+                        location.reload();
+                    } else {
+                        alert(response.message || "Có lỗi xảy ra khi lưu thay đổi.");
+                    }
+                },
+                error: function() {
+                    alert("Có lỗi xảy ra khi lưu thay đổi.");
                 }
+            });
+        }
+    });
+    $("#sortable-tabs").sortable();
+
+    // Lọc danh sách tab khi bật/tắt switch
+    $('#toggleStatusTabs').on('change', function() {
+        const showAll = $(this).is(':checked');
+
+        $('.tab-item').each(function() {
+            const isStatus = $(this).data('status') == 1;
+            if (isStatus) {
+                $(this).toggleClass('hidden-tab', !showAll);
             }
         });
     });
 
-    $(document).ready(function() {
-        $('#confirm-hide-btn').click(function() {
-            let hideStatus = {};
-
-            $('.toggle-hide-btn').each(function() {
-                const tabId = $(this).data('tab-id');
-                const isChecked = $(this).is(':checked');
-                hideStatus[tabId] = isChecked ? 0 : 3;
-            });
-
-            if (confirm("Xác nhận thao tác?")) {
-
-                $.ajax({
-                    url: '<?= \yii\helpers\Url::to(['tabs/update-hide-status']) ?>',
-                    method: 'POST',
-                    headers: {
-                        'X-CSRF-Token': $('meta[name="csrf-token"]').attr('content')
-                    },
-                    data: {
-                        hideStatus: hideStatus
-                    },
-                    success: function(response) {
-                        if (response.success) {
-                            location.reload();
-                        } else {
-                            alert(response.message || "Có lỗi xảy ra khi lưu thay đổi.");
-                        }
-                    },
-                    error: function() {
-                        alert("Có lỗi xảy ra khi lưu thay đổi.");
-                    }
-                });
-            }
-        });
-        $("#sortable-tabs").sortable();
-
-        // Lọc danh sách tab khi bật/tắt switch
-        $('#toggleStatusTabs').on('change', function() {
-            const showAll = $(this).is(':checked');
-
-            $('.tab-item').each(function() {
-                const isStatus = $(this).data('status') == 1;
-                if (isStatus) {
-                    $(this).toggleClass('hidden-tab', !showAll);
-                }
+    $("#confirm-sort-btn").click(function() {
+        var sortedData = [];
+        $("#sortable-tabs li").each(function(index) {
+            var tabId = $(this).data("tab-id");
+            sortedData.push({
+                id: tabId,
+                position: index + 1
             });
         });
-
-        $("#confirm-sort-btn").click(function() {
-            var sortedData = [];
-            $("#sortable-tabs li").each(function(index) {
-                var tabId = $(this).data("tab-id");
-                sortedData.push({
-                    id: tabId,
-                    position: index + 1
-                });
-            });
-            if (confirm("Xác nhận sắp xếp?")) {
-
-                $.ajax({
-                    url: '<?= \yii\helpers\Url::to(['tabs/update-sort-order']) ?>',
-                    method: 'POST',
-                    headers: {
-                        'X-CSRF-Token': $('meta[name="csrf-token"]').attr('content')
-                    },
-                    data: {
-                        tabs: sortedData
-                    },
-                    success: function(response) {
-                        if (response.success) {
-                            location.reload();
-                            $('#sortModal').modal('hide');
-                        } else {
-                            alert(response.message || "Lỗi.");
-                        }
-                    },
-                    error: function() {
-                        alert("Lỗi.");
-                    }
-                });
-            }
-        });
-        $(document).on('click', '#confirm-restore-btn', function() {
-            const tabId = $(this).data('tab-id');
-
-            if (confirm("Bạn có chắc chắn muốn khôi phục tab này không?")) {
-                $.ajax({
-                    url: '<?= \yii\helpers\Url::to(['tabs/restore-tab']) ?>',
-                    method: 'POST',
-                    headers: {
-                        'X-CSRF-Token': $('meta[name="csrf-token"]').attr('content')
-                    },
-                    data: {
-                        tabId: tabId,
-                    },
-                    success: function(response) {
-                        if (response.success) {
-                            location.reload();
-                            $('#trashBinModal').modal('hide');
-                        } else {
-                            alert(response.message || "Khôi phục thất bại.");
-                        }
-                    },
-                    error: function() {
-                        alert("Có lỗi xảy ra khi khôi phục.");
-                    }
-                });
-            }
-        });
-
-        $(document).on('click', '#delete-permanently-btn', function() {
-            const tabId = $(this).data('tab-id');
-            const tableName = $(this).data('tab-name');
-
-            if (confirm("Bạn có chắc chắn muốn xóa hoàn toàn tab này không?")) {
-                $.ajax({
-                    url: '<?= \yii\helpers\Url::to(['tabs/delete-permanently-tab']) ?>',
-                    method: 'POST',
-                    headers: {
-                        'X-CSRF-Token': $('meta[name="csrf-token"]').attr('content')
-                    },
-                    data: {
-                        tabId: tabId,
-                        tableName: tableName,
-                    },
-                    success: function(response) {
-                        if (response.success) {
-                            location.reload();
-                        } else {
-                            alert(response.message || "Xóa thất bại.");
-                        }
-                    },
-                    error: function() {
-                        alert("Có lỗi xảy ra khi xóa tab.");
-                    }
-                });
-            }
-        });
-
-        $('#confirm-delete-btn').on('click', function() {
-            const tabId = $(this).data('tab-id');
+        if (confirm("Xác nhận sắp xếp?")) {
 
             $.ajax({
-                url: '<?= \yii\helpers\Url::to(['tabs/delete-tab']) ?>',
+                url: '<?= \yii\helpers\Url::to(['tabs/update-sort-order']) ?>',
+                method: 'POST',
+                headers: {
+                    'X-CSRF-Token': $('meta[name="csrf-token"]').attr('content')
+                },
+                data: {
+                    tabs: sortedData
+                },
+                success: function(response) {
+                    if (response.success) {
+                        location.reload();
+                        $('#sortModal').modal('hide');
+                    } else {
+                        alert(response.message || "Lỗi.");
+                    }
+                },
+                error: function() {
+                    alert("Lỗi.");
+                }
+            });
+        }
+    });
+    $(document).on('click', '#confirm-restore-btn', function() {
+        const tabId = $(this).data('tab-id');
+
+        if (confirm("Bạn có chắc chắn muốn khôi phục tab này không?")) {
+            $.ajax({
+                url: '<?= \yii\helpers\Url::to(['tabs/restore-tab']) ?>',
                 method: 'POST',
                 headers: {
                     'X-CSRF-Token': $('meta[name="csrf-token"]').attr('content')
                 },
                 data: {
                     tabId: tabId,
+                },
+                success: function(response) {
+                    if (response.success) {
+                        location.reload();
+                        $('#trashBinModal').modal('hide');
+                    } else {
+                        alert(response.message || "Khôi phục thất bại.");
+                    }
+                },
+                error: function() {
+                    alert("Có lỗi xảy ra khi khôi phục.");
+                }
+            });
+        }
+    });
+
+    $(document).on('click', '#delete-permanently-btn', function() {
+        const tabId = $(this).data('tab-id');
+        const tableName = $(this).data('tab-name');
+
+        if (confirm("Bạn có chắc chắn muốn xóa hoàn toàn tab này không?")) {
+            $.ajax({
+                url: '<?= \yii\helpers\Url::to(['tabs/delete-permanently-tab']) ?>',
+                method: 'POST',
+                headers: {
+                    'X-CSRF-Token': $('meta[name="csrf-token"]').attr('content')
+                },
+                data: {
+                    tabId: tabId,
+                    tableName: tableName,
+                },
+                success: function(response) {
+                    if (response.success) {
+                        location.reload();
+                    } else {
+                        alert(response.message || "Xóa thất bại.");
+                    }
+                },
+                error: function() {
+                    alert("Có lỗi xảy ra khi xóa tab.");
+                }
+            });
+        }
+    });
+
+    $('#confirm-delete-btn').on('click', function() {
+        const tabId = $(this).data('tab-id');
+
+        $.ajax({
+            url: '<?= \yii\helpers\Url::to(['tabs/delete-tab']) ?>',
+            method: 'POST',
+            headers: {
+                'X-CSRF-Token': $('meta[name="csrf-token"]').attr('content')
+            },
+            data: {
+                tabId: tabId,
+            },
+            success: function(response) {
+                if (response.success) {
+                    location.reload();
+                    $('#deleteModal').modal('hide');
+                } else {
+                    alert(response.message || "Xóa tab thất bại.");
+                }
+            },
+            error: function() {
+                alert("Có lỗi xảy ra khi xóa tab.");
+            }
+        });
+    });
+
+    $('#confirm-delete-permanently-btn').on('click', function() {
+        const tabId = $(this).data('tab-id');
+        const tableName = $(this).data('tab-name');
+
+        if (confirm("Bạn có chắc chắn muốn xóa hoàn toàn không?")) {
+            $.ajax({
+                url: '<?= \yii\helpers\Url::to(['tabs/delete-permanently-tab']) ?>',
+                method: 'POST',
+                headers: {
+                    'X-CSRF-Token': $('meta[name="csrf-token"]').attr('content')
+                },
+                data: {
+                    tabId: tabId,
+                    tableName: tableName,
                 },
                 success: function(response) {
                     if (response.success) {
@@ -643,50 +672,21 @@ $this->title = 'List Tabs';
                     alert("Có lỗi xảy ra khi xóa tab.");
                 }
             });
-        });
+        }
+    });
+});
 
-        $('#confirm-delete-permanently-btn').on('click', function() {
-            const tabId = $(this).data('tab-id');
-            const tableName = $(this).data('tab-name');
+document.addEventListener("DOMContentLoaded", function() {
+    const deleteButtons = document.querySelectorAll(".delete-btn");
+    const confirmDeleteBtn = document.getElementById("confirm-delete-btn");
+    const confirmDeletePermanentlyBtn = document.getElementById("confirm-delete-permanently-btn");
 
-            if (confirm("Bạn có chắc chắn muốn xóa hoàn toàn không?")) {
-                $.ajax({
-                    url: '<?= \yii\helpers\Url::to(['tabs/delete-permanently-tab']) ?>',
-                    method: 'POST',
-                    headers: {
-                        'X-CSRF-Token': $('meta[name="csrf-token"]').attr('content')
-                    },
-                    data: {
-                        tabId: tabId,
-                        tableName: tableName,
-                    },
-                    success: function(response) {
-                        if (response.success) {
-                            location.reload();
-                            $('#deleteModal').modal('hide');
-                        } else {
-                            alert(response.message || "Xóa tab thất bại.");
-                        }
-                    },
-                    error: function() {
-                        alert("Có lỗi xảy ra khi xóa tab.");
-                    }
-                });
-            }
+    deleteButtons.forEach(button => {
+        button.addEventListener("click", function() {
+            const tabId = this.getAttribute("data-tab-id");
+            confirmDeleteBtn.setAttribute("data-tab-id", tabId);
+            confirmDeletePermanentlyBtn.setAttribute("data-tab-id", tabId);
         });
     });
-
-    document.addEventListener("DOMContentLoaded", function() {
-        const deleteButtons = document.querySelectorAll(".delete-btn");
-        const confirmDeleteBtn = document.getElementById("confirm-delete-btn");
-        const confirmDeletePermanentlyBtn = document.getElementById("confirm-delete-permanently-btn");
-
-        deleteButtons.forEach(button => {
-            button.addEventListener("click", function() {
-                const tabId = this.getAttribute("data-tab-id");
-                confirmDeleteBtn.setAttribute("data-tab-id", tabId);
-                confirmDeletePermanentlyBtn.setAttribute("data-tab-id", tabId);
-            });
-        });
-    });
+});
 </script>

@@ -53,8 +53,6 @@ class TabsController extends Controller
      */
     public function actionIndex()
     {
-        $userId = Yii::$app->user->id;
-
         $menuId = Yii::$app->request->get('menuId');
         $tabId = Yii::$app->request->get('tabId');
 
@@ -63,7 +61,7 @@ class TabsController extends Controller
 
             if ($menu) {
                 $tabs = Tab::find()
-                    ->where(['user_id' => $userId, 'status' => 0, 'menu_id' => $menuId])
+                    ->where(['status' => 0, 'menu_id' => $menuId])
                     ->orderBy(['position' => SORT_ASC, 'id' => SORT_DESC])
                     ->all();
 
@@ -78,7 +76,7 @@ class TabsController extends Controller
 
         if ($tabId) {
             $tab_item = Tab::find()
-                ->where(['user_id' => $userId, 'status' => 0, 'id' => $tabId])
+                ->where(['status' => 0, 'id' => $tabId])
                 ->one();
 
             $tableTabs = TableTab::find()->all();

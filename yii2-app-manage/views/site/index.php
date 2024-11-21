@@ -22,7 +22,6 @@ $this->title = 'Tất cả Tab';
     <div class="container-fluid">
         <div class="row">
             <div class="col-sm-12">
-
                 <div class="card">
                     <div class="card-header card-no-border pb-0">
                         <h4>Tất cả Tab</h4>

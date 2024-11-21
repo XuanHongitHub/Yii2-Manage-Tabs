@@ -44,7 +44,7 @@ class UsersController extends Controller
         $user = User::findOne($id);
 
         if ($user === null) {
-            throw new NotFoundHttpException("User does not exist.");
+            throw new NotFoundHttpException("Người dùng không tồn tại.");
         }
 
         if (Yii::$app->request->isPost) {
@@ -54,10 +54,10 @@ class UsersController extends Controller
             $user->role = Yii::$app->request->post('role');
 
             if ($user->save()) {
-                Yii::$app->session->setFlash('success', 'User updated successfully.');
+                Yii::$app->session->setFlash('success', 'Cập nhật thông tin Người dùng thành công!');
             } else {
                 Yii::error($user->getErrors());
-                Yii::$app->session->setFlash('error', 'Update failed. Please try again.');
+                Yii::$app->session->setFlash('error', 'Cập nhật thất bại. Vui lòng thử lại.');
             }
         }
 

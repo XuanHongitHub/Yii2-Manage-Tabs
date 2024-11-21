@@ -28,21 +28,21 @@ class SiteController extends Controller
         return [
             'access' => [
                 'class' => AccessControl::className(),
-                'only' => ['login', 'signup'],
+                'only' => ['index', 'login', 'signup'], // Thêm 'index' vào đây
                 'rules' => [
                     [
                         'actions' => ['login', 'signup'],
                         'allow' => true,
-                        'roles' => ['?'],
+                        'roles' => ['?'], // Cho phép người dùng chưa đăng nhập
                     ],
                     [
-                        'actions' => ['logout'],
+                        'actions' => ['logout', 'index'], // Cả 'logout' và 'index' yêu cầu đăng nhập
                         'allow' => true,
-                        'roles' => ['@'],
+                        'roles' => ['@'], // Chỉ cho phép người đã đăng nhập
                     ],
                     [
                         'allow' => false,
-                        'roles' => ['?'],
+                        'roles' => ['?'], // Không cho phép người chưa đăng nhập
                     ],
                 ],
             ],
@@ -54,6 +54,7 @@ class SiteController extends Controller
             ],
         ];
     }
+
 
 
     /**
@@ -79,10 +80,7 @@ class SiteController extends Controller
      */
     public function actionIndex()
     {
-        $userId = Yii::$app->user->id;
-
         $tabs = Tab::find()
-            ->where(['user_id' => $userId])
             ->andWhere(['deleted' => 0])
             ->orderBy([
                 'position' => SORT_ASC,

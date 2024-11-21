@@ -24,7 +24,7 @@ class SignupForm extends Model
         return [
             ['username', 'trim'],
             ['username', 'required'],
-            ['username', 'unique', 'targetClass' => '\app\models\User', 'message' => 'ên người dùng này đã được sử dụng.'],
+            ['username', 'unique', 'targetClass' => '\app\models\User', 'message' => 'Tên người dùng này đã được sử dụng.'],
             ['username', 'string', 'min' => 2, 'max' => 255],
 
             ['email', 'trim'],

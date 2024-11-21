@@ -73,4 +73,8 @@ class Menu extends \yii\db\ActiveRecord
     {
         return $this->hasMany(Tab::class, ['menu_id' => 'id']);
     }
+    public function getChildMenus()
+    {
+        return $this->hasMany(Menu::class, ['parent_id' => 'id']);
+    }
 }

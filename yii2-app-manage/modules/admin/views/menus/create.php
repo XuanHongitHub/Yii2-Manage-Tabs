@@ -44,6 +44,18 @@ $this->title = 'Thêm Menu';
                     <div class="card-body">
                         <div class="row">
                             <div class="col-12 col-md-6 col-lg-4 col-xl-3 mb-3">
+                                <label for="parentId" class="form-label">Chọn Menu cha</label>
+                                <select type="text" id="parentId" class="form-control">
+                                    <option value="">-- Không --</option>
+                                    <?php
+                                    foreach ($menus as $menu) {
+                                        echo Html::tag('option', $menu->name, ['value' => $menu->id]);
+                                    } ?>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-12 col-md-6 col-lg-4 col-xl-3 mb-3">
                                 <label for="name" class="form-label">Tên Menu</label>
                                 <input type="text" id="name" class="form-control" value="">
                             </div>
@@ -90,35 +102,8 @@ $this->title = 'Thêm Menu';
 
                         </div>
 
-                        <!-- Chọn loại menu và chọn tab cùng hàng -->
-                        <div class="row">
-                            <div class="col-12 col-md-6 col-lg-4 col-xl-3 mb-3">
-                                <label for="menu_type" class="form-label">Chọn Menu loại</label>
-                                <select id="menu_type" class="form-select">
-                                    <option value="menu_single" selected>Menu chứa Tab con</option>
-                                    <option value="menu_group">Menu chứa Menu con</option>
-                                    <option value="none">Không có Menu con</option>
-                                </select>
-                            </div>
-                            <div class="col-12 col-md-6 col-lg-4 col-xl-3 mb-3">
-                                <label for="tabs" class="form-label">Chọn Tab</label>
-                                <select id="tabs" class="form-select input-air-primary digits form-multi-select"
-                                    multiple="">
-                                    <?php foreach ($tabs as $tab): ?>
-                                    <option value="<?= $tab->id ?>"><?= $tab->tab_name ?></option>
-                                    <?php endforeach; ?>
-                                </select>
-                            </div>
-                            <div class="col-12 col-md-6 col-lg-4 col-xl-3 mb-3">
-                                <label for="menus" class="form-label">Chọn Menu</label>
-                                <select id="menus" class="form-select input-air-primary digits form-multi-select"
-                                    multiple="">
-                                    <?php foreach ($menus as $menu): ?>
-                                    <option value="<?= $menu->id ?>"><?= $menu->name ?></option>
-                                    <?php endforeach; ?>
-                                </select>
-                            </div>
-                        </div>
+                        <!-- Chọn loại menu và Chọn Tab Con Con Con Con Con cùng hàng -->
+
                         <div class="mt-3">
                             <button type="button" id="saveTabMenuChanges" class="btn btn-success">Tạo Menu</button>
                         </div>
@@ -147,30 +132,26 @@ $(document).ready(function() {
     });
 
     $('#saveTabMenuChanges').on('click', function() {
-        var menuName = $('#name').val();
-        var menuType = $('#menu_type').val();
-        var icon = $('#icon-selected-value').val();
-        var selectedTabs = $('#tabs').val();
-        var selectedMenus = $('#menus').val();
+        let parentId = $('#parentId').val();
+        let menuName = $('#name').val();
+        let menuType = $('#menu_type').val();
+        let icon = $('#icon-selected-value').val();
+        let selectedTabs = $('#tabs').val();
+        let selectedMenus = $('#menus').val();
 
         console.log("🚀 ~ $ ~ selectedTabs:", selectedTabs);
         console.log("🚀 ~ $ ~ selectedMenus:", selectedMenus);
 
         $.ajax({
-            url: '<?= \yii\helpers\Url::to(['create-or-update-menu']) ?>',
+            url: '<?= \yii\helpers\Url::to(['store-menu']) ?>',
             type: 'POST',
             headers: {
                 'X-CSRF-Token': $('meta[name="csrf-token"]').attr('content')
             },
             data: {
                 name: menuName,
-                menu_type: menuType,
-                icon: icon,
-                status: 0,
-                position: 0,
-                selectedTabs: selectedTabs,
-                selectedMenus: selectedMenus
-
+                icon,
+                parentId
             },
             success: function(response) {
                 if (response.success) {

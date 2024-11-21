@@ -23,13 +23,13 @@ class ChangePasswordForm extends Model
     public function rules()
     {
         return [
-            ['old_password', 'required', 'message' => 'Old password cannot be blank.'],
+            ['old_password', 'required', 'message' => 'Mật khẩu cũ không được để trống.'],
             ['old_password', 'validateOldPassword'],
 
-            ['new_password', 'required', 'message' => 'New password cannot be blank.'],
-            ['new_password', 'string', 'min' => Yii::$app->params['user.passwordMinLength'], 'message' => 'New password is too short.'],
-            ['confirm_new_password', 'required', 'message' => 'Confirm new password cannot be blank.'],
-            ['confirm_new_password', 'compare', 'compareAttribute' => 'new_password', 'message' => 'New passwords do not match.'],
+            ['new_password', 'required', 'message' => 'Mật khẩu mới không được để trống.'],
+            ['new_password', 'string', 'min' => Yii::$app->params['user.passwordMinLength'], 'message' => 'Mật khẩu mới quá ngắn.'],
+            ['confirm_new_password', 'required', 'message' => 'Xác nhận mật khẩu mới không được để trống.'],
+            ['confirm_new_password', 'compare', 'compareAttribute' => 'new_password', 'message' => 'Mật khẩu mới không khớp.'],
         ];
     }
 
@@ -41,7 +41,7 @@ class ChangePasswordForm extends Model
         if (!$this->hasErrors()) {
             $user = $this->getUser();
             if (!$user || !$user->validatePassword($this->old_password)) {
-                $this->addError($attribute, 'Incorrect old password.');
+                $this->addError($attribute, 'Mật khẩu cũ không đúng.');
             }
         }
     }

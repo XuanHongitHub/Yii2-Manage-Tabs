@@ -452,7 +452,7 @@
     // Duyệt qua tất cả các liên kết trong sidebar
     $(".sidebar-wrapper nav ul li a").each(function () {
       var linkTabId = $(this).data('tab-id'); // Lấy tabId từ thuộc tính data-tabId
-      var linkmenuId = $(this).data('group-id'); // Lấy menuId từ thuộc tính data-group-id
+      var linkmenuId = $(this).data('menu-id'); // Lấy menuId từ thuộc tính data-menu-id
       var linkHref = $(this).attr('href'); // Lấy href của link
 
       // Kiểm tra xem đường dẫn của link có trùng với currentUrl không

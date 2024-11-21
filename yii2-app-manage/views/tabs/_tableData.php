@@ -1,9 +1,6 @@
 <?php
 
-use app\models\User;
 use yii\widgets\LinkPager;
-
-$isAdmin = User::isUserAdmin(Yii::$app->user->identity->username);
 
 $tabId = $_GET['tabId'];
 
@@ -134,61 +131,61 @@ $globalIndexOffset = $page * $rowsPerPage;
             <tr>
                 <th class="px-2 py-0" style="width: 3%;"><input class="" type="checkbox" id="select-all"></th>
                 <?php foreach ($columns as $column): ?>
-                <th><?= htmlspecialchars($column->name) ?></th>
+                    <th><?= htmlspecialchars($column->name) ?></th>
                 <?php endforeach; ?>
                 <th style="width: 8%;">Thao Tác</th>
             </tr>
         </thead>
         <?php if (!empty($data)): ?>
-        <tbody id="tbodyData">
-            <?php foreach ($data as $rowIndex => $row): ?>
-            <?php
+            <tbody id="tbodyData">
+                <?php foreach ($data as $rowIndex => $row): ?>
+                    <?php
                     $globalIndex = $globalIndexOffset + $rowIndex + 1;
                     ?>
-            <tr>
-                <td class="px-2 py-0"><input type="checkbox" class="row-checkbox" data-row="<?= $rowIndex ?>"
-                        id="<?= $rowIndex ?>" data-table-name="<?= $tableName ?>">
-                </td>
-                <?php foreach ($columns as $column): ?>
-                <td><?= htmlspecialchars($row[$column->name]) ?></td>
+                    <tr>
+                        <td class="px-2 py-0"><input type="checkbox" class="row-checkbox" data-row="<?= $rowIndex ?>"
+                                id="<?= $rowIndex ?>" data-table-name="<?= $tableName ?>">
+                        </td>
+                        <?php foreach ($columns as $column): ?>
+                            <td><?= htmlspecialchars($row[$column->name]) ?></td>
+                        <?php endforeach; ?>
+                        <td class="text-nowrap">
+                            <button class="btn btn-secondary btn-sm save-row-btn"
+                                onclick="openEdit(<?= $rowIndex ?>, '<?= $tableName ?>')"><i
+                                    class="fa-solid fa-pen-to-square"></i></button>
+                            <button class="btn btn-danger btn-sm" onclick="deleteRow(<?= $rowIndex ?>, '<?= $tableName ?>')"><i
+                                    class="fa-regular fa-trash-can"></i></button>
+                        </td>
+                    </tr>
                 <?php endforeach; ?>
-                <td class="text-nowrap">
-                    <button class="btn btn-secondary btn-sm save-row-btn"
-                        onclick="openEdit(<?= $rowIndex ?>, '<?= $tableName ?>')"><i
-                            class="fa-solid fa-pen-to-square"></i></button>
-                    <button class="btn btn-danger btn-sm" onclick="deleteRow(<?= $rowIndex ?>, '<?= $tableName ?>')"><i
-                            class="fa-regular fa-trash-can"></i></button>
-                </td>
-            </tr>
-            <?php endforeach; ?>
-            <script>
-            function getRowData(rowIndex) {
-                const table = document.querySelector('.dataTable tbody');
-                const row = table.rows[rowIndex];
+                <script>
+                    function getRowData(rowIndex) {
+                        const table = document.querySelector('.dataTable tbody');
+                        const row = table.rows[rowIndex];
 
-                if (!row) {
-                    console.error("Row not found:", rowIndex);
-                    return undefined;
-                }
-
-                const headerCells = document.querySelectorAll('.dataTable thead th');
-                const rowData = {};
-
-                headerCells.forEach((headerCell, idx) => {
-                    if (idx < headerCells.length - 1) {
-                        const columnName = headerCell.innerText.trim();
-                        const cellValue = row.cells[idx].innerText.trim();
-
-                        if (columnName) {
-                            rowData[columnName] = cellValue;
+                        if (!row) {
+                            console.error("Row not found:", rowIndex);
+                            return undefined;
                         }
-                    }
-                });
 
-                return rowData;
-            }
-            </script>
-        </tbody>
+                        const headerCells = document.querySelectorAll('.dataTable thead th');
+                        const rowData = {};
+
+                        headerCells.forEach((headerCell, idx) => {
+                            if (idx < headerCells.length - 1) {
+                                const columnName = headerCell.innerText.trim();
+                                const cellValue = row.cells[idx].innerText.trim();
+
+                                if (columnName) {
+                                    rowData[columnName] = cellValue;
+                                }
+                            }
+                        });
+
+                        return rowData;
+                    }
+                </script>
+            </tbody>
     </table>
 
     <div class="d-flex flex-column flex-md-row align-items-center mb-3">
@@ -237,53 +234,53 @@ $globalIndexOffset = $page * $rowsPerPage;
 
         <!-- Last Page Button -->
         <?php if ($pagination->getPageCount() > 1): ?>
-        <div class="d-flex justify-content-end">
-            <span class="paginate_button">
-                <input type="hidden" id="totalCount" value="<?= $totalCount ?>">
-                <input type="hidden" id="pageSize" value="<?= $pageSize ?>">
-                <button id="lastPageButton" class="btn btn-secondary btn-sm"
-                    data-page="<?= $pagination->getPageCount() - 1 ?>">
-                    Last
-                </button>
-            </span>
-        </div>
+            <div class="d-flex justify-content-end">
+                <span class="paginate_button">
+                    <input type="hidden" id="totalCount" value="<?= $totalCount ?>">
+                    <input type="hidden" id="pageSize" value="<?= $pageSize ?>">
+                    <button id="lastPageButton" class="btn btn-secondary btn-sm"
+                        data-page="<?= $pagination->getPageCount() - 1 ?>">
+                        Last
+                    </button>
+                </span>
+            </div>
         <?php endif; ?>
     </div>
 
 
-    <?php endif; ?>
+<?php endif; ?>
 
-    <!-- Modal Edit Data-->
-    <div class="modal fade" id="editModal" tabindex="-1" role="dialog" aria-labelledby="editModalLabel"
-        aria-hidden="true">
-        <div class="modal-dialog" role="document">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="editModalLabel">Edit Data</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cancel"></button>
-                </div>
-                <div class="modal-body">
-                    <form id="editForm"></form> <!-- Để trống và sẽ được điền động -->
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"
-                        aria-label="Cancel">Hủy</button>
-                    <button type="button" class="btn btn-primary" id="save-row-btn">Lưu</button>
-                </div>
+<!-- Modal Edit Data-->
+<div class="modal fade" id="editModal" tabindex="-1" role="dialog" aria-labelledby="editModalLabel"
+    aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="editModalLabel">Edit Data</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cancel"></button>
+            </div>
+            <div class="modal-body">
+                <form id="editForm"></form> <!-- Để trống và sẽ được điền động -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"
+                    aria-label="Cancel">Hủy</button>
+                <button type="button" class="btn btn-primary" id="save-row-btn">Lưu</button>
             </div>
         </div>
     </div>
+</div>
 
-    <!-- Modal Thêm Dữ Liệu -->
-    <div class="modal fade" id="addDataModal" tabindex="-1" aria-labelledby="addDataModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="addDataModalLabel">Insert Data</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <?php foreach ($columns as $column): ?>
+<!-- Modal Thêm Dữ Liệu -->
+<div class="modal fade" id="addDataModal" tabindex="-1" aria-labelledby="addDataModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addDataModalLabel">Insert Data</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <?php foreach ($columns as $column): ?>
                     <div class="form-group">
                         <label
                             for="<?= htmlspecialchars($column->name) ?>"><?= htmlspecialchars($column->name) ?>:</label>
@@ -292,17 +289,17 @@ $globalIndexOffset = $page * $rowsPerPage;
                             id="<?= htmlspecialchars($column->name) ?>"
                             placeholder="<?= htmlspecialchars($column->name) ?>">
                     </div>
-                    <?php endforeach; ?>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
-                    <button type="button" id="add-row-btn" class="btn btn-primary">Thêm</button>
-                </div>
+                <?php endforeach; ?>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                <button type="button" id="add-row-btn" class="btn btn-primary">Thêm</button>
             </div>
         </div>
     </div>
+</div>
 
-    <script>
+<script>
     var tabId = <?= json_encode($tabId) ?>;
     var columns = <?= json_encode(array_map(function ($column) {
                         return htmlspecialchars($column->name);
@@ -1020,5 +1017,5 @@ $globalIndexOffset = $page * $rowsPerPage;
             }
         });
     });
-    </script>
+</script>
 </div>

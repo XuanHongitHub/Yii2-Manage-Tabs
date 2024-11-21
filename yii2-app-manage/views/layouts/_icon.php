@@ -1,6 +1,7 @@
 <?php
 
 $iconOptions = [
+    'right-3' => 'Mặc định',
     'stroke-widget' => 'Tiện ích',
     'stroke-home' => 'Trang chủ',
     'stroke-layout' => 'Bố cục',
@@ -39,7 +40,7 @@ $iconOptions = [
     'stroke-maps' => 'Bản đồ',
     'stroke-editors' => 'Biên tập viên',
     'stroke-knowledgebase' => 'Cơ sở tri thức',
-    'stroke-support-tickets' => 'Vé hỗ trợ'
+    'stroke-support-tickets' => 'Vé hỗ trợ',
 ];
 
 ?>
@@ -53,7 +54,7 @@ $(document).ready(function() {
     $('#icon-list .icon-item').on('click', function() {
         var selectedIcon = $(this).data('icon');
 
-        $('#selected-icon-label').text('Icon: ' + selectedIcon);
+        $('#selected-icon-label').text(selectedIcon);
         $('#selected-icon use').attr('href', '<?= Yii::getAlias('@web') ?>/images/icon-sprite.svg#' +
             selectedIcon);
 

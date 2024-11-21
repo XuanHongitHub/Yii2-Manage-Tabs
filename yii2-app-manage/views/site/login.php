@@ -14,7 +14,7 @@ $this->title = 'Đăng Nhập';
 ?>
 <div class="container-fluid p-0">
     <div class="row m-0">
-        <div ss="col-12 p-0">
+        <div class="col-12 p-0 m-0">
             <div class="login-card">
                 <div>
                     <div>

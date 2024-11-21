@@ -1,6 +1,5 @@
 <?php
 
-use app\models\User;
 use app\models\Menu;
 
 /** @var yii\web\View $this */

@@ -27,7 +27,7 @@ $this->title = 'Danh Sách Menu';
                         <div class="d-flex flex-column flex-md-row align-items-md-center">
                             <div class="me-auto mb-3 mb-md-0 text-center text-md-start">
                                 <h4>Danh sách Menu</h4>
-                                <p class="mt-1 f-m-light">Sub Menu | Sub Tab</p>
+                                <p class="mt-1 f-m-light">Menu Nhóm | Menu Đơn</p>
                             </div>
                             <div
                                 class="d-flex flex-wrap justify-content-center align-items-center me-md-2 mb-3 mb-md-0">
@@ -55,9 +55,9 @@ $this->title = 'Danh Sách Menu';
                             <table class="display border table-bordered dataTable no-footer">
                                 <thead>
                                     <tr>
-                                        <th></th>
+                                        <th style="width: 4%"></th>
                                         <th>ID</th>
-                                        <th>Tên Menu</th>
+                                        <th style="width: 20%">Tên Menu</th>
                                         <th>Icon</th>
                                         <th>Loại Menu</th>
                                         <th class="text-center">Trạng Thái</th>
@@ -68,17 +68,17 @@ $this->title = 'Danh Sách Menu';
                                     </tr>
                                 </thead>
                                 <tbody id="columnsContainer">
-                                    <?php 
-                                        $menuParents = array_filter($tabMenus, fn($menu) => $menu->parent_id === null);
-                                        $menuChildren = array_filter($tabMenus, fn($menu) => $menu->parent_id !== null);
+                                    <?php
+                                    $menuParents = array_filter($tabMenus, fn($menu) => $menu->parent_id === null);
+                                    $menuChildren = array_filter($tabMenus, fn($menu) => $menu->parent_id !== null);
                                     ?>
                                     <?php foreach ($menuParents as $parentMenu): ?>
                                     <?php if ($parentMenu->deleted != 1): ?>
                                     <tr class="parent-row" data-parent-id="<?= Html::encode($parentMenu->id) ?>">
                                         <td class="toggle-icon text-center">
-                                            <?php 
-                                                $hasChildren = array_filter($menuChildren, fn($child) => $child->parent_id == $parentMenu->id);
-                                            ?>
+                                            <?php
+                                                    $hasChildren = array_filter($menuChildren, fn($child) => $child->parent_id == $parentMenu->id);
+                                                    ?>
                                             <?php if (!empty($hasChildren)): ?>
                                             <i class="fas fa-plus-circle"></i>
                                             <?php endif; ?>
@@ -86,7 +86,7 @@ $this->title = 'Danh Sách Menu';
                                         <td>
                                             <?= Html::encode($parentMenu->id) ?>
                                         </td>
-                                        <td><?= Html::encode($parentMenu->name) ?></td>
+                                        <td class="text-nowrap"><?= Html::encode($parentMenu->name) ?></td>
                                         <td>
                                             <div class="col-2 d-flex align-items-center ms-3" id="icon-display">
                                                 <svg class="stroke-icon" width="24" height="24">
@@ -98,17 +98,15 @@ $this->title = 'Danh Sách Menu';
                                         </td>
                                         <td class="text-center">
                                             <?php if ($parentMenu->menu_type == 'menu_group'): ?>
-                                            <span class="badge badge-light-primary">Menu Con</span>
+                                            <span class="badge badge-light-primary">Menu Nhóm</span>
                                             <?php elseif ($parentMenu->menu_type == 'menu_single'): ?>
-                                            <span class="badge badge-light-danger">Tab Con</span>
-                                            <?php else: ?>
-                                            <span class="badge badge-light-dark">Không</span>
+                                            <span class="badge badge-light-danger">Menu Đơn</span>
                                             <?php endif; ?>
                                         </td>
                                         <td class="text-center">
-                                            <?= $parentMenu->status == 1 ? 
-                                                '<span class="badge badge-warning">Ẩn</span>' : 
-                                                '<span class="badge badge-success">Hiện</span>' ?>
+                                            <?= $parentMenu->status == 1 ?
+                                                        '<span class="badge badge-warning">Ẩn</span>' :
+                                                        '<span class="badge badge-success">Hiện</span>' ?>
                                         </td>
                                         <td><?= Html::encode($parentMenu->position) ?></td>
                                         <td><?= Yii::$app->formatter->asDatetime($parentMenu->created_at) ?></td>
@@ -144,7 +142,7 @@ $this->title = 'Danh Sách Menu';
                                             <!-- Không hiển thị gì -->
                                         </td>
                                         <td data-order="<?= Html::encode($childMenu->id) ?>">--</td>
-                                        <td data-order="<?= Html::encode($childMenu->name) ?>">
+                                        <td class="text-nowrap" data-order="<?= Html::encode($childMenu->name) ?>">
                                             <?= Html::encode($childMenu->name) ?></td>
                                         <td data-order="<?= Html::encode($childMenu->icon) ?>">
                                             <div class="col-2 d-flex align-items-center ms-3" id="icon-display">
@@ -157,17 +155,15 @@ $this->title = 'Danh Sách Menu';
                                         </td>
                                         <td class="text-center" data-order="<?= $childMenu->menu_type ?>">
                                             <?php if ($childMenu->menu_type == 'menu_group'): ?>
-                                            <span class="badge badge-light-primary">Menu Con</span>
+                                            <span class="badge badge-light-primary">Menu Nhóm</span>
                                             <?php elseif ($childMenu->menu_type == 'menu_single'): ?>
-                                            <span class="badge badge-light-danger">Tab Con</span>
-                                            <?php else: ?>
-                                            <span class="badge badge-light-dark">Không</span>
+                                            <span class="badge badge-light-danger">Menu Đơn</span>
                                             <?php endif; ?>
                                         </td>
                                         <td class="text-center" data-order="<?= $childMenu->status ?>">
-                                            <?= $childMenu->status == 1 ? 
-                                                '<span class="badge badge-warning">Ẩn</span>' : 
-                                                '<span class="badge badge-success">Hiện</span>' ?>
+                                            <?= $childMenu->status == 1 ?
+                                                                '<span class="badge badge-warning">Ẩn</span>' :
+                                                                '<span class="badge badge-success">Hiện</span>' ?>
                                         </td>
                                         <td data-order="<?= Html::encode($childMenu->position) ?>">
                                             <?= Html::encode($childMenu->position) ?>
@@ -185,8 +181,8 @@ $this->title = 'Danh Sách Menu';
                                                 data-position="<?= Html::encode($childMenu->position) ?>">
                                                 <i class="fas fa-edit"></i>
                                             </button>
-                                            <button class="btn btn-sm btn-info me-1" data-bs-toggle="modal"
-                                                data-bs-target="#subTabModal" data-menu-id="<?= $childMenu->id ?>">
+                                            <button class="btn btn-sm btn-info me-1"
+                                                data-menu-id="<?= $childMenu->id ?>">
                                                 <i class="fas fa-cogs"></i>
                                             </button>
                                             <button href="#" data-bs-toggle="modal" data-bs-target="#deleteModal"
@@ -211,37 +207,6 @@ $this->title = 'Danh Sách Menu';
         </div>
     </div>
 </div>
-
-<style>
-.child-row {
-    background-color: #ffffff !important;
-    color: #4171cb;
-    font-size: 0.9em;
-    display: none;
-}
-
-.child-row td {
-    padding-left: 2rem;
-}
-
-.shown+.child-row {
-    display: table-row;
-}
-
-.child-table {
-    display: none;
-    background-color: #f9f9f9;
-}
-
-.child-table td {
-    padding: 1rem;
-}
-
-.child-table table {
-    width: 100%;
-    background-color: #ffffff;
-}
-</style>
 
 <script>
 $(document).ready(function() {
@@ -518,9 +483,8 @@ document.addEventListener("DOMContentLoaded", function() {
                     <div class="mb-3">
                         <label for="tabmenuType" class="form-label">Loại Menu</label>
                         <select class="form-select" id="tabmenuType" name="menu_type" required>
-                            <option value="none">-- Không --</option>
-                            <option value="menu_group">Sub Menu</option>
-                            <option value="menu_single">Sub Tab</option>
+                            <option value="menu_group">Menu Nhóm</option>
+                            <option value="menu_single">Menu Đơn</option>
                         </select>
                     </div>
 
@@ -552,6 +516,9 @@ document.addEventListener("DOMContentLoaded", function() {
                                 </div>
                             </div>
                         </div>
+
+                        <!-- Input ẩn để lưu icon đã chọn -->
+                        <input type="hidden" id="icon-selected-value" value="">
                     </div>
 
                     <!-- Trạng thái -->
@@ -588,13 +555,13 @@ document.addEventListener("DOMContentLoaded", function() {
             </div>
             <div class="modal-body">
                 <div class="mb-3">
-                    <label for="submenu-tabs" class="form-label">Chọn Tab</label>
+                    <label for="submenu-tabs" class="form-label">Chọn Tab Con</label>
                     <select id="submenu-tabs" class="form-select form-multi-select" multiple>
                         <!-- Options sẽ được thêm qua AJAX -->
                     </select>
                 </div>
                 <div class="mb-3">
-                    <label for="submenu-menus" class="form-label">Chọn Menu</label>
+                    <label for="submenu-menus" class="form-label">Chọn Menu Con</label>
                     <select id="submenu-menus" class="form-select form-multi-select" multiple>
                         <!-- Options sẽ được thêm qua AJAX -->
                     </select>
@@ -602,7 +569,8 @@ document.addEventListener("DOMContentLoaded", function() {
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
-                <button type="button" class="btn btn-primary" id="saveSubMenuChanges">Lưu thay đổi</button>
+                <button type="button" class="btn btn-primary" id="saveSubMenuChanges" data-menu-id="">Lưu thay
+                    đổi</button>
             </div>
         </div>
     </div>
@@ -612,19 +580,16 @@ document.addEventListener("DOMContentLoaded", function() {
 
 <script>
 $(document).ready(function() {
-
-    // Khởi tạo lại Select2 sau khi thêm các mục vào danh sách
     $('.form-multi-select').select2({
         placeholder: 'Chọn',
         allowClear: true
     });
-    // Mở modal submenu và nạp dữ liệu
-    $('.btn-info').on('click', function() {
+    $(document).on('click', '.btn-info', function() {
         var menuId = $(this).data('menu-id');
+        $('#saveSubMenuChanges').attr('data-menu-id', menuId);
         $('#submenu-tabs').empty();
         $('#submenu-menus').empty();
 
-        // AJAX lấy danh sách tab/menu con hiện tại và các mục tiềm năng
         $.ajax({
             url: '<?= \yii\helpers\Url::to(['menus/get-submenu']) ?>',
             type: 'GET',
@@ -632,33 +597,46 @@ $(document).ready(function() {
                 menu_id: menuId
             },
             success: function(response) {
-                console.log("🚀 ~ $ ~ response:", response);
+                console.log("🚀 ~ response:", response);
                 if (response.success) {
-                    // Nạp dữ liệu tab/menu con đã liên kết
+                    // Nạp dữ liệu tab con đã liên kết
                     response.childTabs.forEach(tab => {
                         $('#submenu-tabs').append(
                             `<option value="${tab.id}" selected>${tab.tab_name}</option>`
                         );
                     });
-                    response.childMenus.forEach(menu => {
-                        $('#submenu-menus').append(
-                            `<option value="${menu.id}" selected>${menu.name}</option>`
-                        );
-                    });
 
-                    // Xử lý các mục tiềm năng chưa được liên kết (potentialTabs, potentialMenus)
-                    response.potentialTabs.forEach(tab => {
-                        $('#select2-tabs-results').append(
-                            `<li class="select2-results__option select2-results__option--selectable" role="option" data-select2-id="select2-data-${tab.id}">${tab.tab_name}</li>`
-                        );
-                    });
+                    // Kiểm tra menu_type
+                    if (response.menuType === 'menu_group') {
+                        // Nếu là menu_group
+                        $('#submenu-menus').parent().show(); // Hiện phần chọn Menu Con
+                        $('#submenu-tabs').parent().hide(); // Ẩn phần chọn Tab Con
 
-                    response.potentialMenus.forEach(menu => {
-                        $('#select2-menus-results').append(
-                            `<li class="select2-results__option select2-results__option--selectable" role="option" data-select2-id="select2-data-${menu.id}">${menu.name}</li>`
-                        );
-                    });
+                        // Nạp dữ liệu menu con đã liên kết
+                        response.childMenus.forEach(menu => {
+                            $('#submenu-menus').append(
+                                `<option value="${menu.id}" selected>${menu.name}</option>`
+                            );
+                        });
 
+                        // Xử lý các mục tiềm năng chưa được liên kết (potentialMenus)
+                        response.potentialMenus.forEach(menu => {
+                            $('#submenu-menus').append(
+                                `<option value="${menu.id}">${menu.name}</option>`
+                            );
+                        });
+                    } else {
+                        // Nếu không phải menu_group
+                        $('#submenu-menus').parent().hide(); // Ẩn phần chọn Menu Con
+                        $('#submenu-tabs').parent().show(); // Hiện phần chọn Tab Con
+
+                        // Xử lý các mục tiềm năng chưa được liên kết (potentialTabs)
+                        response.potentialTabs.forEach(tab => {
+                            $('#submenu-tabs').append(
+                                `<option value="${tab.id}">${tab.tab_name}</option>`
+                            );
+                        });
+                    }
 
                     // Hiển thị modal
                     $('#subTabModal').modal('show');
@@ -666,7 +644,6 @@ $(document).ready(function() {
                     alert(response.message || 'Không thể tải dữ liệu.');
                 }
             },
-
             error: function(xhr, status, error) {
                 console.log('Lỗi AJAX:', error);
                 alert('Có lỗi xảy ra khi tải dữ liệu.');
@@ -674,18 +651,24 @@ $(document).ready(function() {
         });
     });
 
+
     // Lưu thay đổi khi nhấn nút "Lưu thay đổi"
-    $('#saveSubMenuChanges').on('click', function() {
+    $(document).on('click', '#saveSubMenuChanges', function() {
+        var menuId = $(this).attr('data-menu-id'); // Sử dụng attr thay vì data
+        // alert(menuId);
         var selectedTabs = $('#submenu-tabs').val();
+        console.log("🚀 ~ $ ~ selectedTabs:", selectedTabs);
         var selectedMenus = $('#submenu-menus').val();
+        console.log("🚀 ~ $ ~ selectedMenus:", selectedMenus);
         // Gửi dữ liệu tới server để lưu thay đổi
         $.ajax({
-            url: '<?= \yii\helpers\Url::to(['menus/save-submenu']) ?>',
+            url: '<?= \yii\helpers\Url::to(['menus/save-sub-menu']) ?>',
             type: 'POST',
             headers: {
                 'X-CSRF-Token': $('meta[name="csrf-token"]').attr('content')
             },
             data: {
+                menuId: menuId,
                 selectedTabs: selectedTabs,
                 selectedMenus: selectedMenus
             },
@@ -708,7 +691,7 @@ $(document).ready(function() {
 
 $(document).ready(function() {
     // Khi nhấn nút "sửa"
-    $('.edit-btn').on('click', function() {
+    $(document).on('click', '.edit-btn', function() {
         // Lấy thông tin từ các data-* attributes của button
         var menuId = $(this).data('tab-menu-id');
         var menuName = $(this).data('menu-name');
@@ -731,7 +714,7 @@ $(document).ready(function() {
     });
 
     // Lưu thay đổi menu
-    $('#saveTabMenuChanges').on('click', function() {
+    $(document).on('click', '#saveTabMenuChanges', function() {
         var form = $('#editMenuForm');
         var menuId = form.data('menu-id');
         var menuName = $('#tabmenuName').val();
@@ -739,11 +722,11 @@ $(document).ready(function() {
         var icon = $('#selected-icon-label').text(); // Lấy icon đã chọn
         var status = $('#tabMenustatus').val();
         var position = $('#tabMenuPosition').val();
-        var selectedSubMenus = $('#selectedSubMenus').val(); // Lấy các menu con đã chọn
+
 
         // Gửi dữ liệu tới server để cập nhật menu
         $.ajax({
-            url: '<?= \yii\helpers\Url::to(['create-or-update-menu']) ?>',
+            url: '<?= \yii\helpers\Url::to(['update-menu']) ?>',
             type: 'POST',
             headers: {
                 'X-CSRF-Token': $('meta[name="csrf-token"]').attr('content')
@@ -755,7 +738,6 @@ $(document).ready(function() {
                 icon: icon,
                 status: status,
                 position: position,
-                selected_submenus: selectedSubMenus // Gửi danh sách menu con đã chọn
             },
             success: function(response) {
                 $('#editModal').modal('hide');
@@ -819,11 +801,9 @@ document.addEventListener('DOMContentLoaded', function() {
                             <td><?= htmlspecialchars($tab->name) ?></td>
                             <td class="text-center">
                                 <?php if ($tabMenu->menu_type == 'menu_group'): ?>
-                                <span class="badge badge-light-primary">Menu Con</span>
+                                <span class="badge badge-light-primary">Menu Nhóm</span>
                                 <?php elseif ($tabMenu->menu_type == 'menu_single'): ?>
-                                <span class="badge badge-light-danger">Tab Con</span>
-                                <?php else: ?>
-                                <span class="badge badge-light-dark">Không</span>
+                                <span class="badge badge-light-danger">Menu Đơn</span>
                                 <?php endif; ?>
                             </td>
                             <td class="text-nowrap">
@@ -884,11 +864,9 @@ document.addEventListener('DOMContentLoaded', function() {
                             </td>
                             <td class="text-center py-0">
                                 <?php if ($menu->menu_type == 'menu_group'): ?>
-                                <span class="badge badge-light-primary">Menu Con</span>
+                                <span class="badge badge-light-primary">Menu Nhóm</span>
                                 <?php elseif ($menu->menu_type == 'menu_single'): ?>
-                                <span class="badge badge-light-danger">Tab Con</span>
-                                <?php else: ?>
-                                <span class="badge badge-light-dark">Không</span>
+                                <span class="badge badge-light-danger">Menu Đơn</span>
                                 <?php endif; ?>
                             </td>
                             <td class="py-0" class="text-center">
