@@ -126,21 +126,28 @@ $tabMenus = Menu::find()
                 <div class="left-arrow" id="left-arrow"><i data-feather="arrow-left"></i></div>
                 <div id="sidebar-menu">
                     <ul class="sidebar-links" id="simple-bar">
-                        <li class="back-btn"><a href="<?= \yii\helpers\Url::to(['/']) ?>"><img class="img-fluid"
+                        <li class="back-btn">
+                            <a href="<?= \yii\helpers\Url::to(['/']) ?>"><img class="img-fluid"
                                     src="<?= Yii::getAlias('@web') ?>/images/logo-icon.png" alt=""></a>
                             <div class="mobile-back text-end"><span>Back</span><i class="fa fa-angle-right ps-2"
                                     aria-hidden="true"></i></div>
                         </li>
                         <li class="sidebar-main-title pt-4">
                             <div>
-                                <h6 class="lan-1">Menu </h6>
+                                <h6 class="lan-1">Menu</h6>
                             </div>
                         </li>
                         <?php if (!empty($tabMenus)): ?>
                         <?php foreach ($tabMenus as $menu): ?>
                         <?php if ($menu->parent_id === null): ?>
                         <li class="sidebar-list">
-                            <?php if ($menu->menu_type == 'menu_group'): ?>
+                            <?php
+                                        // Kiểm tra menu có con và có tab con không
+                                        $hasChildren = $menu->getChildMenus()->exists();
+                                        $hasTabs = $menu->tabs && count($menu->tabs) > 0; // Kiểm tra có tab nào không
+                                        ?>
+                            <?php if ($hasChildren): ?>
+                            <!-- Nếu có menu con hoặc tab con -->
                             <a class="sidebar-link sidebar-title" href="#">
                                 <svg class="stroke-icon">
                                     <use href="<?= Yii::getAlias('@web') ?>/images/icon-sprite.svg#<?= $menu->icon ?>">
@@ -153,7 +160,8 @@ $tabMenus = Menu::find()
                                 <div class="according-menu"><i class="fa fa-angle-right"></i></div>
                             </a>
                             <ul class="sidebar-submenu" style="display: none;">
-                                <?php foreach ($menu->getChildMenus()->where(['menu_type' => ['menu_single']])->all() as $childMenu): ?>
+                                <?php if ($hasChildren): ?>
+                                <?php foreach ($menu->getChildMenus()->all() as $childMenu): ?>
                                 <li class="sidebar-list">
                                     <a href="<?= \yii\helpers\Url::to(['/tabs', 'menuId' => $childMenu->id]) ?>"
                                         data-menu-id="<?= $childMenu->id ?>"
@@ -167,6 +175,10 @@ $tabMenus = Menu::find()
                                     </a>
                                 </li>
                                 <?php endforeach; ?>
+                                <?php endif; ?>
+
+                                <?php if ($hasTabs): ?>
+                                <!-- Nếu có tab con, hiển thị trực tiếp các tab con -->
                                 <?php foreach ($menu->tabs as $tab): ?>
                                 <?php if ($tab->status == 0): ?>
                                 <li>
@@ -182,9 +194,10 @@ $tabMenus = Menu::find()
                                 </li>
                                 <?php endif; ?>
                                 <?php endforeach; ?>
+                                <?php endif; ?>
                             </ul>
                             <?php else: ?>
-                            <!-- Xử lý trường hợp mặc định cho menu -->
+                            <!-- Xử lý trường hợp mặc định cho menu không có con và không có tab -->
                             <a class="sidebar-link sidebar-title link-nav"
                                 href="<?= \yii\helpers\Url::to(['/tabs', 'menuId' => $menu->id]) ?>"
                                 data-menu-id="<?= $menu->id ?>">
@@ -193,7 +206,6 @@ $tabMenus = Menu::find()
                                     </use>
                                 </svg>
                                 <span><?= Html::encode($menu->name) ?></span>
-                                <div class="according-menu"><i class="fa fa-angle-right"></i></div>
                             </a>
                             <?php endif; ?>
                         </li>
@@ -201,6 +213,8 @@ $tabMenus = Menu::find()
                         <?php endforeach; ?>
                         <?php endif; ?>
                     </ul>
+
+
                 </div>
                 <div class="right-arrow" id="right-arrow"><i data-feather="arrow-right"></i></div>
             </nav>

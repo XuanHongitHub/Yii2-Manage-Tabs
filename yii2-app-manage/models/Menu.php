@@ -10,7 +10,6 @@ use Yii;
  * @property int $id
  * @property string $name
  * @property string|null $icon
- * @property string $menu_type
  * @property int|null $position
  * @property int|null $status
  * @property int|null $deleted
@@ -37,7 +36,6 @@ class Menu extends \yii\db\ActiveRecord
     {
         return [
             [['name'], 'required'],
-            [['menu_type'], 'string'],
             [['position', 'status', 'deleted', 'parent_id'], 'integer'],
             [['created_at', 'updated_at'], 'safe'],
             [['name', 'icon'], 'string', 'max' => 255],
@@ -54,7 +52,6 @@ class Menu extends \yii\db\ActiveRecord
             'id' => 'ID',
             'name' => 'Name',
             'icon' => 'Icon',
-            'menu_type' => 'Group Type',
             'position' => 'Position',
             'status' => 'Status',
             'deleted' => 'Deleted',

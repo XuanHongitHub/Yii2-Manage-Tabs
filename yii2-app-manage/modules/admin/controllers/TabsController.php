@@ -44,10 +44,10 @@ class TabsController extends Controller
             ])
             ->all();
 
-        $tabMenus = Menu::find()->all();
+        $menus = Menu::find()->all();
         return $this->render('index', [
             'tabs' => $tabs,
-            'tabMenus' => $tabMenus,
+            'menus' => $menus,
         ]);
     }
     public function actionTabsCreate()

@@ -37,14 +37,14 @@ class MenusController extends Controller
     }
     public function actionIndex()
     {
-        $tabMenus = Menu::find()
+        $menus = Menu::find()
             // ->where(['parent_id' => NULL])
             ->orderBy([
-                'id' => SORT_DESC,
+                'position' => SORT_ASC,
             ])
             ->all();
         return $this->render('index', [
-            'tabMenus' => $tabMenus,
+            'menus' => $menus,
 
         ]);
     }
@@ -88,20 +88,6 @@ class MenusController extends Controller
                     throw new \Exception('Không thể lưu menu.', 1);
                 }
 
-                // // Liên kết Tabs với Menu
-                // $selectedTabs = $data['selectedTabs'] ?? [];
-                // if (!empty($selectedTabs)) {
-                //     Tab::updateAll(['menu_id' => null], ['menu_id' => $model->id]); // Xóa liên kết cũ
-                //     Tab::updateAll(['menu_id' => $model->id], ['id' => $selectedTabs]); // Thêm liên kết mới
-                // }
-
-                // // Liên kết Menu con với Menu cha
-                // $selectedMenus = $data['selectedMenus'] ?? [];
-                // if (!empty($selectedMenus)) {
-                //     Menu::updateAll(['parent_id' => null], ['parent_id' => $model->id]); // Xóa liên kết cũ
-                //     Menu::updateAll(['parent_id' => $model->id], ['id' => $selectedMenus]); // Thêm liên kết mới
-                // }
-
                 $transaction->commit();
                 return $this->asJson(['success' => true, 'message' => 'Thành công.']);
             } catch (\Exception $e) {
@@ -124,7 +110,6 @@ class MenusController extends Controller
             try {
                 $model->id = $data['id'] ?? null;
                 $model->name = $data['name'];
-                $model->menu_type = $data['menu_type'];
                 $model->icon = $data['icon'];
                 $model->status = $data['status'];
                 $model->position = $data['position'];
@@ -207,7 +192,6 @@ class MenusController extends Controller
         return [
             'success' => true,
             'isChildMenu' => $menu->parent_id !== null,
-            'menuType' => $menu->menu_type,
             'childTabs' => array_map(fn($tab) => ['id' => $tab->id, 'tab_name' => $tab->tab_name], $childTabs),
             'childMenus' => array_map(fn($menu) => ['id' => $menu->id, 'name' => $menu->name], $childMenus),
             'potentialTabs' => array_map(fn($tab) => ['id' => $tab->id, 'tab_name' => $tab->tab_name], $potentialTabs),
@@ -297,6 +281,30 @@ class MenusController extends Controller
         }
 
         return ['success' => true, 'message' => 'Sắp xếp thành công.'];
+    }
+
+    public function actionSaveSort()
+    {
+        // Kiểm tra nếu có dữ liệu gửi đến
+        if (Yii::$app->request->isAjax) {
+            $sortedIDs = Yii::$app->request->post('sortedIDs'); // Lấy mảng các ID được sắp xếp
+
+            // Lặp qua từng ID và cập nhật trường position
+            foreach ($sortedIDs as $index => $id) {
+                $menu = Menu::findOne($id); // Tìm bản ghi theo ID
+                if ($menu) {
+                    $menu->position = $index + 1; // Cập nhật vị trí (thứ tự trong mảng)
+                    $menu->save(); // Lưu thay đổi
+                }
+            }
+
+            // Trả về kết quả JSON
+            Yii::$app->response->format = Response::FORMAT_JSON;
+            return ['success' => true, 'message' => 'Sắp xếp thành công.'];
+        }
+
+        // Nếu không phải AJAX request, trả về lỗi
+        return ['success' => false, 'message' => 'Dữ liệu không hợp lệ.'];
     }
     // Sort Delete
     public function actionDeleteMenu()

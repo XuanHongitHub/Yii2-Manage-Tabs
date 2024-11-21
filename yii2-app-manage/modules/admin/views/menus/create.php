@@ -81,15 +81,15 @@ $this->title = 'Thêm Menu';
                                         <div id="icon-list" class="d-flex flex-wrap mt-2"
                                             style="display: none; overflow-y: auto; max-height: 200px; border: 1px solid #ccc; border-radius: 8px;">
                                             <?php foreach ($iconOptions as $iconValue => $iconLabel): ?>
-                                            <div class="icon-item col-2 col-md-2 col-lg-1 me-2 mb-2 text-center"
-                                                data-icon="<?= Html::encode($iconValue) ?>"
-                                                style="cursor: pointer; padding: 4px">
-                                                <svg class="stroke-icon" width="40" height="40">
-                                                    <use
-                                                        href="<?= Yii::getAlias('@web') ?>/images/icon-sprite.svg#<?= Html::encode($iconValue) ?>">
-                                                    </use>
-                                                </svg>
-                                            </div>
+                                                <div class="icon-item col-2 col-md-2 col-lg-1 me-2 mb-2 text-center"
+                                                    data-icon="<?= Html::encode($iconValue) ?>"
+                                                    style="cursor: pointer; padding: 4px">
+                                                    <svg class="stroke-icon" width="40" height="40">
+                                                        <use
+                                                            href="<?= Yii::getAlias('@web') ?>/images/icon-sprite.svg#<?= Html::encode($iconValue) ?>">
+                                                        </use>
+                                                    </svg>
+                                                </div>
                                             <?php endforeach; ?>
                                         </div>
                                     </div>
@@ -115,56 +115,47 @@ $this->title = 'Thêm Menu';
 </div>
 
 <script>
-$(document).ready(function() {
-    // Khởi tạo select2 cho các select có class .form-multi-select
-    $('.form-multi-select').select2({
-        placeholder: 'Chọn Tab',
-        allowClear: true
-    });
+    $(document).ready(function() {
+        // Khởi tạo select2 cho các select có class .form-multi-select
+        $('.form-multi-select').select2({
+            placeholder: 'Chọn Tab',
+            allowClear: true
+        });
 
-    $('#menu_type').on('change', function() {
-        var menuType = $(this).val();
-        if (menuType === 'none') {
-            $('#tabs').prop('multiple', false);
-        } else {
-            $('#tabs').prop('multiple', true);
-        }
-    });
 
-    $('#saveTabMenuChanges').on('click', function() {
-        let parentId = $('#parentId').val();
-        let menuName = $('#name').val();
-        let menuType = $('#menu_type').val();
-        let icon = $('#icon-selected-value').val();
-        let selectedTabs = $('#tabs').val();
-        let selectedMenus = $('#menus').val();
+        $('#saveTabMenuChanges').on('click', function() {
+            let parentId = $('#parentId').val();
+            let menuName = $('#name').val();
+            let icon = $('#icon-selected-value').val();
+            let selectedTabs = $('#tabs').val();
+            let selectedMenus = $('#menus').val();
 
-        console.log("🚀 ~ $ ~ selectedTabs:", selectedTabs);
-        console.log("🚀 ~ $ ~ selectedMenus:", selectedMenus);
+            console.log("🚀 ~ $ ~ selectedTabs:", selectedTabs);
+            console.log("🚀 ~ $ ~ selectedMenus:", selectedMenus);
 
-        $.ajax({
-            url: '<?= \yii\helpers\Url::to(['store-menu']) ?>',
-            type: 'POST',
-            headers: {
-                'X-CSRF-Token': $('meta[name="csrf-token"]').attr('content')
-            },
-            data: {
-                name: menuName,
-                icon,
-                parentId
-            },
-            success: function(response) {
-                if (response.success) {
-                    window.location.href =
-                        '<?= \yii\helpers\Url::to(['index']) ?>';
-                } else {
-                    alert(response.message);
+            $.ajax({
+                url: '<?= \yii\helpers\Url::to(['store-menu']) ?>',
+                type: 'POST',
+                headers: {
+                    'X-CSRF-Token': $('meta[name="csrf-token"]').attr('content')
+                },
+                data: {
+                    name: menuName,
+                    icon,
+                    parentId
+                },
+                success: function(response) {
+                    if (response.success) {
+                        window.location.href =
+                            '<?= \yii\helpers\Url::to(['index']) ?>';
+                    } else {
+                        alert(response.message);
+                    }
+                },
+                error: function(xhr, status, error) {
+                    alert('Lỗi khi lưu menu.');
                 }
-            },
-            error: function(xhr, status, error) {
-                alert('Lỗi khi lưu menu.');
-            }
+            });
         });
     });
-});
 </script>
