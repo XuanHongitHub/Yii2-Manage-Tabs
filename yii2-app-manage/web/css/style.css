@@ -45262,6 +45262,10 @@ footer p .footer-icon {
   margin-top: 5px;
 }
 
+#icon-display svg {
+  margin-left: 0.625rem;
+}
+
 .stroke-icon {
   width: 24px;
   height: 24px;
@@ -45334,4 +45338,21 @@ footer p .footer-icon {
 
 .toggle-icon i {
   transition: transform 0.2s;
+}
+
+.child-row {
+  display: none;
+}
+
+.parent-row td {
+  background-color: #ffffff !important;
+}
+
+.child-row td {
+  background-color: #ffffff !important;
+  color: #4171cb !important;
+}
+
+.shown+.child-row {
+  display: table-row;
 }

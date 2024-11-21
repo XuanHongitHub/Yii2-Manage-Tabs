@@ -43,9 +43,11 @@ class MenusController extends Controller
                 'position' => SORT_ASC,
             ])
             ->all();
+        $tabs = Tab::find()
+            ->all();
         return $this->render('index', [
             'menus' => $menus,
-
+            'tabs' => $tabs,
         ]);
     }
     public function actionCreate()
