@@ -51,6 +51,8 @@ class AppAsset extends AssetBundle
         'js/custom-notify.js',
         'js/script.js',
         'js/jquery-ui.js',
+        'js/sweet-alert.min.js',
+
     ];
     public $depends = [
         // 'yii\web\YiiAsset',

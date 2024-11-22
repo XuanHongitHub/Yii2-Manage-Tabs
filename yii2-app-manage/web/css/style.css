@@ -45333,7 +45333,8 @@ footer p .footer-icon {
 .toggle-icon {
   cursor: pointer;
   font-size: 1.2em;
-  color: #4171cb;
+  color: #4171cb !important;
+
 }
 
 .toggle-icon i {

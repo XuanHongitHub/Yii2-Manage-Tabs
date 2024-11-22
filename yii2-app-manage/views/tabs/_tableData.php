@@ -38,8 +38,8 @@ $globalIndexOffset = $page * $rowsPerPage;
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="importExelModalLabel">Nhập Excel</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
+                <h4 class="modal-title" id="importExelModalLabel">Nhập Excel</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
             </div>
             <div class="modal-body">
                 <form id="importExcelForm" enctype="multipart/form-data">
@@ -60,8 +60,8 @@ $globalIndexOffset = $page * $rowsPerPage;
     <div class="modal-dialog modal-dialog-scrollable modal-lg">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="confirmModalLabel">Vấn Đề</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
+                <h4 class="modal-title" id="confirmModalLabel">Vấn Đề</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
             </div>
             <div class="modal-body" id="confirmMessage">Bạn có chắc chắn muốn tiếp tục?</div>
             <div class="modal-footer">
@@ -78,8 +78,8 @@ $globalIndexOffset = $page * $rowsPerPage;
     <div class="modal-dialog modal-dialog-scrollable modal-lg">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="importStatusModalLabel">Trạng Thái Nhập</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
+                <h4 class="modal-title" id="importStatusModalLabel">Trạng Thái Nhập</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
             </div>
             <pre class="modal-body text-wrap" id="importStatusMessage">
             </pre>
@@ -256,8 +256,8 @@ $globalIndexOffset = $page * $rowsPerPage;
     <div class="modal-dialog" role="document">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="editModalLabel">Edit Data</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cancel"></button>
+                <h4 class="modal-title" id="editModalLabel">Edit Data</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cancel"></button>
             </div>
             <div class="modal-body">
                 <form id="editForm"></form> <!-- Để trống và sẽ được điền động -->
@@ -276,8 +276,8 @@ $globalIndexOffset = $page * $rowsPerPage;
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="addDataModalLabel">Insert Data</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                <h4 class="modal-title" id="addDataModalLabel">Insert Data</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
                 <?php foreach ($columns as $column): ?>

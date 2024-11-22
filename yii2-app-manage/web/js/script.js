@@ -4,6 +4,7 @@
         03. sidebar filter
         04. Language js
         05. Translate js
+        06. Sweet Alert js
  --------------------------------------------------------------------------------- */
 (function ($) {
   "use strict";

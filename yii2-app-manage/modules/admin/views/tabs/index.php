@@ -133,8 +133,8 @@ $this->title = 'List Tabs';
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="editModalLabel">Sửa Tab</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                <h4 class="modal-title" id="editModalLabel">Sửa Tab</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
                 <form id="editTabForm">
@@ -238,8 +238,8 @@ $this->title = 'List Tabs';
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="trashBinModalLabel">Thùng Rác</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                <h4 class="modal-title" id="trashBinModalLabel">Thùng Rác</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
                 <p>Chọn tab bạn muốn khôi phục hoặc xóa hoàn toàn:</p>
@@ -282,7 +282,7 @@ $this->title = 'List Tabs';
                         <?php if (!$hasDeletedTabs): ?>
                             <tr>
                                 <td colspan="2" class="text-center text-muted">
-                                    <em>There is nothing here.</em>
+                                    <em>Không có gì ở đây.</em>
                                 </td>
                             </tr>
                         <?php endif; ?>
@@ -301,8 +301,8 @@ $this->title = 'List Tabs';
     <div class="modal-dialog modal-lg modal-dialog-scrollable">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="hideModalLabel">Hiện/Ẩn Tab</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cancel"></button>
+                <h4 class="modal-title" id="hideModalLabel">Hiện/Ẩn Tab</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cancel"></button>
             </div>
             <div class="modal-body">
                 <p class="pb-0 mb-0">Chọn tab bạn muốn ẩn hoặc hiển thị:</p>
@@ -355,8 +355,8 @@ $this->title = 'List Tabs';
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="sortModalLabel">Sắp Xếp</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cancel"></button>
+                <h4 class="modal-title" id="sortModalLabel">Sắp Xếp</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cancel"></button>
             </div>
             <div class="modal-body">
                 <p>Kéo và thả để sắp xếp các tab.</p>
@@ -389,8 +389,8 @@ $this->title = 'List Tabs';
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="deleteModalLabel">Xác nhận xóa tab</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                <h4 class="modal-title" id="deleteModalLabel">Xác nhận xóa tab</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
                 Bạn có chắc chắn muốn xóa tab này không? Không thể hoàn tác hành động này.
