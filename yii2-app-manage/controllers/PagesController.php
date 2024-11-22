@@ -7,7 +7,7 @@ use app\models\User;
 use yii\web\Response;
 use yii\web\Controller;
 use app\models\Page;
-use app\models\TableTab;
+
 use app\models\Menu;
 use yii\filters\VerbFilter;
 use yii\filters\AccessControl;
@@ -22,7 +22,7 @@ use PhpOffice\PhpSpreadsheet\IOFactory;
 use yii\db\Schema;
 use yii\web\NotFoundHttpException;
 
-class TabsController extends Controller
+class PagesController extends Controller
 {
     /**
      * {@inheritdoc}
@@ -47,7 +47,7 @@ class TabsController extends Controller
     }
 
     /**
-     * Displays Manage Tabs.
+     * Displays Manage Page.
      *
      * @return string
      */
@@ -60,16 +60,15 @@ class TabsController extends Controller
             $menu = Menu::findOne($menuId);
 
             if ($menu) {
-                $tabs = Page::find()
+                $pages = Page::find()
                     ->where(['status' => 0, 'menu_id' => $menuId])
                     ->orderBy(['position' => SORT_ASC, 'id' => SORT_DESC])
                     ->all();
 
-                $tableTabs = TableTab::find()->all();
 
                 return $this->render('menu', [
-                    'tabs' => $tabs,
-                    'tableTabs' => $tableTabs,
+                    'pages' => $pages,
+                    // 'tableTabs' => $tableTabs,
                 ]);
             }
         }
@@ -79,11 +78,11 @@ class TabsController extends Controller
                 ->where(['status' => 0, 'id' => $pageId])
                 ->one();
 
-            $tableTabs = TableTab::find()->all();
+            // $tableTabs = TableTab::find()->all();
 
             return $this->render('page', [
                 'page_item' => $page_item,
-                'tableTabs' => $tableTabs,
+                // 'tableTabs' => $tableTabs,
             ]);
         }
 
@@ -96,11 +95,11 @@ class TabsController extends Controller
      * Load Page Data Action.
      *
      */
-    public function actionLoadTabData($pageId)
+    public function actionLoadPageData($pageId)
     {
         $pageId = Yii::$app->request->get('pageId');
 
-        $page = Page::findOne($pageId);
+        $pageTab = Page::findOne($pageId);
         $userId = Yii::$app->user->id;
 
         // Retrieve search keyword if it exists
@@ -114,12 +113,12 @@ class TabsController extends Controller
             return 'No data';
         }
 
-        $tabType = $page->tab_type;
+        $pageType = $pageTab->type;
 
-        if ($tabType === 'table') {
+        if ($pageType === 'table') {
             // Table Page
-            $tableTab = TableTab::find()->where(['tab_id' => $pageId])->one();
-            $tableName = $tableTab ? $tableTab->table_name : null;
+            // $tableTab = TableTab::find()->where(['pageId' => $pageId])->one();
+            $tableName = $pageTab ? $pageTab->table_name : null;
 
             if ($tableName) {
                 $columns = Yii::$app->db->schema->getTableSchema($tableName)->columns;
@@ -156,7 +155,7 @@ class TabsController extends Controller
                     'pageSize' => $pageSize,
                 ]);
             }
-        } elseif ($tabType === 'richtext') {
+        } elseif ($pageType === 'richtext') {
             // Richtext Page
             $filePath = Yii::getAlias('@runtime/richtext/' . $pageId . '.txt');
             $content = file_exists($filePath) ? file_get_contents($filePath) : '';
@@ -194,14 +193,14 @@ class TabsController extends Controller
      * Download RichtextData Action.
      *
      */
-    public function actionDownload($tab_id)
+    public function actionDownload($pageId)
     {
-        $filePath = Yii::getAlias('@runtime/richtext/' . $tab_id . '.txt');
+        $filePath = Yii::getAlias('@runtime/richtext/' . $pageId . '.txt');
 
         if (file_exists($filePath)) {
             return Yii::$app->response->sendFile($filePath);
         } else {
-            throw new \yii\web\NotFoundHttpException('Không tìm thấy tệp tin.');
+            throw new NotFoundHttpException('Không tìm thấy tệp tin.');
         }
     }
     /** 
@@ -282,7 +281,7 @@ class TabsController extends Controller
             return $this->asJson([
                 'success' => true,
                 'totalPages' => $totalPages,
-                'redirect' => '/tabs',
+                'redirect' => '/pages',
             ]);
         } catch (\Exception $e) {
             return $this->asJson(['success' => false, 'message' => $e->getMessage()]);

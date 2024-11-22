@@ -198,3 +198,12 @@
     });
   });
 })(jQuery);
+
+
+function showToast(message) {
+  document.getElementById('toast-body').textContent = message;
+
+  const toastElement = document.getElementById('liveToast');
+  const toast = new bootstrap.Toast(toastElement);
+  toast.show();
+}

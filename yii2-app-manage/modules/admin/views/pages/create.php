@@ -3,7 +3,6 @@
 use yii\helpers\Html;
 
 /** @var yii\web\View $this */
-/** @var app\models\TableTab[] $tableTabs */
 $tableCreationData = Yii::$app->session->getFlash('tableCreationData', []);
 
 $this->title = 'Create Tabs';
@@ -17,42 +16,10 @@ $defaultValues = $tableCreationData['defaultValues'] ?? [];
 $isNotNull = $tableCreationData['isNotNull'] ?? [];
 $isPrimary = $tableCreationData['isPrimary'] ?? [];
 
+
 ?>
 <?php include Yii::getAlias('@app/views/layouts/_sidebar-settings.php'); ?>
 
-<div class="toast-container position-fixed top-0 end-0 p-3 toast-index toast-rtl">
-    <div class="toast fade" id="liveToast" role="alert" aria-live="assertive" aria-atomic="true">
-        <div class="toast-header">
-            <strong class="me-auto">Thông báo</strong>
-            <small id="toast-timestamp"></small>
-            <button class="btn-close" type="button" data-bs-dismiss="toast" aria-label="Close"></button>
-        </div>
-        <div class="toast-body" id="toast-body">Msg</div>
-    </div>
-</div>
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        // Check if there's a success message
-        const successMessage = "<?= Yii::$app->session->getFlash('success') ?>";
-        const errorMessage = "<?= Yii::$app->session->getFlash('error') ?>";
-
-        if (successMessage) {
-            document.getElementById('toast-body').textContent = successMessage;
-            document.getElementById('toast-timestamp').textContent = new Date().toLocaleTimeString();
-            const toastElement = document.getElementById('liveToast');
-            const toast = new bootstrap.Toast(toastElement);
-            toast.show();
-        }
-
-        if (errorMessage) {
-            document.getElementById('toast-body').textContent = errorMessage;
-            document.getElementById('toast-timestamp').textContent = new Date().toLocaleTimeString();
-            const toastElement = document.getElementById('liveToast');
-            const toast = new bootstrap.Toast(toastElement);
-            toast.show();
-        }
-    });
-</script>
 
 <div class="page-body">
     <div class="container-fluid">
@@ -71,30 +38,47 @@ $isPrimary = $tableCreationData['isPrimary'] ?? [];
                         <p class="mt-1 f-m-light">Thêm Table Tab | Richtext Tab</p>
                     </div>
                     <div class="card-body">
-                        <form action="<?= \yii\helpers\Url::to(['create-tab']) ?>" method="post">
+                        <form action="<?= \yii\helpers\Url::to(['store']) ?>" method="post">
                             <?= Html::hiddenInput(Yii::$app->request->csrfParam, Yii::$app->request->csrfToken) ?>
 
                             <div class="row">
+                                <!-- Tên Page -->
                                 <div class="col-12 col-md-6 col-lg-3 col-xl-3 mb-3">
-                                    <label for="tab_name" class="form-label">Tên Tab</label>
-                                    <input type="text" name="tab_name" class="form-control" id="tab_name"
-                                        value="<?= $tableCreationData['tabName'] ?? ''; ?>">
-                                    <?php if (Yii::$app->session->hasFlash('error_tab_name')): ?>
-                                        <div class="text-danger"><?= Yii::$app->session->getFlash('error_tab_name') ?></div>
+                                    <label for="pageName" class="form-label">Tên Page</label>
+                                    <input type="text" name="pageName" class="form-control" id="pageName"
+                                        value="<?= $tableCreationData['pageName'] ?? ''; ?>">
+                                    <!-- Thông báo lỗi sẽ hiển thị ở đây -->
+                                    <?php if (Yii::$app->session->hasFlash('error_page_Name')): ?>
+                                        <div class="text-danger"><?= Yii::$app->session->getFlash('error_page_Name') ?>
+                                        </div>
+                                    <?php else: ?>
+                                        <span id="pageNameError" class="text-danger"></span>
                                     <?php endif; ?>
                                 </div>
 
-                                <!-- Chọn loại tab -->
+                                <!-- Chọn loại page -->
                                 <div class="col-12 col-md-6 col-lg-3 col-xl-2 mb-3">
-                                    <label for="tab_type" class="form-label">Loại Tab</label>
-                                    <select name="tab_type" id="tab_type" class="form-select"
-                                        onchange="toggleTabInputs()">
+                                    <label for="type" class="form-label">Loại Page</label>
+                                    <select name="type" id="type" class="form-select" onchange="toggleTabInputs()">
                                         <option value="table">Table</option>
                                         <option value="richtext">Rich Text</option>
                                     </select>
                                 </div>
 
-                                <!-- Phần input cho loại tab "Table" -->
+                                <!-- TABLE NAME -->
+                                <div class="col-12 col-md-6 col-lg-3 col-xl-3 mb-3" id="tableNameInput">
+                                    <label for="table_name" class="form-label">Tên Bảng</label>
+                                    <input type="text" name="table_name" class="form-control" id="table_name"
+                                        value="<?= $tableCreationData['tableName'] ?? ''; ?>">
+                                    <?php if (Yii::$app->session->hasFlash('error_tableName')): ?>
+                                        <div class="text-danger"><?= Yii::$app->session->getFlash('error_tableName') ?>
+                                        </div>
+                                    <?php else: ?>
+                                        <span id="table_nameError" class="text-danger"></span>
+                                    <?php endif; ?>
+                                </div>
+
+                                <!-- Phần input cho loại page "Table" -->
                                 <div id="tableInputs" style="display: none;">
                                     <div class="table-responsive">
                                         <table class="table table-bordered">
@@ -205,19 +189,160 @@ $isPrimary = $tableCreationData['isPrimary'] ?? [];
         </div>
     </div>
 </div>
-
-
+</div>
 
 <script>
-    function toggleTabInputs() {
-        var tabType = document.getElementById('tab_type').value;
-        document.getElementById('tableInputs').style.display = tabType === 'table' ? 'block' :
-            'none';
-    }
-
-    document.addEventListener("DOMContentLoaded", function() {
+    $(document).ready(function() {
+        // Kiểm tra trạng thái ban đầu của form khi trang được tải
         toggleTabInputs();
+
+        // Lắng nghe sự kiện input trên các trường pageName và tableName
+        $('#pageName, #table_name').on('input', function() {
+            validateField(this);
+        });
+
+        // Lắng nghe sự thay đổi trên loại page để toggle các input tương ứng
+        $('#type').on('change', function() {
+            toggleTabInputs();
+        });
+
+        // Hàm kiểm tra trạng thái hiển thị của các inputs dựa trên loại page
+        function toggleTabInputs() {
+            var type = $('#type').val();
+            var tableInputs = $('#tableInputs');
+            var tableNameInput = $('#tableNameInput');
+
+            if (type === 'table') {
+                tableInputs.show();
+                tableNameInput.show();
+            } else {
+                tableInputs.hide();
+                tableNameInput.hide();
+            }
+        }
+
+        $('form').on('submit', function(event) {
+            var isValid = true;
+
+            // Kiểm tra tất cả các trường input và select
+            $('#pageName, #table_name').each(function() {
+                if ($(this).val() === '') {
+                    validateField(this); // Gọi hàm validate cho trường hợp rỗng
+                    isValid = false;
+                }
+            });
+
+            // Kiểm tra bảng các cột
+            $('#columnsContainer tr').each(function() {
+                var columnName = $(this).find('input[name="columns[]"]').val();
+                if (columnName === '') {
+                    isValid = false;
+                    $(this).find('input[name="columns[]"]').css('border', '1px solid red').addClass(
+                        'is-invalid');
+                }
+            });
+
+            // Nếu form không hợp lệ, ngừng submit
+            if (!isValid) {
+                event.preventDefault(); // Ngừng submit
+                showToast('Vui lòng kiểm tra lại các trường bắt buộc!');
+
+            }
+        });
+
+        // Hàm kiểm tra và hiển thị lỗi cho từng trường input
+        function validateField(inputElement) {
+            var fieldId = $(inputElement).attr('id');
+            var fieldValue = $(inputElement).val();
+            var errorMessage = $('#' + fieldId + 'Error');
+            var fieldName = fieldId === 'pageName' ? 'Page' : 'Table';
+            var errorMessageText = '';
+
+            if (fieldValue === '') {
+                errorMessageText = `${fieldName} không được để trống!`;
+                errorMessage.text(errorMessageText).show();
+                $(inputElement).css('border', '1px solid red').addClass('is-invalid').removeClass('is-valid');
+            } else {
+                errorMessage.text('').hide();
+                $(inputElement).css('border', '1px solid green').addClass('is-valid').removeClass('is-invalid');
+            }
+        }
+
+        function checkIfPageNameExists(pageName) {
+            $.ajax({
+                url: '<?= \yii\helpers\Url::to(['pages/check-name-existence']) ?>',
+                method: 'POST',
+                headers: {
+                    'X-CSRF-Token': $('meta[name="csrf-token"]').attr('content') // Lấy CSRF token
+                },
+                data: {
+                    pageName: pageName
+                },
+                success: function(response) {
+                    if (response.pageExists) {
+                        $('#pageNameError')
+                            .text('Tên Page đã tồn tại.')
+                            .show();
+                        $('#pageName')
+                            .css('border', '1px solid red')
+                            .addClass('is-invalid')
+                            .removeClass('is-valid')
+                    } else {
+                        $('#pageNameError')
+                            .text('')
+                            .hide();
+                        $('#pageName')
+                            .css('border', '1px solid green')
+                            .addClass('is-valid')
+                            .removeClass('is-invalid');
+                    }
+                },
+                error: function() {
+                    alert("Có lỗi xảy ra khi kiểm tra sự tồn tại tên Page.");
+                }
+            });
+        }
+
+        // Hàm gửi AJAX kiểm tra sự tồn tại của tableName
+        function checkIfTableNameExists(tableName) {
+            $.ajax({
+                url: '<?= \yii\helpers\Url::to(['pages/check-name-existence']) ?>',
+                method: 'POST',
+                headers: {
+                    'X-CSRF-Token': $('meta[name="csrf-token"]').attr('content') // Lấy CSRF token
+                },
+                data: {
+                    tableName: tableName
+                },
+                success: function(response) {
+                    if (response.tableExists) {
+                        $('#table_nameError')
+                            .text('Tên Bảng đã tồn tại.')
+                            .show();
+                        $('#tableNameInput input')
+                            .css('border', '1px solid red')
+                            .addClass('is-invalid')
+                            .removeClass('is-valid')
+
+                    } else {
+                        $('#table_nameError')
+                            .text('')
+                            .hide();
+                        $('#tableNameInput input')
+                            .css('border', '1px solid green')
+                            .addClass('is-valid')
+                            .removeClass('is-invalid')
+
+                    }
+                },
+                error: function() {
+                    alert("Có lỗi xảy ra khi kiểm tra sự tồn tại tên Bảng.");
+                }
+            });
+        }
+
     });
+
 
     function addColumn() {
         const columnsContainer = document.getElementById('columnsContainer');

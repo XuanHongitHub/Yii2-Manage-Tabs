@@ -7,13 +7,11 @@ services:
       dockerfile: Dockerfile
     volumes:
       - .:/var/www
-      - ./php/php.ini:/usr/local/etc/php/php.ini 
+      - ./php/php.ini:/usr/local/etc/php/php.ini
     ports:
       - "9090:9090"
-    networks:
-      - app-network
     depends_on:
-      - mysql
+      - db
     stop_grace_period: 600s
 
   nginx:
@@ -23,32 +21,16 @@ services:
     volumes:
       - .:/var/www
       - ./nginx/nginx.conf:/etc/nginx/nginx.conf
-      - ./nginx/snippets:/etc/nginx/snippets 
+      - ./nginx/snippets:/etc/nginx/snippets
     depends_on:
       - php
-    networks:
-      - app-network
     stop_grace_period: 600s
 
-  mysql:
-    image: mysql:5.7
+  db:
+    image: postgres
     restart: always
-    environment:
-      MYSQL_ROOT_PASSWORD: root_password 
-      MYSQL_DATABASE: yii_manage
-      MYSQL_USER: yii_manage 
-      MYSQL_PASSWORD: yii_manage
-    volumes:
-      - mysql_data:/var/lib/mysql
-    networks:
-      - app-network
+    shm_size: 128mb
     ports:
-      - "33063:3306"
-    stop_grace_period: 600s
-
-networks:
-  app-network:
-    driver: bridge
-
-volumes:
-  mysql_data:
+      - 5432:5432
+    environment:
+      POSTGRES_PASSWORD: root

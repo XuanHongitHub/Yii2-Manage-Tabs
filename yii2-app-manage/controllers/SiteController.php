@@ -12,8 +12,8 @@ use app\models\SignupForm;
 use app\models\ChangePasswordForm;
 use app\models\ContactForm;
 use app\models\User;
-use app\models\Tab;
-use app\models\TableTab;
+use app\models\Page;
+
 use yii\db\Exception;
 
 class SiteController extends Controller
@@ -80,7 +80,7 @@ class SiteController extends Controller
      */
     public function actionIndex()
     {
-        $tabs = Tab::find()
+        $pages = Page::find()
             ->andWhere(['deleted' => 0])
             ->orderBy([
                 'position' => SORT_ASC,
@@ -91,7 +91,7 @@ class SiteController extends Controller
         // $tableTabs = TableTab::find()->all();
 
         return $this->render('index', [
-            'tabs' => $tabs,
+            'pages' => $pages,
             // 'tableTabs' => $tableTabs,
         ]);
     }
@@ -126,7 +126,7 @@ class SiteController extends Controller
         $model = new SignupForm();
 
         if ($model->load(Yii::$app->request->post()) && $model->signup()) {
-            Yii::$app->session->setFlash('success', 'Thank you for registration. Please check your inbox for verification email.');
+            Yii::$app->session->setFlash('success', 'Đăng ký thành công.');
 
             return $this->redirect(['login']);
         }

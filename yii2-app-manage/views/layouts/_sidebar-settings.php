@@ -7,11 +7,11 @@ use yii\bootstrap5\Html;
 use app\assets\Select2Asset;
 
 use app\models\User;
-use app\models\Tab;
+use app\models\Page;
 use app\models\Menu;
 
 $isAdmin = User::isUserAdmin(Yii::$app->user->identity->username);
-$tabsWithoutGroup = Tab::find()->where(['menu_id' => null])->all();
+$tabsWithoutGroup = Page::find()->where(['menu_id' => null])->all();
 
 Select2Asset::register($this);
 
@@ -41,26 +41,26 @@ Select2Asset::register($this);
                 <li class="profile-nav onhover-dropdown p-0">
                     <div class="d-flex align-items-center profile-media">
                         <?php if (!Yii::$app->user->isGuest): ?>
-                        <svg style="margin-bottom: -5px; width: 30px !important; height: 30px !important;">
-                            <use href="<?= Yii::getAlias('@web') ?>/images/icon-sprite.svg#fill-user"></use>
-                        </svg>
-                        <div class="flex-grow-1">
-                            <span><?= Html::encode(Yii::$app->user->identity->username) ?></span>
-                            <p class="mb-0">
-                                <?php if (Yii::$app->user->identity->role == 10): ?>
-                                User
-                                <?php elseif (Yii::$app->user->identity->role == 20): ?>
-                                Admin
-                                <?php else: ?>
-                                <?= Html::encode(Yii::$app->user->identity->role) ?>
-                                <?php endif; ?>
-                                <i class="middle fa fa-angle-down"></i>
-                            </p>
+                            <svg style="margin-bottom: -5px; width: 30px !important; height: 30px !important;">
+                                <use href="<?= Yii::getAlias('@web') ?>/images/icon-sprite.svg#fill-user"></use>
+                            </svg>
+                            <div class="flex-grow-1">
+                                <span><?= Html::encode(Yii::$app->user->identity->username) ?></span>
+                                <p class="mb-0">
+                                    <?php if (Yii::$app->user->identity->role == 10): ?>
+                                        User
+                                    <?php elseif (Yii::$app->user->identity->role == 20): ?>
+                                        Admin
+                                    <?php else: ?>
+                                        <?= Html::encode(Yii::$app->user->identity->role) ?>
+                                    <?php endif; ?>
+                                    <i class="middle fa fa-angle-down"></i>
+                                </p>
 
-                        </div>
+                            </div>
                     </div>
                     <ul class="profile-dropdown onhover-show-div">
-                        <li><a href="<?= Yii::$app->urlManager->createUrl(['admin/tabs/index']) ?>"><span><i
+                        <li><a href="<?= Yii::$app->urlManager->createUrl(['admin/pages/index']) ?>"><span><i
                                         class="fa-solid fa-gear me-2"></i>Cài đặt</span></a></li>
                         <li><a href="<?= Yii::$app->urlManager->createUrl(['site/change-password']) ?>"><span><i
                                         class="fa-solid fa-key me-2"></i></i>Đổi mật khẩu</span></a></li>
@@ -74,7 +74,7 @@ Select2Asset::register($this);
                             </form>
                         </li>
                     </ul>
-                    <?php else: ?>
+                <?php else: ?>
                     <div class="auth-buttons">
                         <a href="<?= Yii::$app->urlManager->createUrl(['site/login']) ?>" class="btn btn-primary me-1">
                             <i class="fa-solid fa-right-to-bracket"></i> Login
@@ -84,7 +84,7 @@ Select2Asset::register($this);
                             <i class="fa-solid fa-user-plus"></i> Sign Up
                         </a>
                     </div>
-                    <?php endif; ?>
+                <?php endif; ?>
                 </li>
         </div>
 
@@ -143,16 +143,16 @@ Select2Asset::register($this);
                                 </svg>
                                 <svg class="fill-icon">
                                     <use href="<?= Yii::getAlias('@web') ?>/images/icon-sprite.svg#fill-social"></use>
-                                </svg><span>Quản Lý Tab</span>
+                                </svg><span>Quản Lý Page</span>
                                 <div class="according-menu"><i class="fa fa-angle-right"></i></div>
                             </a>
                             <ul class="sidebar-submenu" style="display: none;">
-                                <li><a href="<?= \yii\helpers\Url::to(['tabs/index']) ?>">
+                                <li><a href="<?= \yii\helpers\Url::to(['pages/index']) ?>">
                                         <svg class="svg-menu">
                                             <use href="<?= Yii::getAlias('@web') ?>/images/icon-sprite.svg#right-3">
                                             </use>
                                         </svg>Danh sách</a></li>
-                                <li><a href="<?= \yii\helpers\Url::to(['tabs/tabs-create']) ?>">
+                                <li><a href="<?= \yii\helpers\Url::to(['pages/create']) ?>">
                                         <svg class="svg-menu">
                                             <use href="<?= Yii::getAlias('@web') ?>/images/icon-sprite.svg#right-3">
                                             </use>
@@ -166,7 +166,7 @@ Select2Asset::register($this);
                                 </svg>
                                 <svg class="fill-icon">
                                     <use href="<?= Yii::getAlias('@web') ?>/images/icon-sprite.svg#fill-icons"></use>
-                                </svg><span>Menu tab</span>
+                                </svg><span>Menu page</span>
                                 <div class="according-menu"><i class="fa fa-angle-right"></i></div>
                             </a>
                             <ul class="sidebar-submenu" style="display: none;">
@@ -184,18 +184,18 @@ Select2Asset::register($this);
                         </li>
 
                         <?php if ($isAdmin): ?>
-                        <li class="sidebar-list"><a class="sidebar-link sidebar-title link-nav"
-                                href="<?= \yii\helpers\Url::to(['users/index']) ?>">
-                                <svg class="stroke-icon">
-                                    <use href="<?= Yii::getAlias('@web') ?>/images/icon-sprite.svg#stroke-user">
-                                    </use>
-                                </svg>
-                                <svg class="fill-icon">
-                                    <use href="<?= Yii::getAlias('@web') ?>/images/icon-sprite.svg#fill-user">
-                                    </use>
-                                </svg><span>Người dùng</span>
-                            </a>
-                        </li>
+                            <li class="sidebar-list"><a class="sidebar-link sidebar-title link-nav"
+                                    href="<?= \yii\helpers\Url::to(['users/index']) ?>">
+                                    <svg class="stroke-icon">
+                                        <use href="<?= Yii::getAlias('@web') ?>/images/icon-sprite.svg#stroke-user">
+                                        </use>
+                                    </svg>
+                                    <svg class="fill-icon">
+                                        <use href="<?= Yii::getAlias('@web') ?>/images/icon-sprite.svg#fill-user">
+                                        </use>
+                                    </svg><span>Người dùng</span>
+                                </a>
+                            </li>
                         <?php endif; ?>
                     </ul>
                 </div>

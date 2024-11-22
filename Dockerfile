@@ -7,19 +7,16 @@ RUN apt-get update && apt-get install -y \
     libjpeg62-turbo-dev \
     libpng-dev \
     libzip-dev \
+    libpq-dev \
     zip \
     unzip \
     git \
     curl \
     && docker-php-ext-configure gd --with-freetype --with-jpeg \
-    && docker-php-ext-install gd pdo pdo_mysql zip pcntl
+    && docker-php-ext-install gd pdo pdo_pgsql zip pcntl
 
 # Cài đặt Composer (quản lý các gói PHP)
 RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
-
-# Cài đặt Node.js và NPM
-RUN curl -sL https://deb.nodesource.com/setup_18.x | bash - \
-    && apt-get install -y nodejs
 
 # Thiết lập thư mục làm việc
 WORKDIR /var/www

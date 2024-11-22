@@ -94,16 +94,7 @@ $this->title = 'Manage Users';
 
 
 
-<div class="toast-container position-fixed top-0 end-0 p-3 toast-index toast-rtl">
-    <div class="toast fade" id="liveToast" role="alert" aria-live="assertive" aria-atomic="true">
-        <div class="toast-header">
-            <strong class="me-auto">Thông báo</strong>
-            <small id="toast-timestamp"></small>
-            <button class="btn-close" type="button" data-bs-dismiss="toast" aria-label="Close"></button>
-        </div>
-        <div class="toast-body" id="toast-body">Thông Báo</div>
-    </div>
-</div>
+
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         // Check if there's a success message

@@ -17,7 +17,7 @@ use Yii;
  * @property string $created_at
  * @property string $updated_at
  *
- * @property Tab[] $tabs
+ * @property Page[] $pages
  */
 class Menu extends \yii\db\ActiveRecord
 {
@@ -68,7 +68,7 @@ class Menu extends \yii\db\ActiveRecord
      */
     public function getTabs()
     {
-        return $this->hasMany(Tab::class, ['menu_id' => 'id']);
+        return $this->hasMany(Page::class, ['menu_id' => 'id']);
     }
     public function getChildMenus()
     {

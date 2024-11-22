@@ -6,7 +6,7 @@
 use yii\bootstrap5\Html;
 
 use app\models\User;
-use app\models\Tab;
+use app\models\Page;
 use app\models\Menu;
 
 $isAdmin = User::isUserAdmin(Yii::$app->user->identity->username);
@@ -62,7 +62,7 @@ $tabMenus = Menu::find()
                         </div>
                     </div>
                     <ul class="profile-dropdown onhover-show-div">
-                        <li><a href="<?= Yii::$app->urlManager->createUrl(['admin/tabs/index']) ?>"><span><i
+                        <li><a href="<?= Yii::$app->urlManager->createUrl(['admin/pages/index']) ?>"><span><i
                                         class="fa-solid fa-gear me-2"></i>Cài đặt</span></a></li>
                         <li><a href="<?= Yii::$app->urlManager->createUrl(['site/change-password']) ?>"><span><i
                                         class="fa-solid fa-key me-2"></i></i>Đổi mật khẩu</span></a></li>
@@ -142,12 +142,11 @@ $tabMenus = Menu::find()
                         <?php if ($menu->parent_id === null): ?>
                         <li class="sidebar-list">
                             <?php
-                                        // Kiểm tra menu có con và có tab con không
+                                        // Kiểm tra menu có con và có page con không
                                         $hasChildren = $menu->getChildMenus()->exists();
-                                        $hasTabs = $menu->tabs && count($menu->tabs) > 0; // Kiểm tra có tab nào không
                                         ?>
                             <?php if ($hasChildren): ?>
-                            <!-- Nếu có menu con hoặc tab con -->
+                            <!-- Nếu có menu con hoặc page con -->
                             <a class="sidebar-link sidebar-title" href="#">
                                 <svg class="stroke-icon">
                                     <use href="<?= Yii::getAlias('@web') ?>/images/icon-sprite.svg#<?= $menu->icon ?>">
@@ -163,9 +162,9 @@ $tabMenus = Menu::find()
                                 <?php if ($hasChildren): ?>
                                 <?php foreach ($menu->getChildMenus()->all() as $childMenu): ?>
                                 <li class="sidebar-list">
-                                    <a href="<?= \yii\helpers\Url::to(['/tabs', 'menuId' => $childMenu->id]) ?>"
+                                    <a href="<?= \yii\helpers\Url::to(['/pages', 'menuId' => $childMenu->id]) ?>"
                                         data-menu-id="<?= $childMenu->id ?>"
-                                        class="<?= Yii::$app->request->get('tabId') === $childMenu->id ? 'active' : '' ?>">
+                                        class="<?= Yii::$app->request->get('pageId') === $childMenu->id ? 'active' : '' ?>">
                                         <svg class="svg-menu">
                                             <use
                                                 href="<?= Yii::getAlias('@web') ?>/images/icon-sprite.svg#<?= $childMenu->icon ?>">
@@ -176,30 +175,11 @@ $tabMenus = Menu::find()
                                 </li>
                                 <?php endforeach; ?>
                                 <?php endif; ?>
-
-                                <?php if ($hasTabs): ?>
-                                <!-- Nếu có tab con, hiển thị trực tiếp các tab con -->
-                                <?php foreach ($menu->tabs as $tab): ?>
-                                <?php if ($tab->status == 0): ?>
-                                <li>
-                                    <a href="<?= \yii\helpers\Url::to(['/tabs', 'tabId' => $tab->id]) ?>"
-                                        data-tab-id="<?= $tab->id ?>"
-                                        class="<?= Yii::$app->request->get('tabId') === $tab->id ? 'active' : '' ?>">
-                                        <svg class="svg-menu">
-                                            <use href="<?= Yii::getAlias('@web') ?>/images/icon-sprite.svg#right-3">
-                                            </use>
-                                        </svg>
-                                        <?= Html::encode($tab->tab_name) ?>
-                                    </a>
-                                </li>
-                                <?php endif; ?>
-                                <?php endforeach; ?>
-                                <?php endif; ?>
                             </ul>
                             <?php else: ?>
-                            <!-- Xử lý trường hợp mặc định cho menu không có con và không có tab -->
+                            <!-- Xử lý trường hợp mặc định cho menu không có con và không có page -->
                             <a class="sidebar-link sidebar-title link-nav"
-                                href="<?= \yii\helpers\Url::to(['/tabs', 'menuId' => $menu->id]) ?>"
+                                href="<?= \yii\helpers\Url::to(['/pages', 'menuId' => $menu->id]) ?>"
                                 data-menu-id="<?= $menu->id ?>">
                                 <svg class="stroke-icon">
                                     <use href="<?= Yii::getAlias('@web') ?>/images/icon-sprite.svg#<?= $menu->icon ?>">

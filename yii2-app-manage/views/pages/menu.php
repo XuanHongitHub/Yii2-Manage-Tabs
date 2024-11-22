@@ -4,11 +4,12 @@ use app\models\Menu;
 
 /** @var yii\web\View $this */
 /** @var app\models\TableTab[] $tableTabs */
-/** @var app\models\Tab[] $tabs */
-
-$this->title = 'Tabs Data';
+/** @var app\models\Page[] $pages */
 
 $menuId = $_GET['menuId'];
+$menuName = Menu::findOne($menuId)->name ?? 'Menu Page';
+$this->title = $menuName;
+
 ?>
 <?php include Yii::getAlias('@app/views/layouts/_sidebar.php'); ?>
 
@@ -26,21 +27,18 @@ $menuId = $_GET['menuId'];
             <div class="col-sm-12">
 
                 <div class="card">
-                    <div class="card-header card-no-border pb-0">
-                        <h4><?= Menu::findOne($menuId)->name ?? 'Menu này không tồn tại hoặc đã bị ẩn/xóa.' ?>
-                        </h4>
-                    </div>
+
                     <div class="card-body">
-                        <ul class="simple-wrapper nav nav-tabs" id="tab-list">
-                            <?php if (!empty($tabs)): ?>
+                        <ul class="simple-wrapper nav nav-tabs" id="page-list">
+                            <?php if (!empty($pages)): ?>
                                 <?php $hasValidTabs = false; ?>
-                                <?php foreach ($tabs as $index => $tab): ?>
-                                    <?php if ($tab->deleted == 0): ?>
+                                <?php foreach ($pages as $index => $page): ?>
+                                    <?php if ($page->deleted == 0): ?>
                                         <?php $hasValidTabs = true; ?>
                                         <li class="nav-item">
                                             <a class="nav-link <?= $index === 0 ? 'active' : '' ?>" href="#"
-                                                data-id="<?= $tab->id ?>" onclick="loadTabData(<?= $tab->id ?>, null)">
-                                                <?= htmlspecialchars($tab->tab_name) ?>
+                                                data-id="<?= $page->id ?>" onclick="loadTabData(<?= $page->id ?>, null)">
+                                                <?= htmlspecialchars($page->name) ?>
                                             </a>
                                         </li>
                                     <?php endif; ?>
@@ -48,29 +46,29 @@ $menuId = $_GET['menuId'];
 
                                 <?php if (!$hasValidTabs): ?>
                                     <div class="align-items-center m-2">
-                                        Không có tab nào. Vui lòng
+                                        Không có page nào. Vui lòng
                                         <a class="txt-primary mb-2"
-                                            href="<?= \yii\helpers\Url::to(['admin/tabs/tabs-create', 'menuId' => $menuId]) ?>"
+                                            href="<?= \yii\helpers\Url::to(['admin/pages/create', 'menuId' => $menuId]) ?>"
                                             style="font-weight: bold; text-decoration: underline;">
-                                            Thêm Tab tại đây
+                                            Thêm Page tại đây
                                         </a> hoặc trong cài đặt.
                                     </div>
 
                                 <?php endif; ?>
                             <?php else: ?>
                                 <div class="align-items-center m-2">
-                                    Không có tab nào. Vui lòng
+                                    Không có page nào. Vui lòng
                                     <a class="txt-primary mb-2"
-                                        href="<?= \yii\helpers\Url::to(['admin/tabs/tabs-create', 'menuId' => $menuId]) ?>"
+                                        href="<?= \yii\helpers\Url::to(['admin/pages/create', 'menuId' => $menuId]) ?>"
                                         style="font-weight: bold; text-decoration: underline;">
-                                        Thêm Tab tại đây
+                                        Thêm Page tại đây
                                     </a> hoặc trong cài đặt.
                                 </div>
 
                             <?php endif; ?>
                         </ul>
-                        <div class="tab-content">
-                            <div class="tab-pane fade show active" id="tab-data-current">
+                        <div class="page-content">
+                            <div class="page-pane fade show active" id="page-data-current">
                                 <div class="table-responsive" id="table-data-current">
                                     <!-- Data Loading -->
                                 </div>
@@ -87,9 +85,9 @@ $menuId = $_GET['menuId'];
 <?php
 
 $firstTabId = null;
-foreach ($tabs as $tab) {
-    if ($tab->deleted == 0) {
-        $firstTabId = $tab->id;
+foreach ($pages as $page) {
+    if ($page->deleted == 0) {
+        $firstTabId = $page->id;
         break;
     }
 }
@@ -98,32 +96,32 @@ foreach ($tabs as $tab) {
 <script async>
     $(document).ready(function() {
 
-        var firstTabId = <?= !empty($firstTabId) ? $tabs[0]->id : 'null' ?>;
+        var firstTabId = <?= !empty($firstTabId) ? $pages[0]->id : 'null' ?>;
         if (firstTabId !== null) {
             loadTabData(firstTabId);
         } else {
-            console.log("No tabs available to load data.");
+            console.log("No pages available to load data.");
         }
 
-        function loadTabData(tabId, page, search, pageSize) {
+        function loadTabData(pageId, page, search, pageSize) {
             localStorage.clear();
 
             $.ajax({
-                url: "<?= \yii\helpers\Url::to(['tabs/load-tab-data']) ?>",
+                url: "<?= \yii\helpers\Url::to(['pages/load-page-data']) ?>",
                 type: "GET",
                 data: {
-                    tabId: tabId,
+                    pageId: pageId,
                     page: page,
                     search: search,
                     pageSize: pageSize,
                 },
                 success: function(data) {
                     $('#table-data-current').html(data);
-                    // Cập nhật trạng thái của tab hiện tại
+                    // Cập nhật trạng thái của page hiện tại
                     $('.nav-link').removeClass('active');
                     $('.nav-item').removeClass('active');
-                    $(`[data-id="${tabId}"]`).addClass('active');
-                    $(`[data-id="${tabId}"]`).closest('.nav-item').addClass('active');
+                    $(`[data-id="${pageId}"]`).addClass('active');
+                    $(`[data-id="${pageId}"]`).closest('.nav-item').addClass('active');
                 },
                 error: function(xhr, status, error) {
                     console.error('Error:', error);
@@ -144,7 +142,7 @@ foreach ($tabs as $tab) {
             function(e) {
                 e.preventDefault();
                 var page = $(this).data('page');
-                var tabId = $('.nav-link.active').data('id');
+                var pageId = $('.nav-link.active').data('id');
                 var search = $('input[name="search"]').val();
                 var pageSize = $('#pageSize').val();
 
@@ -152,12 +150,12 @@ foreach ($tabs as $tab) {
                     search = search.trim();
                 }
 
-                loadData(tabId, page, search, pageSize);
+                loadData(pageId, page, search, pageSize);
             });
 
         $(document).off('click', '#goToPageButton').on('click', '#goToPageButton', function() {
             var page = $('#goToPageInput').val();
-            var tabId = $('.nav-link.active').data('id');
+            var pageId = $('.nav-link.active').data('id');
             var search = $('input[name="search"]').val();
             var pageSize = $('#pageSize').val();
 
@@ -167,7 +165,7 @@ foreach ($tabs as $tab) {
 
             if (page && !isNaN(page)) {
                 page = parseInt(page) - 1;
-                loadData(tabId, page, search, pageSize);
+                loadData(pageId, page, search, pageSize);
             } else {
                 console.log('Invalid page number.');
             }
@@ -178,7 +176,7 @@ foreach ($tabs as $tab) {
             e.preventDefault();
 
             var page = $(this).data('page');
-            var tabId = $('.nav-link.active').data('id');
+            var pageId = $('.nav-link.active').data('id');
             var search = $('input[name="search"]').val();
             var pageSize = $('#pageSize').val();
             var totalCount = $('#totalCount').val();
@@ -189,14 +187,14 @@ foreach ($tabs as $tab) {
 
             lastPage = Math.ceil(totalCount / pageSize) - 1;
 
-            loadData(tabId, lastPage, search, pageSize);
+            loadData(pageId, lastPage, search, pageSize);
         });
 
 
         $(document).off('change', '#pageSize').on('change', '#pageSize', function() {
             var pageSize = $(this).val();
 
-            var tabId = $('.nav-link.active').data('id');
+            var pageId = $('.nav-link.active').data('id');
             var search = $('input[name="search"]').val();
 
             if (search && typeof search === 'string') {
@@ -204,7 +202,7 @@ foreach ($tabs as $tab) {
             }
 
             if (pageSize && (pageSize === 'all' || !isNaN(pageSize))) {
-                loadData(tabId, 0, search, pageSize);
+                loadData(pageId, 0, search, pageSize);
             } else {
                 console.log('Invalid page size.');
             }

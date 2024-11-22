@@ -10,7 +10,8 @@ use Yii;
  * @property int $id
  * @property int $user_id
  * @property string|null $name
- * @property string $tab_type
+ * @property string|null $table_name
+ * @property string $type
  * @property int|null $status
  * @property int|null $deleted
  * @property int|null $menu_id
@@ -18,7 +19,6 @@ use Yii;
  * @property string $created_at
  * @property string $updated_at
  *
- * @property TableTab[] $tableTabs
  * @property User $user
  */
 class Page extends \yii\db\ActiveRecord
@@ -37,11 +37,11 @@ class Page extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
-            [['user_id', 'tab_type'], 'required'],
+            [['user_id', 'type'], 'required'],
             [['user_id', 'menu_id', 'deleted', 'status', 'position'], 'integer'],
-            [['tab_type'], 'string'],
+            [['type'], 'string'],
             [['created_at', 'updated_at'], 'safe'],
-            [['name'], 'string', 'max' => 255],
+            [['name', 'table_name'], 'string', 'max' => 255],
             [['user_id'], 'exist', 'skipOnError' => true, 'targetClass' => User::class, 'targetAttribute' => ['user_id' => 'id']],
         ];
     }
@@ -55,7 +55,8 @@ class Page extends \yii\db\ActiveRecord
             'id' => 'ID',
             'user_id' => 'User ID',
             'name' => 'Page Name',
-            'tab_type' => 'Page Type',
+            'table_name' => 'Table Name',
+            'type' => 'Page Type',
             'menu_id' => 'Group ID',
             'deleted' => 'Deleted',
             'status' => 'Status',
@@ -63,16 +64,6 @@ class Page extends \yii\db\ActiveRecord
             'created_at' => 'Created At',
             'updated_at' => 'Updated At',
         ];
-    }
-
-    /**
-     * Gets query for [[TableTabs]].
-     *
-     * @return \yii\db\ActiveQuery
-     */
-    public function getTableTabs()
-    {
-        return $this->hasMany(TableTab::class, ['tab_id' => 'id']);
     }
 
     /**

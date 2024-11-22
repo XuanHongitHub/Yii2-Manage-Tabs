@@ -445,13 +445,13 @@
 
 (function ($) {
   $(document).ready(function () {
-    var currentTabId = new URL(window.location.href).searchParams.get('tabId'); // Lấy tabId từ URL
+    var currentTabId = new URL(window.location.href).searchParams.get('pageId'); // Lấy pageId từ URL
     var currentmenuId = new URL(window.location.href).searchParams.get('menuId'); // Lấy menuId từ URL
     var currentUrl = window.location.pathname; // Lấy đường dẫn URL hiện tại
 
     // Duyệt qua tất cả các liên kết trong sidebar
     $(".sidebar-wrapper nav ul li a").each(function () {
-      var linkTabId = $(this).data('tab-id'); // Lấy tabId từ thuộc tính data-tabId
+      var linkTabId = $(this).data('tab-id'); // Lấy pageId từ thuộc tính data-pageId
       var linkmenuId = $(this).data('menu-id'); // Lấy menuId từ thuộc tính data-menu-id
       var linkHref = $(this).attr('href'); // Lấy href của link
 
@@ -462,7 +462,7 @@
         $(this).parents("li").addClass("active"); // Thêm class active vào <li> chứa tab
         $(this).parents("ul.sidebar-submenu").prev("a").addClass("active"); // Thêm active vào link cha
       }
-      // Kiểm tra xem tabId có trùng không và nếu có, đánh dấu tab active
+      // Kiểm tra xem pageId có trùng không và nếu có, đánh dấu tab active
       else if (currentTabId && linkTabId == currentTabId) {
         $(this).addClass("active"); // Thêm class active vào tab tương ứng
         $(this).parents("ul.sidebar-submenu").slideDown("normal"); // Mở submenu của tab

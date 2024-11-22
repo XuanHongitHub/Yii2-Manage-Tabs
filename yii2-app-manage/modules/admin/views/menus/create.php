@@ -13,18 +13,6 @@ $this->title = 'Thêm Menu';
 <?php include Yii::getAlias('@app/views/layouts/_icon.php'); ?>
 <?php include Yii::getAlias('@app/views/layouts/_sidebar-settings.php'); ?>
 
-<!-- Toast thông báo -->
-<div class="toast-container position-fixed top-0 end-0 p-3 toast-index toast-rtl">
-    <div class="toast fade" id="liveToast" role="alert" aria-live="assertive" aria-atomic="true">
-        <div class="toast-header">
-            <strong class="me-auto">Thông báo</strong>
-            <small id="toast-timestamp"></small>
-            <button class="btn-close" type="button" data-bs-dismiss="toast" aria-label="Close"></button>
-        </div>
-        <div class="toast-body" id="toast-body">Msg</div>
-    </div>
-</div>
-
 <div class="page-body">
     <div class="container-fluid">
         <div class="page-title">
@@ -38,8 +26,8 @@ $this->title = 'Thêm Menu';
             <div class="col-sm-12">
                 <div class="card">
                     <div class="card-header card-no-border pb-0">
-                        <h4>Thêm Menu tab</h4>
-                        <p class="mt-1 f-m-light">Menu tab chứa các tab con</p>
+                        <h4>Thêm Menu page</h4>
+                        <p class="mt-1 f-m-light">Menu page chứa các page con</p>
                     </div>
                     <div class="card-body">
                         <div class="row">
@@ -102,7 +90,7 @@ $this->title = 'Thêm Menu';
 
                         </div>
 
-                        <!-- Chọn loại menu và Chọn Tab Con Con Con Con Con cùng hàng -->
+                        <!-- Chọn loại menu và Chọn Page Con Con Con Con Con cùng hàng -->
 
                         <div class="mt-3">
                             <button type="button" id="saveTabMenuChanges" class="btn btn-success">Tạo Menu</button>
@@ -118,7 +106,7 @@ $this->title = 'Thêm Menu';
     $(document).ready(function() {
         // Khởi tạo select2 cho các select có class .form-multi-select
         $('.form-multi-select').select2({
-            placeholder: 'Chọn Tab',
+            placeholder: 'Chọn Page',
             allowClear: true
         });
 
@@ -127,14 +115,14 @@ $this->title = 'Thêm Menu';
             let parentId = $('#parentId').val();
             let menuName = $('#name').val();
             let icon = $('#icon-selected-value').val();
-            let selectedTabs = $('#tabs').val();
+            let selectedTabs = $('#pages').val();
             let selectedMenus = $('#menus').val();
 
             console.log("🚀 ~ $ ~ selectedTabs:", selectedTabs);
             console.log("🚀 ~ $ ~ selectedMenus:", selectedMenus);
 
             $.ajax({
-                url: '<?= \yii\helpers\Url::to(['store-menu']) ?>',
+                url: '<?= \yii\helpers\Url::to(['store']) ?>',
                 type: 'POST',
                 headers: {
                     'X-CSRF-Token': $('meta[name="csrf-token"]').attr('content')
@@ -146,14 +134,29 @@ $this->title = 'Thêm Menu';
                 },
                 success: function(response) {
                     if (response.success) {
-                        window.location.href =
-                            '<?= \yii\helpers\Url::to(['index']) ?>';
+                        swal({
+                            title: "Thành công!",
+                            text: response.message || "Dữ liệu đã được cập nhật.",
+                            icon: "success",
+                        }).then(() => {
+                            location.reload();
+                        });
                     } else {
-                        alert(response.message);
+                        swal({
+                            title: "Thất bại!",
+                            text: response.message ||
+                                "Có lỗi xảy ra, vui lòng thử lại.",
+                            icon: "error",
+                        });
                     }
                 },
                 error: function(xhr, status, error) {
-                    alert('Lỗi khi lưu menu.');
+                    console.error('Lỗi AJAX: ', error);
+                    swal({
+                        title: "Lỗi hệ thống!",
+                        text: "Không thể thực hiện yêu cầu, vui lòng thử lại.",
+                        icon: "error",
+                    });
                 }
             });
         });

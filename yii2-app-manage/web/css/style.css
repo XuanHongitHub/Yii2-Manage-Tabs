@@ -45357,3 +45357,15 @@ footer p .footer-icon {
 .shown+.child-row {
   display: table-row;
 }
+
+#tableNameInput input {
+  position: relative;
+}
+
+.input-icon {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  pointer-events: none;
+}
