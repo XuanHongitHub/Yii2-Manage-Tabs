@@ -53,17 +53,17 @@ class MenusController extends Controller
     public function actionCreate()
     {
         $menus = Menu::find()
-            ->leftJoin('menu AS parent_menu', 'parent_menu.id = menu.parent_id')
-            ->where(['menu.parent_id' => null])
-            ->andWhere(['menu.status' => 0])
-            ->andWhere(['menu.deleted' => 0])
+            ->leftJoin('manager_menu AS parent_menu', 'parent_menu.id = manager_menu.parent_id')
+            ->where(['manager_menu.parent_id' => null])
+            ->andWhere(['manager_menu.status' => 0])
+            ->andWhere(['manager_menu.deleted' => 0])
             ->andWhere([
                 'not in',
-                'menu.id',
+                'manager_menu.id',
                 (new Query())
-                    ->select('parent_id')
-                    ->from('menu')
-                    ->where(['not', ['parent_id' => null]])
+                    ->select('menu_id')
+                    ->from('manager_page') // Giả sử bảng lưu các trang là `manager_page`
+                    ->where('manager_page.menu_id = manager_menu.id') // Lọc ra các menu đã có manager_page liên kết
             ])
             ->all();
 
@@ -127,10 +127,10 @@ class MenusController extends Controller
                 }
 
                 // Liên kết Pages với Menu
-                $selectedTabs = $data['selectedTabs'] ?? [];
-                if (!empty($selectedTabs)) {
+                $selectedPages = $data['selectedPages'] ?? [];
+                if (!empty($selectedPages)) {
                     Page::updateAll(['menu_id' => null], ['menu_id' => $model->id]); // Xóa liên kết cũ
-                    Page::updateAll(['menu_id' => $model->id], ['id' => $selectedTabs]); // Thêm liên kết mới
+                    Page::updateAll(['menu_id' => $model->id], ['id' => $selectedPages]); // Thêm liên kết mới
                 }
 
                 // Liên kết Menu con với Menu cha
@@ -153,7 +153,7 @@ class MenusController extends Controller
 
     public function actionGetSubmenu($menu_id)
     {
-        Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+        Yii::$app->response->format = Response::FORMAT_JSON;
         $menu = Menu::findOne($menu_id);
         if (!$menu) {
             return [
@@ -162,47 +162,47 @@ class MenusController extends Controller
             ];
         }
 
-        $childTabs = Page::find()
+        $childPages = Page::find()
             ->where(['menu_id' => $menu_id])
-            ->andWhere(['status' => 0])  // Thêm điều kiện cho status
+            ->andWhere(['status' => 0])
             ->andWhere(['deleted' => 0])
             ->all();
 
         $childMenus = Menu::find()
             ->where(['parent_id' => $menu_id])
-            ->andWhere(['status' => 0])  // Thêm điều kiện cho status
+            ->andWhere(['status' => 0])
             ->andWhere(['deleted' => 0])
             ->all();
 
         // Lấy các page/menu tiềm năng (chưa liên kết)
-        $potentialTabs = Page::find()
+        $potentialPages = Page::find()
             ->where(['menu_id' => null])
-            ->andWhere(['status' => 0])  // Thêm điều kiện cho status
+            ->andWhere(['status' => 0])
             ->andWhere(['deleted' => 0])
             ->all();
 
         $potentialMenus = Menu::find()
-            ->leftJoin('menu AS parent_menu', 'parent_menu.id = menu.parent_id') // Đặt alias cho bảng menu
-            ->where(['menu.parent_id' => null]) // Lọc các bản ghi không có parent_id (null)
+            ->leftJoin('manager_menu AS parent_menu', 'parent_menu.id = manager_menu.parent_id') // Đặt alias cho bảng menu
+            ->where(['manager_menu.parent_id' => null])
             ->andWhere([
                 'not in',
-                'menu.id',
+                'manager_menu.id',
                 (new Query())
                     ->select('parent_id')
-                    ->from('menu')
-                    ->where(['not', ['parent_id' => null]]) // Chỉ lấy các parent_id đã tồn tại
+                    ->from('manager_menu')
+                    ->where(['not', ['parent_id' => null]])
             ])
-            ->andWhere(['menu.status' => 0])  // Thêm điều kiện cho status
-            ->andWhere(['menu.deleted' => 0])
+            ->andWhere(['manager_menu.status' => 0])
+            ->andWhere(['manager_menu.deleted' => 0])
             ->all();
 
 
         return [
             'success' => true,
             'isChildMenu' => $menu->parent_id !== null,
-            'childTabs' => array_map(fn($page) => ['id' => $page->id, 'name' => $page->name], $childTabs),
+            'childPages' => array_map(fn($page) => ['id' => $page->id, 'name' => $page->name], $childPages),
             'childMenus' => array_map(fn($menu) => ['id' => $menu->id, 'name' => $menu->name], $childMenus),
-            'potentialTabs' => array_map(fn($page) => ['id' => $page->id, 'name' => $page->name], $potentialTabs),
+            'potentialPages' => array_map(fn($page) => ['id' => $page->id, 'name' => $page->name], $potentialPages),
             'potentialMenus' => array_map(fn($menu) => ['id' => $menu->id, 'name' => $menu->name], $potentialMenus),
         ];
     }
@@ -227,16 +227,70 @@ class MenusController extends Controller
                     throw new \Exception('Không thể lưu menu.');
                 }
 
-                $selectedTabs = $data['selectedTabs'] ?? [];
-                if (!empty($selectedTabs)) {
+                $selectedPages = $data['selectedPages'] ?? [];
+                if (!empty($selectedPages)) {
                     Page::updateAll(['menu_id' => null], ['menu_id' => $model->id]); // Xóa liên kết cũ
-                    Page::updateAll(['menu_id' => $model->id], ['id' => $selectedTabs]); // Thêm liên kết mới
+                    Page::updateAll(['menu_id' => $model->id], ['id' => $selectedPages]); // Thêm liên kết mới
                 }
 
                 $selectedMenus = $data['selectedMenus'] ?? [];
                 if (!empty($selectedMenus)) {
                     Menu::updateAll(['parent_id' => null], ['parent_id' => $model->id]); // Xóa liên kết cũ
                     Menu::updateAll(['parent_id' => $model->id], ['id' => $selectedMenus]); // Thêm liên kết mới
+                }
+
+                $transaction->commit();
+                return $this->asJson(['success' => true, 'message' => 'Cập nhật thành công.']);
+            } catch (\Exception $e) {
+                $transaction->rollBack();
+                return $this->asJson(['success' => false, 'message' => $e->getMessage()]);
+            }
+        }
+
+        return $this->asJson(['success' => false, 'message' => 'Yêu cầu không hợp lệ.']);
+    }
+    public function actionSaveSubPage()
+    {
+        if (Yii::$app->request->isPost) {
+            $data = Yii::$app->request->post();
+
+            if (empty($data['menuId'])) {
+                return $this->asJson(['success' => false, 'message' => 'menuId không được để trống.']);
+            }
+
+            $menuModel = Menu::findOne($data['menuId']);
+            if (!$menuModel) {
+                return $this->asJson(['success' => false, 'message' => 'Menu không tồn tại.']);
+            }
+
+            $transaction = Yii::$app->db->beginTransaction();
+            try {
+                if (!$menuModel->save()) {
+                    throw new \Exception('Không thể lưu menu.');
+                }
+
+                $selectedPages = $data['selectedPages'] ?? [];
+                $sortedData = $data['sortedData'] ?? [];
+                Yii::error("selectedPages: " . print_r($selectedPages, true));
+
+                // Cập nhật các page con
+                if (!empty($selectedPages)) {
+                    // Xóa liên kết cũ
+                    Page::updateAll(['menu_id' => null], ['menu_id' => $data['menuId']]);
+                    Page::updateAll(
+                        ['menu_id' => $menuModel->id],
+                        ['id' => $selectedPages]
+                    );
+
+                    foreach ($sortedData as $page) {
+                        $pageModel = Page::findOne($page['id']);
+                        if ($pageModel) {
+                            $pageModel->position = $page['position'];
+                            if (!$pageModel->save(false)) {
+                                throw new \Exception("Không thể lưu subpage ID: {$page['id']}.");
+                            }
+                        }
+                    }
                 }
 
                 $transaction->commit();

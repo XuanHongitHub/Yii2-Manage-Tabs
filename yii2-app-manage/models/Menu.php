@@ -26,7 +26,7 @@ class Menu extends \yii\db\ActiveRecord
      */
     public static function tableName()
     {
-        return 'menu';
+        return 'manager_menu';
     }
 
     /**
@@ -62,7 +62,7 @@ class Menu extends \yii\db\ActiveRecord
     }
 
     /**
-     * Gets query for [[Tabs]].
+     * Gets query for [[Pages]].
      *
      * @return \yii\db\ActiveQuery
      */

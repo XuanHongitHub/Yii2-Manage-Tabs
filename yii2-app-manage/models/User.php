@@ -38,7 +38,7 @@ class User extends ActiveRecord implements IdentityInterface
      */
     public static function tableName()
     {
-        return '{{%user}}';
+        return '{{manager_user}}';
     }
 
     /**
@@ -230,6 +230,5 @@ class User extends ActiveRecord implements IdentityInterface
 
             return false;
         }
-
     }
 }

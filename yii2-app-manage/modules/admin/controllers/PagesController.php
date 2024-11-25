@@ -51,7 +51,12 @@ class PagesController extends Controller
     }
     public function actionCreate()
     {
-        return $this->render('create', []);
+        $pages = Page::find()
+            ->select(['name', 'table_name'])
+            ->asArray()
+            ->all();
+
+        return $this->render('create', ['pages' => $pages]);
     }
 
     public function actionStore()
@@ -61,6 +66,7 @@ class PagesController extends Controller
             $pageType = Yii::$app->request->post('type');
             $pageName = Yii::$app->request->post('pageName');
             $tableName = Yii::$app->request->post('tableName');
+            Yii::error("Dữ liệu nhận từ form: type={$pageType}, pageName={$pageName}, tableName={$tableName}", 'application');
 
             $page = new Page();
             $page->user_id = $userId;
@@ -77,28 +83,11 @@ class PagesController extends Controller
                 $isNotNull = Yii::$app->request->post('is_not_null', []);
                 $isPrimary = Yii::$app->request->post('is_primary', []);
 
+                Yii::info("Dữ liệu table: columns=" . implode(', ', $columns) . ", dataTypes=" . implode(', ', $dataTypes), 'application');
                 foreach ($isPrimary as $index => $primary) {
                     if (isset($isPrimary[$index]) && $isPrimary[$index] == '1') {
                         $isNotNull[$index] = '1';
                     }
-                }
-
-                $validationResult = $this->validateTableCreation($pageName, $tableName, $columns, $dataTypes, $dataSizes, $isNotNull);
-                if ($validationResult !== true) {
-                    foreach ($validationResult as $error) {
-                        Yii::$app->session->setFlash("error_{$error['field']}", $error['message']);
-                    }
-                    Yii::$app->session->setFlash('tableCreationData', compact('tableName', 'columns', 'dataTypes', 'dataSizes', 'isNotNull', 'isPrimary'));
-                    return $this->render('create', [
-                        'tableTabs' => [],
-                        'pageName' => $pageName,
-                        'tableName' => $tableName,
-                        'columns' => $columns,
-                        'dataTypes' => $dataTypes,
-                        'dataSizes' => $dataSizes,
-                        'isNotNull' => $isNotNull,
-                        'isPrimary' => $isPrimary,
-                    ]);
                 }
 
                 $transaction = Yii::$app->db->beginTransaction();
@@ -113,7 +102,7 @@ class PagesController extends Controller
                             $dataSize = isset($dataSizes[$index]) ? "($dataSizes[$index])" : '';
                             $isNotNullColumn = isset($isNotNull[$index]) && $isNotNull[$index] == '1' ? 'NOT NULL' : 'NULL';
 
-                            // Xử lý kiểu dữ liệu
+                            // Xử lý kiểu dữ liệu và khóa chính
                             if ($dataType === 'VARCHAR' || $dataType === 'CHAR') {
                                 $columnDef = isset($isPrimary[$index]) && $isPrimary[$index] == '1'
                                     ? "\"$columnName\" SERIAL PRIMARY KEY"
@@ -175,7 +164,6 @@ class PagesController extends Controller
         ]);
     }
 
-
     public function actionCheckNameExistence()
     {
         $pageName = Yii::$app->request->post('pageName');
@@ -183,100 +171,15 @@ class PagesController extends Controller
 
         $pageExists = Page::find()->where(['name' => $pageName])->exists();
 
-        $tableExists = Yii::$app->db->createCommand("SELECT EXISTS (SELECT 1 FROM information_schema.tables WHERE tableName = :tableName)")
+        $tableExists = Yii::$app->db->createCommand("SELECT EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = :tableName)")
             ->bindValue(':tableName', $tableName)
             ->queryScalar();
+
 
         return $this->asJson([
             'pageExists' => $pageExists,
             'tableExists' => $tableExists
         ]);
-    }
-
-    /**
-     * Validate the table creation inputs.
-     *
-     * @param string $tableName
-     * @param array $columns
-     * @param array $dataTypes
-     * @return array|string
-     */
-    protected function validateTableCreation($pageName, $tableName, $columns, $dataTypes, $dataSizes, $isNotNull)
-    {
-        $errors = [];
-
-        if (!preg_match('/^[a-zA-Z0-9_]+$/', $pageName)) {
-            $errors[] = ['message' => 'page name can only include letters, numbers, and underscores.', 'field' => 'pageName'];
-        }
-
-        if (!preg_match('/^[a-zA-Z0-9_]+$/', $tableName)) {
-            $errors[] = ['message' => 'Table name can only include letters, numbers, and underscores.', 'field' => 'tableName'];
-        }
-
-        if (empty($columns) || empty($dataTypes)) {
-            $errors[] = ['message' => 'Columns and data types must not be empty.', 'field' => 'columns'];
-        }
-
-        if (count($columns) !== count($dataTypes)) {
-            $errors[] = ['message' => 'Each column must have a matching data type.', 'field' => 'data_types'];
-        }
-
-        foreach ($columns as $index => $column) {
-            if (!preg_match('/^[a-zA-Z0-9_]+$/', $column)) {
-                $errors[] = ['message' => 'Column names can only include letters, numbers, and underscores.', 'field' => "columns[$index]"];
-            }
-            $dataType = $dataTypes[$index] ?? null;
-            $dataSize = $dataSizes[$index] ?? null;
-
-            if (
-                !in_array($dataType, [
-                    'INT',
-                    'BIGINT',
-                    'SMALLINT',
-                    'TINYINT',
-                    'FLOAT',
-                    'DOUBLE',
-                    'DECIMAL',
-                    'VARCHAR',
-                    'CHAR',
-                    'TEXT',
-                    'MEDIUMTEXT',
-                    'LONGTEXT',
-                    'DATE',
-                    'DATETIME',
-                    'TIMESTAMP',
-                    'TIME',
-                    'BOOLEAN',
-                    'JSON',
-                    'BLOB'
-                ])
-            ) {
-                $errors[] = ['message' => "Invalid data type for column '$column'.", 'field' => "data_types[$index]"];
-            } else {
-                if (in_array($dataType, ['VARCHAR', 'CHAR'])) {
-                    if ($dataSize === null || !is_numeric($dataSize) || $dataSize <= 0 || $dataSize > 1000) {
-                        $errors[] = ['message' => "Length for column '$column' must be a positive number not greater than 1000 for data type '$dataType'.", 'field' => "data_sizes[$index]"];
-                    }
-                }
-                if (in_array($dataType, ['DECIMAL', 'FLOAT', 'DOUBLE'])) {
-                    if ($dataSize === null || !is_numeric($dataSize) || $dataSize < 0 || $dataSize > 38) {
-                        $errors[] = ['message' => "Invalid size for column '$column' with data type '$dataType'. Maximum size is 38.", 'field' => "data_sizes[$index]"];
-                    }
-                }
-                if (in_array($dataType, ['TEXT', 'MEDIUMTEXT', 'LONGTEXT', 'DATE', 'DATETIME', 'TIMESTAMP', 'TIME', 'BOOLEAN', 'JSON', 'BLOB'])) {
-                    if ($dataSize != null) {
-                        $errors[] = ['message' => "Column '$column' with data type '$dataType' should not have a size.", 'field' => "data_sizes[$index]"];
-                    }
-                }
-            }
-
-            // $isNotNullValue = isset($isNotNull[$index]) ? $isNotNull[$index] : null;
-            // if ($isNotNullValue !== null && !is_bool($isNotNullValue)) {
-            //     $errors[] = ['message' => "Giá trị không hợp lệ cho 'Not Null' của cột '$column'.", 'field' => "is_not_null[$index]"];
-            // }
-        }
-
-        return empty($errors) ? true : $errors;
     }
 
     public function actionDelete($id)

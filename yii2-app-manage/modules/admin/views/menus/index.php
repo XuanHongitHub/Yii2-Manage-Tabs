@@ -55,12 +55,14 @@ $this->title = 'Danh Sách Menu';
                             <table class="table table-hover table-responsive custom-scrollbar border table-bordered">
                                 <thead>
                                     <tr>
-                                        <th style="width: 2%"></th>
+                                        <th style="width: 2%">
+                                            <i class="fa-solid fa-caret-right"></i>
+                                        </th>
                                         <th colspan="2" style="width: 20%">Tên Menu</th>
-                                        <th style="width: 6%" class="text-center">Icon</th>
-                                        <th style="width: 20%">Page</th>
-                                        <th style="width: 8%" class="text-center">Trạng Thái</th>
-                                        <th style="width: 8%">Thao tác</th>
+                                        <th style="width: 5%" class="text-center">Icon</th>
+                                        <th style="width: 25%">Page</th>
+                                        <th style="width: 6%" class="text-center">Trạng Thái</th>
+                                        <th style="width: 6%">Thao tác</th>
                                         <th style="width: 3%"></th>
 
                                     </tr>
@@ -78,7 +80,7 @@ $this->title = 'Danh Sách Menu';
                                                     $hasChildren = array_filter($menuChildren, fn($child) => $child->parent_id == $parentMenu->id);
                                                     ?>
                                             <?php if (!empty($hasChildren)): ?>
-                                            <i class="fas fa-plus-circle"></i>
+                                            <i class="fa-solid fa-caret-right"></i>
                                             <?php endif; ?>
                                         </td>
                                         <td colspan="2"><?= Html::encode($parentMenu->name) ?></td>
@@ -93,31 +95,42 @@ $this->title = 'Danh Sách Menu';
                                             </div>
                                         </td>
                                         <td>
-                                            <?php foreach ($pages as $page): ?>
-                                            <?php if ($page->menu_id == $parentMenu->id): ?>
-                                            <span class="badge badge-primary"><?= Html::encode($page->name) ?></span>
-                                            <?php endif; ?>
-                                            <?php endforeach; ?>
+                                            <div>
+                                                <?php foreach ($pages as $page): ?>
+                                                <?php if ($page->menu_id == $parentMenu->id): ?>
+                                                <span
+                                                    class="badge badge-primary"><?= Html::encode($page->name) ?></span>
+                                                <?php endif; ?>
+                                                <?php endforeach; ?>
+                                            </div>
+
                                         </td>
+
                                         <td class="text-center">
                                             <?= $parentMenu->status == 1 ? '<span class="badge badge-warning">Ẩn</span>' : '<span class="badge badge-success">Hiện</span>' ?>
                                         </td>
                                         <td class="text-nowrap text-center">
-                                            <button class="btn btn-sm btn-primary me-1 edit-btn" data-bs-toggle="modal"
-                                                data-bs-target="#editModal" data-page-menu-id="<?= $parentMenu->id ?>"
+                                            <button class="btn btn-m btn-sm btn-primary me-1 edit-btn"
+                                                data-bs-toggle="modal" data-bs-target="#editModal"
+                                                data-page-menu-id="<?= $parentMenu->id ?>"
                                                 data-menu-name="<?= Html::encode($parentMenu->name) ?>"
                                                 data-icon="<?= Html::encode($parentMenu->icon) ?>"
                                                 data-status="<?= Html::encode($parentMenu->status) ?>"
                                                 data-position="<?= Html::encode($parentMenu->position) ?>">
                                                 <i class="fas fa-edit"></i>
                                             </button>
-                                            <button class="btn btn-sm btn-info me-1" id="submenu"
+                                            <button class="btn btn-m btn-sm btn-outline-primary edit-subpage-btn"
+                                                data-menu-id="<?= $parentMenu->id ?>"
+                                                data-menu-name="<?= Html::encode($parentMenu->name) ?>">
+                                                <i class="fa-solid fa-link"></i>
+                                            </button>
+                                            <button class="btn btn-m btn-sm btn-info me-1" id="submenu"
                                                 data-menu-name="<?= Html::encode($parentMenu->name) ?>"
                                                 data-menu-id="<?= $parentMenu->id ?>">
                                                 <i class="fas fa-cogs"></i>
                                             </button>
                                             <button href="#" data-bs-toggle="modal" data-bs-target="#deleteModal"
-                                                class="btn btn-danger btn-sm delete-btn"
+                                                class="btn btn-m btn-danger btn-sm delete-btn"
                                                 data-menu-id="<?= $parentMenu->id ?>">
                                                 <i class="fa-regular fa-trash-can"></i>
                                             </button>
@@ -125,7 +138,8 @@ $this->title = 'Danh Sách Menu';
                                         <td>
                                         </td>
                                     </tr>
-                                    <?php foreach ($menuChildren as $index => $childMenu): ?>
+                                <tbody id="children-<?= Html::encode($parentMenu->id) ?>" class="child-group">
+                                    <?php foreach ($menuChildren as $childMenu): ?>
                                     <?php if ($childMenu->parent_id == $parentMenu->id): ?>
                                     <tr class="child-row" data-parent-id="<?= Html::encode($parentMenu->id) ?>"
                                         data-sort-id="<?= Html::encode($childMenu->id) ?>" style="display: none;">
@@ -143,34 +157,44 @@ $this->title = 'Danh Sách Menu';
                                             </div>
                                         </td>
                                         <td>
-                                            <?php foreach ($pages as $page): ?>
-                                            <?php if ($page->menu_id == $childMenu->id): ?>
-                                            <span class="badge badge-primary"><?= Html::encode($page->name) ?>
-                                            </span>
-                                            <?php endif; ?>
-                                            <?php endforeach; ?>
+                                            <div>
+                                                <?php foreach ($pages as $page): ?>
+                                                <?php if ($page->menu_id == $childMenu->id): ?>
+                                                <span
+                                                    class="badge badge-primary"><?= Html::encode($page->name) ?></span>
+                                                <?php endif; ?>
+                                                <?php endforeach; ?>
+                                            </div>
+
                                         </td>
+
                                         <td class="text-center">
                                             <?= $childMenu->status == 1 ?
-                                                                '<span class="badge badge-warning">Ẩn</span>' :
-                                                                '<span class="badge badge-success">Hiện</span>' ?>
+                                                        '<span class="badge badge-warning">Ẩn</span>' :
+                                                        '<span class="badge badge-success">Hiện</span>' ?>
                                         </td>
                                         <td class="text-nowrap text-center">
-                                            <button class="btn btn-sm btn-primary me-1 edit-btn" data-bs-toggle="modal"
-                                                data-bs-target="#editModal" data-page-menu-id="<?= $childMenu->id ?>"
+                                            <button class="btn btn-m btn-sm btn-primary me-1 edit-btn"
+                                                data-bs-toggle="modal" data-bs-target="#editModal"
+                                                data-page-menu-id="<?= $childMenu->id ?>"
                                                 data-menu-name="<?= Html::encode($childMenu->name) ?>"
                                                 data-icon="<?= Html::encode($childMenu->icon) ?>"
                                                 data-status="<?= Html::encode($childMenu->status) ?>"
                                                 data-position="<?= Html::encode($childMenu->position) ?>">
                                                 <i class="fas fa-edit"></i>
                                             </button>
-                                            <button class="btn btn-sm btn-info me-1" id="submenu"
+                                            <button class="btn btn-m btn-sm btn-outline-primary edit-subpage-btn"
+                                                data-menu-id="<?= $childMenu->id ?>"
+                                                data-menu-name="<?= Html::encode($childMenu->name) ?>">
+                                                <i class="fa-solid fa-link"></i>
+                                            </button>
+                                            <button class="btn btn-m btn-sm btn-info me-1" id="submenu"
                                                 data-menu-name="<?= Html::encode($childMenu->name) ?>"
                                                 data-menu-id="<?= $childMenu->id ?>">
                                                 <i class="fas fa-cogs"></i>
                                             </button>
                                             <button href="#" data-bs-toggle="modal" data-bs-target="#deleteModal"
-                                                class="btn btn-danger btn-sm delete-btn"
+                                                class="btn btn-m btn-danger btn-sm delete-btn"
                                                 data-menu-id="<?= $childMenu->id ?>">
                                                 <i class="fa-regular fa-trash-can"></i>
                                             </button>
@@ -179,12 +203,18 @@ $this->title = 'Danh Sách Menu';
                                             <i class="fas fa-sort"></i>
                                         </td>
                                     </tr>
+                                    <?php endif; ?>
+                                    <?php endforeach; ?>
+                                </tbody>
+                                <?php foreach ($menuChildren as $index => $childMenu): ?>
+                                <?php if ($childMenu->parent_id == $parentMenu->id): ?>
 
-                                    <?php endif; ?>
-                                    <?php endforeach; ?>
-                                    <?php endif; ?>
-                                    <?php endforeach; ?>
-                                    <!-- Hiển thị menu con -->
+
+                                <?php endif; ?>
+                                <?php endforeach; ?>
+                                <?php endif; ?>
+                                <?php endforeach; ?>
+                                <!-- Hiển thị menu con -->
 
 
                                 </tbody>
@@ -199,6 +229,33 @@ $this->title = 'Danh Sách Menu';
 
 <script>
 $(document).ready(function() {
+    $('#toggle-all').on('click', function() {
+        const toggleIcon = $(this); // Lấy icon trong nút
+        const isExpanded = toggleIcon.hasClass(
+            'fa-caret-down'); // Kiểm tra nếu icon đang là "mở rộng" (caret down)
+
+        if (isExpanded) {
+            // Nếu đang mở rộng, thu gọn tất cả
+            $('.child-row').each(function() {
+                const childRow = $(this);
+                if (childRow.is(':visible')) {
+                    childRow.hide(); // Ẩn hàng con
+                }
+            });
+            toggleIcon.removeClass('fa-caret-down').addClass(
+                'fa-caret-right'); // Đổi biểu tượng thành thu gọn
+        } else {
+            // Nếu đang thu gọn, mở rộng tất cả
+            $('.child-row').each(function() {
+                const childRow = $(this);
+                if (childRow.is(':hidden')) {
+                    childRow.show(); // Hiển thị hàng con
+                }
+            });
+            toggleIcon.removeClass('fa-caret-right').addClass(
+                'fa-caret-down'); // Đổi biểu tượng thành mở rộng
+        }
+    });
     $('.toggle-icon i').on('click', function(e) {
         const toggleIcon = $(this); // Lấy chính icon được nhấn
         const parentRow = toggleIcon.closest('tr'); // Tìm hàng cha
@@ -209,12 +266,12 @@ $(document).ready(function() {
             const childRow = $(this);
             if (childRow.is(':visible')) {
                 childRow.hide(); // Ẩn hàng con
-                toggleIcon.removeClass('fa-minus-circle').addClass(
-                    'fa-plus-circle'); // Biểu tượng thu gọn
+                toggleIcon.removeClass('fa-solid fa-caret-down').addClass(
+                    'fa-solid fa-caret-right'); // Biểu tượng thu gọn
             } else {
                 childRow.show(); // Hiển thị hàng con
-                toggleIcon.removeClass('fa-plus-circle').addClass(
-                    'fa-minus-circle'); // Biểu tượng mở rộng
+                toggleIcon.removeClass('fa-solid fa-caret-right').addClass(
+                    'fa-solid fa-caret-down'); // Biểu tượng mở rộng
             }
         });
     });
@@ -222,7 +279,8 @@ $(document).ready(function() {
     // Sắp xếp các hàng trong bảng menu (cha và con)
     $(document).on('click', 'th.sortable', function() {
         var columnIndex = $(this).index(); // Lấy chỉ mục cột được nhấp vào
-        var rows = $('#columnsContainer tr').get(); // Lấy tất cả các hàng trong bảng
+        var parentId = $(this).closest('table').attr('data-parent-id'); // Lấy ID của hàng cha
+        var rows = $(`tr.child-row[data-parent-id="${parentId}"]`).get(); // Lấy hàng con cùng cha
 
         rows.sort(function(a, b) {
             var cellA = $(a).children('td').eq(columnIndex).text().trim(); // Lấy nội dung cột
@@ -233,42 +291,48 @@ $(document).ready(function() {
             return 0;
         });
 
-        // Đặt lại các hàng vào tbody sau khi sắp xếp
+        // Đặt lại các hàng con vào đúng vị trí trong DOM
         $.each(rows, function(index, row) {
-            $('#columnsContainer').append(row);
+            $(row).parent().append(row);
         });
     });
 
-    // Kéo và thả các hàng trong bảng
-    $('#columnsContainer').sortable({
-        handle: '.sort-icon', // Biểu tượng kéo
-        update: function(event, ui) {
-            var sortedIDs = $('#columnsContainer').sortable('toArray', {
-                attribute: 'data-sort-id' // Thuộc tính dùng để phân biệt các hàng con
-            });
+    $('.child-group').each(function() {
+        $(this).sortable({
+            handle: '.sort-icon', // Chỉ cho phép kéo bằng biểu tượng sort
+            update: function(event, ui) {
+                var parentId = $(this).closest('.parent-group').find('.parent-row').data(
+                    'parent-id');
+                var sortedIDs = $(this).sortable('toArray', {
+                    attribute: 'data-sort-id'
+                });
 
-            // Gửi dữ liệu đã sắp xếp lên server
-            $.ajax({
-                url: '<?= \yii\helpers\Url::to(['menus/save-sort']) ?>',
-                method: 'POST',
-                headers: {
-                    'X-CSRF-Token': $('meta[name="csrf-token"]').attr('content')
-                },
-                data: {
-                    sortedIDs: sortedIDs
-                },
-                success: function(response) {
-                    if (response.success) {
-                        showToast('Sắp xếp thành công!');
-                    } else {
+                console.log("Parent ID: ", parentId);
+                console.log("Sorted IDs: ", sortedIDs);
+
+                $.ajax({
+                    url: '<?= \yii\helpers\Url::to(['menus/save-sort']) ?>',
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-Token': $('meta[name="csrf-token"]').attr('content')
+                    },
+                    data: {
+                        parentId: parentId,
+                        sortedIDs: sortedIDs
+                    },
+                    success: function(response) {
+                        if (response.success) {
+                            showToast('Sắp xếp thành công!');
+                        } else {
+                            showToast('Có lỗi xảy ra khi lưu dữ liệu.');
+                        }
+                    },
+                    error: function() {
                         showToast('Có lỗi xảy ra khi lưu dữ liệu.');
                     }
-                },
-                error: function() {
-                    showToast('Có lỗi xảy ra khi lưu dữ liệu.');
-                }
-            });
-        }
+                });
+            }
+        });
     });
 
 });
@@ -590,7 +654,7 @@ $(document).ready(function() {
         $('#saveSubMenuChanges').attr('data-menu-id', menuId);
         $('#submenu-pages').empty();
         $('#submenu-menus').empty();
-        $('#subMenuModalLabel').text(menuName);
+        $('#subMenuModalLabel').text('Menu cho ' + menuName);
 
         $.ajax({
             url: '<?= \yii\helpers\Url::to(['menus/get-submenu']) ?>',
@@ -601,39 +665,17 @@ $(document).ready(function() {
             success: function(response) {
                 console.log("🚀 ~ response:", response);
                 if (response.success) {
-                    response.childTabs.forEach(page => {
-                        $('#submenu-pages').append(
-                            `<option value="${page.id}" selected>${page.name}</option>`
+                    response.childMenus.forEach(menu => {
+                        $('#submenu-menus').append(
+                            `<option value="${menu.id}" selected>${menu.name}</option>`
                         );
                     });
 
-                    if (response.childMenus.length > 0) {
-                        // Nếu có menu con
-                        $('#submenu-menus').parent().show();
-                        $('#submenu-pages').parent().hide();
-
-                        response.childMenus.forEach(menu => {
-                            $('#submenu-menus').append(
-                                `<option value="${menu.id}" selected>${menu.name}</option>`
-                            );
-                        });
-
-                        response.potentialMenus.forEach(menu => {
-                            $('#submenu-menus').append(
-                                `<option value="${menu.id}">${menu.name}</option>`
-                            );
-                        });
-                    } else {
-                        // Nếu không có menu con
-                        $('#submenu-menus').parent().hide();
-                        $('#submenu-pages').parent().show();
-
-                        response.potentialTabs.forEach(page => {
-                            $('#submenu-pages').append(
-                                `<option value="${page.id}">${page.name}</option>`
-                            );
-                        });
-                    }
+                    response.potentialMenus.forEach(menu => {
+                        $('#submenu-menus').append(
+                            `<option value="${menu.id}">${menu.name}</option>`
+                        );
+                    });
 
                     $('#subMenuModal').modal('show');
                 } else {
@@ -647,10 +689,9 @@ $(document).ready(function() {
         });
     });
 
-
     $(document).on('click', '#saveSubMenuChanges', function() {
         var menuId = $(this).attr('data-menu-id');
-        var selectedTabs = $('#submenu-pages').val();
+        var selectedPages = $('#submenu-pages').val();
         var selectedMenus = $('#submenu-menus').val();
         $.ajax({
             url: '<?= \yii\helpers\Url::to(['menus/save-sub-menu']) ?>',
@@ -660,7 +701,7 @@ $(document).ready(function() {
             },
             data: {
                 menuId: menuId,
-                selectedTabs: selectedTabs,
+                selectedPages: selectedPages,
                 selectedMenus: selectedMenus
             },
             success: function(response) {
@@ -693,6 +734,145 @@ $(document).ready(function() {
         });
     });
 });
+
+$(document).on('click', '.edit-subpage-btn', function() {
+    var menuId = $(this).data('menu-id');
+    var menuName = $(this).data('menu-name');
+
+    $('#editSubPageModalLabel').text('Page cho ' + menuName);
+    $('#sub-pages').empty();
+    $('#sub-pages').empty();
+    $('#sortable-subpages').empty(); // Xóa danh sách cũ
+    $('#saveSubPageChanges').attr('data-menu-id', menuId);
+
+    // Lấy dữ liệu sub-pages qua AJAX
+    $.ajax({
+        url: '<?= \yii\helpers\Url::to(['menus/get-submenu']) ?>',
+        type: 'GET',
+        data: {
+            menu_id: menuId
+        },
+        success: function(response) {
+            if (response.success) {
+                response.childPages.forEach(page => {
+                    $('#sub-pages').append(
+                        `<option value="${page.id}" selected>${page.name}</option>`
+                    );
+                });
+
+                response.potentialPages.forEach(page => {
+                    $('#sub-pages').append(
+                        `<option value="${page.id}">${page.name}</option>`
+                    );
+                });
+                if (response.childPages.length > 0) {
+                    response.childPages.forEach(page => {
+                        $('#sortable-subpages').append(`
+                            <li class="list-group-item" data-id="${page.id}">
+                                ${page.name}
+                            </li>
+                        `);
+                    });
+                } else {
+                    $('#sortable-subpages').append(
+                        '<li class="list-group-item text-muted">-- Không có Page nào --</li>');
+                }
+
+                $('#sub-pages').on('change', function() {
+                    // Lấy các ID của các trang đã chọn
+                    var selectedPages = $(this).select2('data');
+
+                    // Tạo danh sách các ID và tên đã chọn
+                    var selectedPageIds = selectedPages.map(page => page.id);
+                    var selectedPageNames = selectedPages.map(page => page.text);
+                    console.log("🚀 ~ $ ~ selectedPages:", selectedPages);
+
+                    // Cập nhật lại danh sách sortable-subpages
+                    $('#sortable-subpages').empty();
+
+                    selectedPages.forEach(page => {
+                        // Nếu page được chọn, hiển thị nó trong sortable
+                        if (selectedPageIds.includes(page.id.toString())) {
+                            $('#sortable-subpages').append(`
+                <li class="list-group-item" data-id="${page.id}">
+                    ${page.text}  <!-- Sử dụng page.text để hiển thị tên -->
+                </li>
+            `);
+                        }
+                    });
+                });
+
+
+                // Kích hoạt sortable
+                $("#sortable-subpages").sortable();
+                // Hiển thị modal
+                $('#editSubPageModal').modal('show');
+            } else {
+                alert(response.message || 'Không thể tải dữ liệu.');
+            }
+        },
+        error: function(xhr, status, error) {
+            console.log('Lỗi AJAX:', error);
+            alert('Có lỗi xảy ra khi tải dữ liệu.');
+        }
+    });
+});
+
+// Lưu thay đổi
+$(document).on('click', '#saveSubPageChanges', function() {
+    var menuId = $(this).attr('data-menu-id');
+    var selectedPages = $('#sub-pages').val();
+    var sortedData = [];
+
+    // Thu thập ID sub-page và vị trí sắp xếp
+    $('#sortable-subpages li').each(function(index) {
+        sortedData.push({
+            id: $(this).data('id'),
+            position: index + 1 // Lưu vị trí bắt đầu từ 1
+        });
+    });
+
+    // Gửi dữ liệu để lưu
+    $.ajax({
+        url: '<?= \yii\helpers\Url::to(['menus/save-sub-page']) ?>',
+        type: 'POST',
+        headers: {
+            'X-CSRF-Token': $('meta[name="csrf-token"]').attr('content')
+        },
+        data: {
+            menuId,
+            selectedPages,
+            sortedData
+        },
+        success: function(response) {
+            if (response.success) {
+                swal({
+                    title: "Thành công!",
+                    text: response.message || "Dữ liệu đã được cập nhật.",
+                    icon: "success",
+                }).then(() => {
+                    $('#editSubPageModal').modal('hide');
+                    location.reload();
+                });
+            } else {
+                swal({
+                    title: "Thất bại!",
+                    text: response.message || "Có lỗi xảy ra, vui lòng thử lại.",
+                    icon: "error",
+                });
+            }
+        },
+        error: function(xhr, status, error) {
+            console.error('Lỗi AJAX:', error);
+            swal({
+                title: "Lỗi hệ thống!",
+                text: "Không thể thực hiện yêu cầu, vui lòng thử lại.",
+                icon: "error",
+            });
+        }
+    });
+});
+
 
 $(document).ready(function() {
     $(document).on('click', '.edit-btn', function() {
@@ -843,7 +1023,7 @@ $(document).ready(function() {
     </div>
 </div>
 
-<!-- Modal Page Menu Con -->
+<!-- Modal SubMenu -->
 <div class="modal fade" id="subMenuModal" tabindex="-1" aria-labelledby="subMenuModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
@@ -852,12 +1032,6 @@ $(document).ready(function() {
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                <div class="mb-3">
-                    <label for="submenu-pages" class="form-label">Page Con:</label>
-                    <select id="submenu-pages" class="form-select form-multi-select" multiple>
-                        <!-- Options sẽ được thêm qua AJAX -->
-                    </select>
-                </div>
                 <div class="mb-3">
                     <label for="submenu-menus" class="form-label">Menu Con:</label>
                     <select id="submenu-menus" class="form-select form-multi-select" multiple>
@@ -873,6 +1047,36 @@ $(document).ready(function() {
         </div>
     </div>
 </div>
+
+<!-- Sub Page -->
+<div class="modal fade" id="editSubPageModal" tabindex="-1" aria-labelledby="editSubPageModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title" id="editSubPageModalLabel">Chỉnh sửa Page Con<< /h4>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div>
+                    <label for="sub-pages">Page con:</label>
+                    <select id="sub-pages" class="form-multi-select" multiple="multiple"></select>
+                </div>
+                <div class="mt-3">
+                    <label>Sắp xếp:</label>
+                    <ul id="sortable-subpages" class="list-group">
+                        <!-- Các sub-page sẽ được thêm vào đây -->
+                    </ul>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+                <button type="button" class="btn btn-primary" id="saveSubPageChanges">Lưu thay đổi</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
 
 <!-- Modal Thùng Rác -->
 <div class="modal fade" id="trashBinModal" tabindex="-1" aria-labelledby="trashBinModalLabel" aria-hidden="true">

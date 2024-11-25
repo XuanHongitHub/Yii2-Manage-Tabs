@@ -9,7 +9,7 @@ use Yii;
  *
  * @property int $id
  * @property int $user_id
- * @property string|null $name
+ * @property string $name
  * @property string|null $table_name
  * @property string $type
  * @property int|null $status
@@ -28,7 +28,7 @@ class Page extends \yii\db\ActiveRecord
      */
     public static function tableName()
     {
-        return 'page';
+        return 'manager_page';
     }
 
     /**
@@ -37,7 +37,7 @@ class Page extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
-            [['user_id', 'type'], 'required'],
+            [['user_id', 'name', 'type'], 'required'],
             [['user_id', 'menu_id', 'deleted', 'status', 'position'], 'integer'],
             [['type'], 'string'],
             [['created_at', 'updated_at'], 'safe'],

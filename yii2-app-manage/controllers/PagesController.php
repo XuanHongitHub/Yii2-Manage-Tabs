@@ -21,6 +21,7 @@ use PhpOffice\PhpSpreadsheet\Style\Font;
 use PhpOffice\PhpSpreadsheet\IOFactory;
 use yii\db\Schema;
 use yii\web\NotFoundHttpException;
+use yii\db\Query;
 
 class PagesController extends Controller
 {
@@ -54,35 +55,18 @@ class PagesController extends Controller
     public function actionIndex()
     {
         $menuId = Yii::$app->request->get('menuId');
-        $pageId = Yii::$app->request->get('pageId');
 
-        if ($menuId) {
-            $menu = Menu::findOne($menuId);
+        $menu = Menu::findOne($menuId);
 
-            if ($menu) {
-                $pages = Page::find()
-                    ->where(['status' => 0, 'menu_id' => $menuId])
-                    ->orderBy(['position' => SORT_ASC, 'id' => SORT_DESC])
-                    ->all();
+        if ($menu) {
+            $pages = Page::find()
+                ->where(['status' => 0, 'menu_id' => $menuId])
+                ->orderBy(['position' => SORT_ASC, 'id' => SORT_DESC])
+                ->all();
 
 
-                return $this->render('menu', [
-                    'pages' => $pages,
-                    // 'tableTabs' => $tableTabs,
-                ]);
-            }
-        }
-
-        if ($pageId) {
-            $page_item = Page::find()
-                ->where(['status' => 0, 'id' => $pageId])
-                ->one();
-
-            // $tableTabs = TableTab::find()->all();
-
-            return $this->render('page', [
-                'page_item' => $page_item,
-                // 'tableTabs' => $tableTabs,
+            return $this->render('menu', [
+                'pages' => $pages,
             ]);
         }
 
@@ -124,7 +108,7 @@ class PagesController extends Controller
                 $columns = Yii::$app->db->schema->getTableSchema($tableName)->columns;
                 $columnNames = array_keys($columns);
 
-                $query = (new \yii\db\Query())->from($tableName);
+                $query = (new Query())->from($tableName);
 
                 if (!empty($searchTerm)) {
                     $query->where(['or', ...array_map(fn($c) => ['like', $c, $searchTerm], $columnNames)]);
@@ -153,6 +137,7 @@ class PagesController extends Controller
                     'pagination' => $pagination,
                     'totalCount' => $totalCount,
                     'pageSize' => $pageSize,
+                    'pageId' => $pageId,
                 ]);
             }
         } elseif ($pageType === 'richtext') {
@@ -193,16 +178,16 @@ class PagesController extends Controller
      * Download RichtextData Action.
      *
      */
-    public function actionDownload($pageId)
-    {
-        $filePath = Yii::getAlias('@runtime/richtext/' . $pageId . '.txt');
+    // public function actionDownload($pageId)
+    // {
+    //     $filePath = Yii::getAlias('@runtime/richtext/' . $pageId . '.txt');
 
-        if (file_exists($filePath)) {
-            return Yii::$app->response->sendFile($filePath);
-        } else {
-            throw new NotFoundHttpException('Không tìm thấy tệp tin.');
-        }
-    }
+    //     if (file_exists($filePath)) {
+    //         return Yii::$app->response->sendFile($filePath);
+    //     } else {
+    //         throw new NotFoundHttpException('Không tìm thấy tệp tin.');
+    //     }
+    // }
     /** 
      * Update TableData Action.
      *
@@ -213,35 +198,20 @@ class PagesController extends Controller
         $data = Yii::$app->request->post('data');
         $originalValues = Yii::$app->request->post('originalValues');
 
-        if (isset($originalValues['id'])) {
-            $whereCondition = "`id` = :original_id";
-        } else {
-            $whereCondition = '';
-        }
-
-        $setClause = [];
-        foreach ($data as $column => $value) {
-            $setClause[] = "`$column` = :$column";
-        }
-        $setCondition = implode(", ", $setClause);
-
-        $sql = "UPDATE `$tableName` SET $setCondition" . ($whereCondition ? " WHERE $whereCondition" : "");
-        $command = Yii::$app->db->createCommand($sql);
-
-        foreach ($data as $column => $value) {
-            $command->bindValue(":$column", $value === '' ? null : $value);
-        }
-        if (isset($originalValues['id'])) {
-            $command->bindValue(":original_id", $originalValues['id']);
-        }
+        $whereCondition = isset($originalValues['id']) ? ['id' => $originalValues['id']] : [];
 
         try {
-            $command->execute();
+            Yii::$app->db->createCommand()
+                ->update($tableName, $data, $whereCondition)
+                ->execute();
+
             return $this->asJson(['success' => true]);
         } catch (\Exception $e) {
             return $this->asJson(['success' => false, 'message' => $e->getMessage()]);
         }
     }
+
+    //QUERYBUILD
     /** 
      * Create TableData Action.
      *
@@ -262,18 +232,10 @@ class PagesController extends Controller
             return $this->asJson(['success' => false, 'message' => 'Không có cột hợp lệ để thêm dữ liệu.']);
         }
 
-        $sql = "INSERT INTO `$tableName` (`" . implode("`, `", array_keys($validData)) . "`) VALUES (:" . implode(", :", array_keys($validData)) . ")";
-        $command = Yii::$app->db->createCommand($sql);
-
-        foreach ($validData as $column => $value) {
-            $command->bindValue(":$column", $value);
-        }
-
         try {
-            $command->execute();
+            Yii::$app->db->createCommand()->insert($tableName, $validData)->execute();
 
-            $countSql = "SELECT COUNT(*) FROM `$tableName`";
-            $totalRecords = Yii::$app->db->createCommand($countSql)->queryScalar();
+            $totalRecords = Yii::$app->db->createCommand("SELECT COUNT(*) FROM $tableName")->queryScalar();
 
             $pageSize = 10;
             $totalPages = ceil($totalRecords / $pageSize);
@@ -287,6 +249,7 @@ class PagesController extends Controller
             return $this->asJson(['success' => false, 'message' => $e->getMessage()]);
         }
     }
+
 
     /** 
      * Delete TableData Action.
@@ -312,9 +275,9 @@ class PagesController extends Controller
 
                 if (preg_match('/^[a-zA-Z_0-9][a-zA-Z0-9_]*$/', $column)) {
                     if ($value === '') {
-                        $tempConditions[] = "`$column` IS NULL";
+                        $tempConditions[] = "$column IS NULL";
                     } else {
-                        $tempConditions[] = "`$column` = '" . addslashes($value) . "'";
+                        $tempConditions[] = "$column = '" . addslashes($value) . "'";
                     }
                 } else {
                     Yii::error("Invalid column name: $column", __METHOD__);
@@ -330,17 +293,17 @@ class PagesController extends Controller
 
 
         if (empty($whereConditions)) {
-            $sql = "DELETE FROM `$table` WHERE ";
+            $sql = "DELETE FROM $table WHERE ";
             $columns = array_keys($conditions[0]);
             $nullConditions = [];
 
             foreach ($columns as $column) {
-                $nullConditions[] = "`$column` IS NULL";
+                $nullConditions[] = "$column IS NULL";
             }
 
             $sql .= implode(' AND ', $nullConditions);
         } else {
-            $sql = "DELETE FROM `$table` WHERE " . implode(' OR ', $whereConditions);
+            $sql = "DELETE FROM $table WHERE " . implode(' OR ', $whereConditions);
         }
 
         try {
@@ -402,7 +365,7 @@ class PagesController extends Controller
             if (!$removeId && isset($columns[$primaryKey])) {
                 $primaryKeyValues = array_filter(array_column($data, $primaryKey));
                 if (!empty($primaryKeyValues)) {
-                    $existingIds = Yii::$app->db->createCommand("SELECT `$primaryKey` FROM {$tableName} WHERE `$primaryKey` IN (" . implode(',', $primaryKeyValues) . ")")
+                    $existingIds = Yii::$app->db->createCommand("SELECT $primaryKey FROM {$tableName} WHERE $primaryKey IN (" . implode(',', $primaryKeyValues) . ")")
                         ->queryColumn();
 
                     foreach ($data as $key => $row) {
@@ -467,10 +430,10 @@ class PagesController extends Controller
                             }, $rowData));
 
                             $updateList = implode(', ', array_map(function ($column) {
-                                return "`$column` = VALUES(`$column`)";
+                                return "$column = VALUES($column)";
                             }, array_keys($rowData)));
 
-                            $sql = "INSERT INTO {$tableName} (`$columnsList`) VALUES ($valuesList) ON DUPLICATE KEY UPDATE $updateList";
+                            $sql = "INSERT INTO {$tableName} ($columnsList) VALUES ($valuesList) ON DUPLICATE KEY UPDATE $updateList";
                             Yii::$app->db->createCommand($sql)->execute();
                         }
                     }
@@ -592,8 +555,13 @@ class PagesController extends Controller
 
     public function actionExportExcel($format, $tableName)
     {
-        $columns = Yii::$app->db->createCommand("DESCRIBE `$tableName`")->queryAll();
-        $columnNames = array_map(fn($column) => $column['Field'], $columns);
+        $columns = (new Query())
+            ->select('column_name')
+            ->from('information_schema.columns')
+            ->where(['table_name' => $tableName])
+            ->all();
+
+        $columnNames = array_map(fn($column) => $column['column_name'], $columns);
 
         $spreadsheet = new Spreadsheet();
         $sheet = $spreadsheet->getActiveSheet();
@@ -616,7 +584,7 @@ class PagesController extends Controller
         ];
         $sheet->getStyle('A1:' . chr(64 + count($columnNames)) . '1')->applyFromArray($headerStyle);
 
-        $query = (new \yii\db\Query())->from($tableName);
+        $query = (new Query())->from($tableName);
         $batchSize = 1000;
         $rowIndex = 2;
 
@@ -631,7 +599,6 @@ class PagesController extends Controller
             }
         }
 
-        // Border
         $sheet->getStyle('A1:' . chr(64 + count($columnNames)) . ($rowIndex - 1))->applyFromArray([
             'borders' => [
                 'allBorders' => ['borderStyle' => Border::BORDER_THIN, 'color' => ['rgb' => '000000']],
@@ -661,13 +628,14 @@ class PagesController extends Controller
         ]);
     }
 
+
     public function getExportData($tableName)
     {
-        $columns = Yii::$app->db->createCommand("DESCRIBE `$tableName`")->queryAll();
+        $columns = Yii::$app->db->createCommand("DESCRIBE $tableName")->queryAll();
         $columnNames = array_map(fn($column) => $column['Field'], $columns);
 
         $data = [];
-        foreach (Yii::$app->db->createCommand("SELECT * FROM `$tableName`")->query()->batch(1000) as $rows) {
+        foreach (Yii::$app->db->createCommand("SELECT * FROM $tableName")->query()->batch(1000) as $rows) {
             $data = array_merge($data, $rows);
         }
 

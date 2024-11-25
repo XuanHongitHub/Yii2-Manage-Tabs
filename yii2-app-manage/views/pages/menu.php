@@ -3,7 +3,6 @@
 use app\models\Menu;
 
 /** @var yii\web\View $this */
-/** @var app\models\TableTab[] $tableTabs */
 /** @var app\models\Page[] $pages */
 
 $menuId = $_GET['menuId'];
@@ -27,46 +26,38 @@ $this->title = $menuName;
             <div class="col-sm-12">
 
                 <div class="card">
-
+                    <div class="card-header card-no-border pb-0">
+                        <h4>
+                            <?= $menuName ? $menuName : 'Menu này không tồn tại hoặc đã bị ẩn/xóa.'; ?>
+                        </h4>
+                    </div>
                     <div class="card-body">
-                        <ul class="simple-wrapper nav nav-tabs" id="page-list">
-                            <?php if (!empty($pages)): ?>
-                                <?php $hasValidTabs = false; ?>
-                                <?php foreach ($pages as $index => $page): ?>
-                                    <?php if ($page->deleted == 0): ?>
-                                        <?php $hasValidTabs = true; ?>
+                        <?php
+                        $validPages = array_filter($pages, fn($page) => $page->deleted == 0);
+                        ?>
+
+                        <?php if (!empty($validPages)): ?>
+                            <?php if (count($validPages) > 1): ?>
+                                <ul class="simple-wrapper nav nav-tabs" id="page-list">
+                                    <?php foreach ($validPages as $index => $page): ?>
                                         <li class="nav-item">
                                             <a class="nav-link <?= $index === 0 ? 'active' : '' ?>" href="#"
                                                 data-id="<?= $page->id ?>" onclick="loadTabData(<?= $page->id ?>, null)">
                                                 <?= htmlspecialchars($page->name) ?>
                                             </a>
                                         </li>
-                                    <?php endif; ?>
-                                <?php endforeach; ?>
-
-                                <?php if (!$hasValidTabs): ?>
-                                    <div class="align-items-center m-2">
-                                        Không có page nào. Vui lòng
-                                        <a class="txt-primary mb-2"
-                                            href="<?= \yii\helpers\Url::to(['admin/pages/create', 'menuId' => $menuId]) ?>"
-                                            style="font-weight: bold; text-decoration: underline;">
-                                            Thêm Page tại đây
-                                        </a> hoặc trong cài đặt.
-                                    </div>
-
-                                <?php endif; ?>
-                            <?php else: ?>
-                                <div class="align-items-center m-2">
-                                    Không có page nào. Vui lòng
-                                    <a class="txt-primary mb-2"
-                                        href="<?= \yii\helpers\Url::to(['admin/pages/create', 'menuId' => $menuId]) ?>"
-                                        style="font-weight: bold; text-decoration: underline;">
-                                        Thêm Page tại đây
-                                    </a> hoặc trong cài đặt.
-                                </div>
-
+                                    <?php endforeach; ?>
+                                </ul>
                             <?php endif; ?>
-                        </ul>
+                        <?php else: ?>
+                            <div class="align-items-center m-2">
+                                Không có page nào. Vui lòng
+                                <a class="txt-primary mb-2" href="<?= \yii\helpers\Url::to(['admin/pages/create']) ?>"
+                                    style="font-weight: bold; text-decoration: underline;">
+                                    Thêm Page tại đây
+                                </a> hoặc trong cài đặt.
+                            </div>
+                        <?php endif; ?>
                         <div class="page-content">
                             <div class="page-pane fade show active" id="page-data-current">
                                 <div class="table-responsive" id="table-data-current">
@@ -84,10 +75,10 @@ $this->title = $menuName;
 </div>
 <?php
 
-$firstTabId = null;
+$firstpageId = null;
 foreach ($pages as $page) {
     if ($page->deleted == 0) {
-        $firstTabId = $page->id;
+        $firstpageId = $page->id;
         break;
     }
 }
@@ -96,9 +87,9 @@ foreach ($pages as $page) {
 <script async>
     $(document).ready(function() {
 
-        var firstTabId = <?= !empty($firstTabId) ? $pages[0]->id : 'null' ?>;
-        if (firstTabId !== null) {
-            loadTabData(firstTabId);
+        var firstpageId = <?= !empty($firstpageId) ? $pages[0]->id : 'null' ?>;
+        if (firstpageId !== null) {
+            loadTabData(firstpageId);
         } else {
             console.log("No pages available to load data.");
         }

@@ -70,10 +70,10 @@ $this->title = 'Tất cả Page';
 </div>
 <?php
 
-$firstTabId = null;
+$firstpageId = null;
 foreach ($pages as $page) {
     if ($page->deleted == 0) {
-        $firstTabId = $page->id;
+        $firstpageId = $page->id;
         break;
     }
 }
@@ -82,9 +82,9 @@ foreach ($pages as $page) {
 <script async>
     $(document).ready(function() {
 
-        var firstTabId = <?= !empty($firstTabId) ? $pages[0]->id : 'null' ?>;
-        if (firstTabId !== null) {
-            loadTabData(firstTabId);
+        var firstpageId = <?= !empty($firstpageId) ? $pages[0]->id : 'null' ?>;
+        if (firstpageId !== null) {
+            loadTabData(firstpageId);
         } else {
             console.log("No pages available to load data.");
         }

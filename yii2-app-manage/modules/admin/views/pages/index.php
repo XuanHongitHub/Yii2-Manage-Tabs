@@ -6,7 +6,7 @@ use app\models\Menu;
 /** @var yii\web\View $this */
 $tableCreationData = Yii::$app->session->getFlash('tableCreationData', []);
 
-$this->title = 'List Tabs';
+$this->title = 'List Pages';
 
 ?>
 <?php include Yii::getAlias('@app/views/layouts/_sidebar-settings.php'); ?>
@@ -26,7 +26,7 @@ $this->title = 'List Tabs';
                     <div class="card-header card-no-border pb-0">
                         <div class="d-flex flex-column flex-md-row align-items-md-center">
                             <div class="me-auto mb-3 mb-md-0 text-center text-md-start">
-                                <h4>Danh sách Tabs</h4>
+                                <h4>Danh sách Pages</h4>
                                 <p class="mt-1 f-m-light">Table Page | Richtext Page</p>
                             </div>
                             <div

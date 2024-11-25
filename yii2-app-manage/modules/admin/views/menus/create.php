@@ -115,10 +115,10 @@ $this->title = 'Thêm Menu';
             let parentId = $('#parentId').val();
             let menuName = $('#name').val();
             let icon = $('#icon-selected-value').val();
-            let selectedTabs = $('#pages').val();
+            let selectedPages = $('#pages').val();
             let selectedMenus = $('#menus').val();
 
-            console.log("🚀 ~ $ ~ selectedTabs:", selectedTabs);
+            console.log("🚀 ~ $ ~ selectedPages:", selectedPages);
             console.log("🚀 ~ $ ~ selectedMenus:", selectedMenus);
 
             $.ajax({
