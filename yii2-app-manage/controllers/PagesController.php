@@ -100,8 +100,7 @@ class PagesController extends Controller
         $pageType = $pageTab->type;
 
         if ($pageType === 'table') {
-            // Table Page
-            // $tableTab = TableTab::find()->where(['pageId' => $pageId])->one();
+
             $tableName = $pageTab ? $pageTab->table_name : null;
 
             if ($tableName) {
@@ -221,9 +220,10 @@ class PagesController extends Controller
         $tableName = Yii::$app->request->post('table');
         $data = Yii::$app->request->post('data');
 
+        // Kiểm tra và chỉ giữ lại các cột hợp lệ
         $validData = [];
         foreach ($data as $column => $value) {
-            if (preg_match('/^[a-zA-Z_][a-zA-Z0-9_]*$/', $column) || is_numeric($column)) {
+            if (preg_match('/^[a-zA-Z_][a-zA-Z0-9_]*$/', $column)) {
                 $validData[$column] = $value === '' ? null : $value;
             }
         }
@@ -233,9 +233,11 @@ class PagesController extends Controller
         }
 
         try {
-            Yii::$app->db->createCommand()->insert($tableName, $validData)->execute();
+            $escapedTableName = Yii::$app->db->quoteTableName($tableName);
 
-            $totalRecords = Yii::$app->db->createCommand("SELECT COUNT(*) FROM $tableName")->queryScalar();
+            Yii::$app->db->createCommand()->insert($escapedTableName, $validData)->execute();
+
+            $totalRecords = Yii::$app->db->createCommand("SELECT COUNT(*) FROM $escapedTableName")->queryScalar();
 
             $pageSize = 10;
             $totalPages = ceil($totalRecords / $pageSize);
@@ -249,6 +251,7 @@ class PagesController extends Controller
             return $this->asJson(['success' => false, 'message' => $e->getMessage()]);
         }
     }
+
 
 
     /** 

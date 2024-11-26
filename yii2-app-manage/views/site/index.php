@@ -3,7 +3,6 @@
 use app\models\User;
 
 /** @var yii\web\View $this */
-/** @var app\models\TableTab[] $tableTabs */
 /** @var app\models\Page[] $pages */
 
 $this->title = 'Tất cả Page';
@@ -11,15 +10,8 @@ $this->title = 'Tất cả Page';
 <?php include Yii::getAlias('@app/views/layouts/_sidebar.php'); ?>
 
 <div class="page-body">
-    <div class="container-fluid">
-        <div class="page-title">
-            <div class="row">
-
-            </div>
-        </div>
-    </div>
     <!-- Container-fluid starts -->
-    <div class="container-fluid">
+    <div class="container-fluid pt-3">
         <div class="row">
             <div class="col-sm-12">
                 <div class="card">
@@ -35,7 +27,7 @@ $this->title = 'Tất cả Page';
                                         <?php $hasValidTabs = true; ?>
                                         <li class="nav-item">
                                             <a class="nav-link <?= $index === 0 ? 'active' : '' ?>" href="#"
-                                                data-id="<?= $page->id ?>" onclick="loadTabData(<?= $page->id ?>, null)">
+                                                data-id="<?= $page->id ?>" onclick="loadPageData(<?= $page->id ?>, null)">
                                                 <?= htmlspecialchars($page->name) ?>
                                             </a>
                                         </li>
@@ -84,12 +76,12 @@ foreach ($pages as $page) {
 
         var firstpageId = <?= !empty($firstpageId) ? $pages[0]->id : 'null' ?>;
         if (firstpageId !== null) {
-            loadTabData(firstpageId);
+            loadPageData(firstpageId);
         } else {
             console.log("No pages available to load data.");
         }
 
-        function loadTabData(pageId, page, search, pageSize) {
+        function loadPageData(pageId, page, search, pageSize) {
             localStorage.clear();
 
             $.ajax({

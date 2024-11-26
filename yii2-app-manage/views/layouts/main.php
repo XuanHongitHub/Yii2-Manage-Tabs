@@ -4,11 +4,11 @@
 /** @var string $content */
 
 use app\assets\AppAsset;
-use app\widgets\Alert;
-use yii\bootstrap5\Breadcrumbs;
 use yii\bootstrap5\Html;
-use yii\bootstrap5\Nav;
-use yii\bootstrap5\NavBar;
+use yii\helpers\Json;
+
+$errorMessage = Yii::$app->session->getFlash('error');
+$successMessage = Yii::$app->session->getFlash('success');
 
 AppAsset::register($this);
 
@@ -78,9 +78,9 @@ $this->registerLinkTag(['rel' => 'icon', 'type' => 'image/x-icon', 'href' => Yii
 </div>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // Check if there's a success message
-    const successMessage = "<?= Yii::$app->session->getFlash('success') ?>";
-    const errorMessage = "<?= Yii::$app->session->getFlash('error') ?>";
+    const errorMessage = <?= Json::encode($errorMessage) ?>;
+
+    const successMessage = <?= Json::encode($successMessage) ?>;
     if (successMessage) {
         document.getElementById('toast-body').textContent = successMessage;
         document.getElementById('toast-timestamp').textContent = new Date().toLocaleTimeString();

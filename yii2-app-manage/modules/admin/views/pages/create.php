@@ -71,59 +71,54 @@ $this->title = 'Create Pages';
                                                 <tr>
                                                     <td>
                                                         <input type="text" name="columns[]" class="form-control"
-                                                            id="column-name" placeholder="Column Name">
-                                                        <div class="text-danger column-error" id="column-name-error">
+                                                            id="column-name-0" placeholder="Column Name">
+                                                        <div class="text-danger column-error" id="column-name-error-0">
                                                         </div>
                                                     </td>
                                                     <td>
-                                                        <select name="data_types[]" class="form-select" id="data-type">
+                                                        <select name="data_types[]" class="form-select"
+                                                            id="data-type-0">
                                                             <?php
                                                             $dataTypeOptions = [
-                                                                "INT",
-                                                                "BIGINT",
-                                                                "SMALLINT",
-                                                                "TINYINT",
+                                                                "SERIAL",
                                                                 "FLOAT",
                                                                 "DOUBLE",
                                                                 "DECIMAL",
                                                                 "VARCHAR",
                                                                 "CHAR",
                                                                 "TEXT",
-                                                                "MEDIUMTEXT",
                                                                 "LONGTEXT",
                                                                 "DATE",
                                                                 "DATETIME",
                                                                 "TIMESTAMP",
                                                                 "TIME",
                                                                 "BOOLEAN",
-                                                                "JSON",
-                                                                "BLOB"
                                                             ];
                                                             foreach ($dataTypeOptions as $option): ?>
                                                             <option value="<?= $option ?>"><?= $option ?></option>
                                                             <?php endforeach; ?>
                                                         </select>
-                                                        <div class="text-danger data-type-error" id="data-type-error">
+                                                        <div class="text-danger data-type-error" id="data-type-error-0">
                                                         </div>
                                                     </td>
                                                     <td>
                                                         <input type="number" name="data_sizes[]" class="form-control"
-                                                            id="data-size" placeholder="Length">
-                                                        <div class="text-danger data-size-error" id="data-size-error">
+                                                            id="data-size-0" placeholder="Length">
+                                                        <div class="text-danger data-size-error" id="data-size-error-0">
                                                         </div>
                                                     </td>
                                                     <td class="text-center">
                                                         <input type="checkbox" name="is_not_null[]" value="1"
-                                                            class="form-check-input" id="is-not-null">
+                                                            class="form-check-input" id="is-not-null-0" checked>
                                                     </td>
                                                     <td class="text-center">
                                                         <input type="checkbox" name="is_primary[]" value="1"
-                                                            class="form-check-input" id="is-primary">
-                                                        <div class="text-danger primary-error" id="primary-error"></div>
+                                                            class="form-check-input" id="is-primary-0" checked>
+                                                        <div class="text-danger primary-error" id="primary-error-0">
+                                                        </div>
                                                     </td>
                                                     <td>
-                                                        <i class="fa-solid fa-square-minus text-danger fs-3"
-                                                            style="cursor: pointer;" onclick="removeColumn(this)"></i>
+                                                        <!-- <i class="fa-solid fa-square-minus text-danger fs-3" style="cursor: pointer;" onclick="removeColumn(this)"></i> -->
                                                     </td>
                                                 </tr>
                                             </tbody>
@@ -150,25 +145,45 @@ $this->title = 'Create Pages';
 $(document).ready(function() {
     toggleTabInputs();
 
-    $(document).on('input', '#pageName, #tableName', function() {
-        validateField(this);
+    $(document).on('input, change', '#pageName, #tableName, .form-control', function() {
+        debouncedValidateField(this);
     });
 
-    $(document).on('change', '#type', function() {
-        toggleTabInputs();
-    });
+    function debounce(func, delay) {
+        let timeoutId;
+        return function(...args) {
+            clearTimeout(timeoutId);
+            timeoutId = setTimeout(() => func.apply(this, args), delay);
+        };
+    }
+
+    // Sử dụng debounce cho validateField
+    const debouncedValidateField = debounce(function(inputElement) {
+        validateField(inputElement);
+        if ($('#type').val() === 'table') {
+            // Kiểm tra các cột
+            $('#columnsContainer tr').each(function(index) {
+                let columnName = $(this).find(`#column-name-${index}`).val();
+                let dataType = $(this).find(`#data-type-${index}`).val();
+                let dataSize = $(this).find(`#data_size-${index}`).val();
+                validateColumn(index, columnName, dataType, dataSize);
+            });
+        }
+    }, 500);
 
     let pageExists = false;
     let tableExists = false;
 
     $(document).on('submit', 'form', function(event) {
         let isValid = true;
+        let errors = [];
 
         // Kiểm tra các trường bắt buộc
         $('#pageName, #tableName').each(function() {
             if ($(this).val() === '' && $(this).is(':visible')) {
                 validateField(this);
                 isValid = false;
+                errors.push(`${$(this).attr('id')} không được để trống!`);
             }
         });
 
@@ -178,86 +193,101 @@ $(document).ready(function() {
                 if ($(this).val() === '' && $(this).is(':visible')) {
                     validateField(this);
                     isValid = false;
+                    errors.push('Tên bảng không được để trống!');
                 }
             });
 
             // Kiểm tra các cột
-            $('#columnsContainer tr').each(function() {
-                let columnName = $(this).find('input[name="columns[]"]').val();
-                let dataType = $(this).find('select[name="data_types[]"]').val();
-                let dataSize = $(this).find('input[name="data_sizes[]"]').val();
-                let isValidColumn = validateColumn(columnName, dataType, dataSize);
+            $('#columnsContainer tr').each(function(index) {
+                let columnName = $(this).find(`#column-name-${index}`).val();
+                let dataType = $(this).find(`#data-type-${index}`).val();
+                let dataSize = $(this).find(`#data_size-${index}`).val();
+                let isValidColumn = validateColumn(index, columnName, dataType, dataSize);
 
                 if (!isValidColumn) {
                     isValid = false;
-                    $(this).find('input[name="columns[]"]').css('border', '1px solid red')
-                        .addClass('is-invalid');
-                    $(this).find('select[name="data_types[]"]').css('border', '1px solid red')
-                        .addClass('is-invalid');
-                    $(this).find('input[name="data_sizes[]"]').css('border', '1px solid red')
-                        .addClass('is-invalid');
+                    errors.push('Có lỗi với các cột!');
                 }
             });
-        } else if ($('#type').val() === 'richtext') {
-            $('#tableNameInput').hide();
-            $('#tableInputs').hide();
         }
 
         // Kiểm tra kết quả tổng thể
         if (!isValid) {
             event.preventDefault();
+            showErrors(errors);
             showToast('Vui lòng kiểm tra lại các trường bắt buộc!');
         }
     });
 
-    function validateColumn(columnName, dataType, dataSize) {
+    function validateColumn(index, columnName, dataType, dataSize) {
         let isValid = true;
+        let columnNameErrorSelector = `#column-name-error-${index}`;
+        let dataTypeErrorSelector = `#data-type-error-${index}`;
+        let dataSizeErrorSelector = `#data-size-error-${index}`;
+
+        const dataTypeConfig = {
+            SERIAL: {
+                requiresSize: false
+            },
+            FLOAT: {
+                requiresSize: true,
+                min: 0,
+                max: 38
+            },
+            DOUBLE: {
+                requiresSize: true,
+                min: 0,
+                max: 38
+            },
+            DECIMAL: {
+                requiresSize: true,
+                min: 0,
+                max: 38
+            },
+            VARCHAR: {
+                requiresSize: true,
+                min: 1,
+                max: 1000
+            },
+            CHAR: {
+                requiresSize: true,
+                min: 1,
+                max: 255
+            },
+            TEXT: {
+                requiresSize: false
+            },
+            BOOLEAN: {
+                requiresSize: false
+            },
+        };
+
+        const config = dataTypeConfig[dataType];
 
         // Kiểm tra tên cột hợp lệ
         if (!/^[a-zA-Z0-9_]+$/.test(columnName)) {
-            $('#column-name-error').text('Tên cột chỉ có thể bao gồm chữ cái, số và dấu gạch dưới.');
+            $(columnNameErrorSelector).text('Tên cột chỉ có thể bao gồm chữ cái, số và dấu gạch dưới.');
             isValid = false;
         } else {
-            $('#column-name-error').text('');
+            $(columnNameErrorSelector).text('');
         }
 
-        // Kiểm tra kiểu dữ liệu hợp lệ
-        const validDataTypes = ['INT', 'BIGINT', 'SMALLINT', 'TINYINT', 'FLOAT', 'DOUBLE', 'DECIMAL', 'VARCHAR',
-            'CHAR', 'TEXT',
-            'MEDIUMTEXT', 'LONGTEXT', 'DATE', 'DATETIME', 'TIMESTAMP', 'TIME', 'BOOLEAN', 'JSON', 'BLOB'
-        ];
-        if (!validDataTypes.includes(dataType)) {
-            $('#data-type-error').text('Kiểu dữ liệu không hợp lệ.');
-            isValid = false;
+        if (config) {
+            // Kiểm tra kiểu dữ liệu và kích thước
+            if (config.requiresSize) {
+                if (!dataSize || isNaN(dataSize) || dataSize < config.min || dataSize > config.max) {
+                    $(dataSizeErrorSelector).text(
+                        `Kích thước phải trong khoảng từ ${config.min} đến ${config.max}.`);
+                    isValid = false;
+                } else {
+                    $(dataSizeErrorSelector).text('');
+                }
+            } else if (dataSize) {
+                $(dataSizeErrorSelector).text('Kiểu dữ liệu này không yêu cầu kích thước.');
+                isValid = false;
+            }
         } else {
-            $('#data-type-error').text('');
-        }
-
-        // Kiểm tra độ dài cho các kiểu dữ liệu có độ dài (VARCHAR, CHAR, DECIMAL, FLOAT, ...)
-        if (['VARCHAR', 'CHAR'].includes(dataType)) {
-            if (!dataSize || isNaN(dataSize) || dataSize <= 0 || dataSize > 1000) {
-                $('#data-size-error').text('Độ dài phải là một số lớn hơn 0 và nhỏ hơn 1000.');
-                isValid = false;
-            } else {
-                $('#data-size-error').text('');
-            }
-        }
-
-        if (['DECIMAL', 'FLOAT', 'DOUBLE'].includes(dataType)) {
-            if (!dataSize || isNaN(dataSize) || dataSize < 0 || dataSize > 38) {
-                $('#data-size-error').text('Kích thước phải là một số từ 0 đến 38.');
-                isValid = false;
-            } else {
-                $('#data-size-error').text('');
-            }
-        }
-
-        // Kiểm tra các kiểu dữ liệu không cần kích thước (TEXT, BLOB, ...)
-        const invalidDataSizeTypes = ['TEXT', 'MEDIUMTEXT', 'LONGTEXT', 'DATE', 'DATETIME', 'TIMESTAMP', 'TIME',
-            'BOOLEAN', 'JSON', 'BLOB'
-        ];
-        if (invalidDataSizeTypes.includes(dataType) && dataSize) {
-            $('#data-size-error').text('Các kiểu dữ liệu này không yêu cầu kích thước.');
+            $(dataTypeErrorSelector).text('Kiểu dữ liệu không hợp lệ.');
             isValid = false;
         }
 
@@ -271,29 +301,34 @@ $(document).ready(function() {
         let errorMessage = $('#' + fieldId + 'Error');
         let fieldName = fieldId === 'pageName' ? 'Page' : 'Table';
 
-        // Kiểm tra trường trống và kiểm tra sự tồn tại
         checkIfNameExists(fieldValue, fieldId, fieldName);
     }
 
     function checkIfNameExists(name, fieldId, fieldName) {
-        // Kiểm tra nếu trường bị trống
         if (name === '') {
-            let errorMessageText = `${fieldName} không được để trống!`;
-            $('#' + fieldId + 'Error').text(errorMessageText).show();
-            $('#' + fieldId).css('border', '1px solid red').addClass('is-invalid').removeClass('is-valid');
-            return; // Dừng lại nếu trường bị trống
+            setFieldValidation('#' + fieldId, false, `${fieldName} không được để trống!`);
+            return;
         }
 
-        // Kiểm tra tên có chứa ký tự đặc biệt không hợp lệ
-        const invalidCharsPattern = /[^a-zA-Z0-9_]/; // Chỉ cho phép chữ cái, số và dấu gạch dưới
-        if (invalidCharsPattern.test(name)) {
-            let errorMessageText = `${fieldName} chỉ được phép chứa chữ cái, số và dấu gạch dưới (_).`;
-            $('#' + fieldId + 'Error').text(errorMessageText).show();
-            $('#' + fieldId).css('border', '1px solid red').addClass('is-invalid').removeClass('is-valid');
-            return; // Dừng lại nếu tên chứa ký tự đặc biệt
-        }
+        const pageNamePattern = /^[a-zA-ZÀ-ỹà-ỹ0-9_ ]{1,20}$/;
+        const otherFieldPattern = /^[a-zA-Z0-9_]+$/;
 
-        // Nếu trường không trống và không có ký tự đặc biệt, tiếp tục kiểm tra sự tồn tại
+        if (fieldName === 'Page') {
+            if (!pageNamePattern.test(name)) {
+                setFieldValidation('#' + fieldId, false,
+                    `${fieldName} Không nhập ký tự đặc biệt, tối đa 20 ký tự.`);
+                return;
+            }
+        } else {
+            if (!otherFieldPattern.test(name)) {
+                setFieldValidation('#' + fieldId, false,
+                    `${fieldName} không được chứa khoảng trắng hoặc ký tự đặc biệt`
+                );
+                return;
+            }
+        }
+        setFieldValidation('#' + fieldId, true);
+
         let url = fieldId === 'pageName' ? '<?= \yii\helpers\Url::to(['pages/check-name-existence']) ?>' :
             '<?= \yii\helpers\Url::to(['pages/check-name-existence']) ?>';
         let data = fieldId === 'pageName' ? {
@@ -324,74 +359,87 @@ $(document).ready(function() {
         });
     }
 
-
     function handleExistenceResponse(exists, type, inputSelector, errorSelector) {
-        if (exists) {
-            $(errorSelector).text(`${type === 'page' ? 'Tên Page' : 'Tên Bảng'} đã tồn tại.`).show();
-            $(inputSelector).css('border', '1px solid red').addClass('is-invalid').removeClass('is-valid');
-            $('#tableInputs').hide(); // Ẩn form nhập columns nếu tồn tại
-        } else {
-            $(errorSelector).text('').hide();
-            $(inputSelector).css('border', '1px solid green').addClass('is-valid').removeClass('is-invalid');
-            $('#tableInputs').show(); // Hiển thị lại form nhập columns nếu không tồn tại
+        $(errorSelector).text(exists ? `${type === 'page' ? 'Tên Page' : 'Tên Bảng'} đã tồn tại.` : '').toggle(
+            exists);
+        $(inputSelector)
+            .css('border', exists ? '1px solid red' : '1px solid green')
+            .toggleClass('is-invalid', exists)
+            .toggleClass('is-valid', !exists);
+
+        if (type === 'table') {
+            $('#tableInputs').toggle(!exists);
         }
     }
 
+    function setFieldValidation(inputSelector, isValid, message = '') {
+        const borderColor = isValid ? '1px solid green' : '1px solid red';
+        $(inputSelector)
+            .css('border', borderColor)
+            .toggleClass('is-valid', isValid)
+            .toggleClass('is-invalid', !isValid);
+        $(inputSelector + 'Error').text(message).toggle(!isValid);
+    }
+
+    function showErrors(errors) {
+        const errorList = errors.map(error => `<li>${error}</li>`).join('');
+        $('#errorSummary').html(`<ul>${errorList}</ul>`).show();
+    }
 });
 
-// Hàm kiểm tra và hiển thị input khi thay đổi loại
 function toggleTabInputs() {
     var type = $('#type').val();
     var tableInputs = $('#tableInputs');
     var tableNameInput = $('#tableNameInput');
 
     if (type === 'richtext') {
-        tableInputs.hide();
+        // tableInputs.hide();
         tableNameInput.hide();
     } else {
-        tableInputs.show();
+        // tableInputs.show();
         tableNameInput.show();
     }
 }
 
-function addColumn() {
-    const columnsContainer = document.getElementById('columnsContainer');
-    const inputGroup = document.createElement('tr');
-    inputGroup.innerHTML =
-        `<td><input type="text" name="columns[]" class="form-control" placeholder="Length"></td>
-        <td>
-            <select name="data_types[]" class="form-select">
-                <option value="INT">INT</option>
-                <option value="BIGINT">BIGINT</option>
-                <option value="SMALLINT">SMALLINT</option>
-                <option value="TINYINT">TINYINT</option>
-                <option value="FLOAT">FLOAT</option>
-                <option value="DOUBLE">DOUBLE</option>
-                <option value="DECIMAL">DECIMAL</option>
-                <option value="VARCHAR">VARCHAR</option>
-                <option value="CHAR">CHAR</option>
-                <option value="TEXT">TEXT</option>
-                <option value="MEDIUMTEXT">MEDIUMTEXT</option>
-                <option value="LONGTEXT">LONGTEXT</option>
-                <option value="DATE">DATE</option>
-                <option value="DATETIME">DATETIME</option>
-                <option value="TIMESTAMP">TIMESTAMP</option>
-                <option value="TIME">TIME</option>
-                <option value="BOOLEAN">BOOLEAN</option>
-                <option value="JSON">JSON</option>
-                <option value="BLOB">BLOB</option>
-            </select>
-        </td>
-        <td><input type="number" name="data_sizes[]" class="form-control" placeholder="Length"></td>
+$(document).on('change', 'input[name="is_primary[]"]', function() {
+    $('input[name="is_primary[]"]').prop('checked', false); // Hủy chọn tất cả
+    $(this).prop('checked', true); // Chỉ chọn checkbox hiện tại
+});
 
-        <td class="text-center">
-            <input type="checkbox" name="is_not_null[]" value="1" class="form-check-input">
-        </td>
-        <td class="text-center">
-            <input type="checkbox" name="is_primary[]" value="1" class="form-check-input">
-        </td>
-        <td><i class="fa-solid fa-square-minus text-danger fs-3" style="cursor: pointer;" onclick="removeColumn(this)"></i></td>`;
-    columnsContainer.appendChild(inputGroup);
+
+function addColumn() {
+    const rowIndex = $('#columnsContainer tr').length; // Lấy số dòng hiện tại trong tbody
+    const newRow = `
+            <tr>
+                <td>
+                    <input type="text" name="columns[]" class="form-control" id="column-name-${rowIndex}" placeholder="Column Name">
+                    <div class="text-danger column-error" id="column-name-error-${rowIndex}"></div>
+                </td>
+                <td>
+                    <select name="data_types[]" class="form-select" id="data-type-${rowIndex}">
+                        <?php foreach ($dataTypeOptions as $option): ?>
+                            <option value="<?= $option ?>"><?= $option ?></option>
+                        <?php endforeach; ?>
+                    </select>
+                    <div class="text-danger data-type-error" id="data-type-error-${rowIndex}"></div>
+                </td>
+                <td>
+                    <input type="number" name="data_sizes[]" class="form-control" id="data-size-${rowIndex}" placeholder="Length">
+                    <div class="text-danger data-size-error" id="data-size-error-${rowIndex}"></div>
+                </td>
+                <td class="text-center">
+                    <input type="checkbox" name="is_not_null[]" value="1" class="form-check-input" id="is-not-null-${rowIndex}">
+                </td>
+                <td class="text-center">
+                    <input type="checkbox" name="is_primary[]" value="1" class="form-check-input" id="is-primary-${rowIndex}">
+                    <div class="text-danger primary-error" id="primary-error-${rowIndex}"></div>
+                </td>
+                <td>
+                    <i class="fa-solid fa-square-minus text-danger fs-3" style="cursor: pointer;" onclick="removeColumn(this)"></i>
+                </td>
+            </tr>
+        `;
+    $('#columnsContainer').append(newRow);
 }
 
 

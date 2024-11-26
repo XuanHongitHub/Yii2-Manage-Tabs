@@ -70,15 +70,14 @@ $globalIndexOffset = $page * $rowsPerPage;
 <div id="tableData">
     <div class="d-flex flex-wrap justify-content-between mt-3">
         <div class="d-md-flex d-sm-block">
-            <button class="btn btn-primary mb-2 me-2" id="add-data-btn" href="#" data-bs-toggle="modal"
+            <button class="btn btn-outline-primary mb-2 me-2" id="add-data-btn" href="#" data-bs-toggle="modal"
                 data-bs-target="#addDataModal">
-                <i class="fa-solid fa-plus"></i> Nhập Dữ Liệu
+                <i class="fa-solid fa-plus"></i> Nhập Mới
             </button>
 
             <button class="btn btn-danger mb-2 me-2" id="delete-selected-btn">
                 <i class="fa-regular fa-trash-can"></i> Xóa Đã Chọn
             </button>
-
             <!-- Nút Nhập Excel -->
             <button class="btn btn-info mb-2 me-2" id="import-data-btn" href="#" data-bs-toggle="modal"
                 data-bs-target="#importExelModal">
@@ -107,7 +106,8 @@ $globalIndexOffset = $page * $rowsPerPage;
             <tr>
                 <th class="px-2 py-0" style="width: 3%;"><input class="" type="checkbox" id="select-all"></th>
                 <?php foreach ($columns as $column): ?>
-                <th><?= htmlspecialchars($column->name) ?></th>
+                <th class="column-header" data-column="<?= htmlspecialchars($column->name) ?>">
+                    <?= htmlspecialchars($column->name) ?></th>
                 <?php endforeach; ?>
                 <th style="width: 8%;">Thao Tác</th>
             </tr>
@@ -123,7 +123,9 @@ $globalIndexOffset = $page * $rowsPerPage;
                         id="<?= $rowIndex ?>" data-table-name="<?= $tableName ?>">
                 </td>
                 <?php foreach ($columns as $column): ?>
-                <td><?= htmlspecialchars($row[$column->name]) ?></td>
+                <td class="column-data" data-column="<?= htmlspecialchars($column->name) ?>">
+                    <?= htmlspecialchars($row[$column->name]) ?>
+                </td>
                 <?php endforeach; ?>
                 <td class="text-nowrap">
                     <button class="btn btn-secondary btn-sm save-row-btn"
@@ -134,34 +136,35 @@ $globalIndexOffset = $page * $rowsPerPage;
                 </td>
             </tr>
             <?php endforeach; ?>
-            <script>
-            function getRowData(rowIndex) {
-                const table = document.querySelector('.dataTable tbody');
-                const row = table.rows[rowIndex];
 
-                if (!row) {
-                    console.error("Row not found:", rowIndex);
-                    return undefined;
-                }
-
-                const headerCells = document.querySelectorAll('.dataTable thead th');
-                const rowData = {};
-
-                headerCells.forEach((headerCell, idx) => {
-                    if (idx < headerCells.length - 1) {
-                        const columnName = headerCell.innerText.trim();
-                        const cellValue = row.cells[idx].innerText.trim();
-
-                        if (columnName) {
-                            rowData[columnName] = cellValue;
-                        }
-                    }
-                });
-
-                return rowData;
-            }
-            </script>
         </tbody>
+        <script>
+        function getRowData(rowIndex) {
+            const table = document.querySelector('.dataTable tbody');
+            const row = table.rows[rowIndex];
+
+            if (!row) {
+                console.error("Row not found:", rowIndex);
+                return undefined;
+            }
+
+            const headerCells = document.querySelectorAll('.dataTable thead th');
+            const rowData = {};
+
+            headerCells.forEach((headerCell, idx) => {
+                if (idx < headerCells.length - 1) {
+                    const columnName = headerCell.innerText.trim();
+                    const cellValue = row.cells[idx].innerText.trim();
+
+                    if (columnName) {
+                        rowData[columnName] = cellValue;
+                    }
+                }
+            });
+
+            return rowData;
+        }
+        </script>
     </table>
 
     <div class="d-flex flex-column flex-md-row align-items-center mb-3">
@@ -185,6 +188,28 @@ $globalIndexOffset = $page * $rowsPerPage;
                 <option value="500" <?= $pageSize == 500 ? 'selected' : '' ?>>500</option>
                 <option value="1000" <?= $pageSize == 1000 ? 'selected' : '' ?>>1000</option>
             </select>
+        </div>
+
+        <!-- Nút Tùy chỉnh cột -->
+        <div class="btn-group">
+            <button class="btn btn-primary mb-2 me-2 dropdown-toggle" type="button" data-bs-toggle="dropdown"
+                aria-expanded="false"><i class="fa-solid fa-border-all"></i> Tùy Chỉnh</button>
+            <ul class="dropdown-menu border dropdown-block">
+                <table class="table table-borderless">
+                    <?php foreach ($columns as $column): ?>
+                    <tr class="border">
+                        <td class="d-flex justify-content-between align-items-center">
+                            <span data-checkbox-column="<?= htmlspecialchars($column->name) ?>">
+                                <?= htmlspecialchars($column->name) ?>
+                            </span>
+                            <input class="form-check-input column-checkbox" type="checkbox" checked
+                                id="checkbox-<?= htmlspecialchars($column->name) ?>"
+                                data-column="<?= htmlspecialchars($column->name) ?>">
+                        </td>
+                    </tr>
+                    <?php endforeach; ?>
+                </table>
+            </ul>
         </div>
 
         <!-- Pagination Links -->
@@ -226,12 +251,12 @@ $globalIndexOffset = $page * $rowsPerPage;
 
     <?php endif; ?>
 
-    <!-- Modal Edit Data-->
+    <!-- Modal Sửa dữ liệu-->
     <div class="modal fade" id="editModal" tabindex="-1" role="dialog" aria-labelledby="editModalLabel">
         <div class="modal-dialog" role="document">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h4 class="modal-title" id="editModalLabel">Edit Data</h5>
+                    <h4 class="modal-title" id="editModalLabel">Sửa dữ liệu</h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cancel"></button>
                 </div>
                 <div class="modal-body">
@@ -251,7 +276,7 @@ $globalIndexOffset = $page * $rowsPerPage;
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h4 class="modal-title" id="addDataModalLabel">Insert Data</h5>
+                    <h4 class="modal-title" id="addDataModalLabel">Nhập dữ liệu</h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
@@ -274,7 +299,6 @@ $globalIndexOffset = $page * $rowsPerPage;
         </div>
     </div>
 </div>
-
 
 
 <script>
@@ -323,14 +347,7 @@ $(document).off('click', '#add-row-btn').on('click', '#add-row-btn', function() 
 
                 loadData(pageId, lastPage, null);
 
-                var toastElementSuccess = document.getElementById('liveToast');
-                var toastBodySuccess = toastElementSuccess.querySelector('.toast-body');
-                toastBodySuccess.innerText = "Thêm dữ liệu thành công!";
-
-                var toastSuccess = new bootstrap.Toast(toastElementSuccess, {
-                    delay: 3000
-                });
-                toastSuccess.show();
+                showToast('Thêm dữ liệu thành công!');
                 $('#addDataModal').find('input').val('');
                 $('#addDataModal').modal('hide');
             } else {
@@ -434,14 +451,8 @@ function saveRow() {
 
                 let rowData = getRowData(rowIndex);
                 Object.assign(rowData, updatedData);
-                var toastElementSuccess = document.getElementById('liveToast');
-                var toastBodySuccess = toastElementSuccess.querySelector('.toast-body');
-                toastBodySuccess.innerText = "Lưu dữ liệu thành công!";
+                showToast('Lưu dữ liệu thành công!');
 
-                var toastSuccess = new bootstrap.Toast(toastElementSuccess, {
-                    delay: 3000
-                });
-                toastSuccess.show();
                 $('#editModal').modal('hide');
 
             } else {
@@ -467,8 +478,18 @@ $(document).ready(function() {
         "ordering": true,
         "language": {
             "info": ''
-        }
+        },
     });
+    $(document).on('change', '.column-checkbox', function() {
+        var columnName = $(this).data('column');
+        var isChecked = $(this).prop('checked');
+
+        $('th[data-column="' + columnName + '"]').toggle(
+            isChecked);
+        $('td[data-column="' + columnName + '"]').toggle(
+            isChecked);
+    });
+
 });
 
 function generateColumnsConfig(columnCount) {
@@ -492,11 +513,10 @@ function generateColumnsConfig(columnCount) {
     return columns;
 }
 
-function loadTabData(pageId, page, search, pageSize) {
+function loadPageData(pageId, page, search, pageSize) {
     localStorage.clear();
-    var pageId = <?= json_encode($pageId) ?>;
 
-    console.log("🚀 ~ loadTabData ~ pageId:", pageId);
+    console.log("🚀 ~ loadPageData !!!! ~ pageId:", pageId);
 
     var loadingSpinner = $(`
              <div class="spinner-fixed">
@@ -522,7 +542,7 @@ function loadTabData(pageId, page, search, pageSize) {
             $('.nav-link').removeClass('active');
             $('.nav-item').removeClass('active');
             $(`[data-id="${pageId}"]`).addClass('active');
-            $(`[data-id="${pageId}"]`).closest('.nav-item').addClass('active');
+            $(`[data-id="${pageId}"]`).closest('.nav-item').addClass('active')
         },
         error: function(xhr, status, error) {
             loadingSpinner.remove();
@@ -534,7 +554,7 @@ function loadTabData(pageId, page, search, pageSize) {
 
 function loadData(pageId, page, search, pageSize) {
     var pageId = <?= json_encode($pageId) ?>;
-    console.log("🚀 ~ loadTabData ~ pageId:", pageId);
+    console.log("🚀 ~ loadPageData ~ pageId:", pageId);
 
     var loadingSpinner = $(`
              <div class="spinner-fixed">
@@ -557,13 +577,13 @@ function loadData(pageId, page, search, pageSize) {
 
             var data = responseData.data;
 
-            var newTbodyHtml = $(responseData).find('tbody').html();
-            $('tbody').html(newTbodyHtml);
+            var newTbodyHtml = $(responseData).find('.dataTable tbody').html();
+            $('.dataTable tbody').html(newTbodyHtml);
 
             var table = $('.dataTable').DataTable();
             table.clear();
 
-            var rows = $(responseData).find('tbody tr').toArray().map(function(row) {
+            var rows = $(responseData).find('.dataTable tbody tr').toArray().map(function(row) {
                 return $(row).prop('outerHTML');
             });
 
@@ -580,14 +600,17 @@ function loadData(pageId, page, search, pageSize) {
             $('#pageSize').val(pageSize);
             $('#lastPageButton').attr('data-last-page', lastPage);
 
+            $('.column-checkbox').each(function() {
+                var columnName = $(this).data('column');
+                var isChecked = $(this).prop('checked');
+
+                $('th[data-column="' + columnName + '"]').toggle(isChecked);
+                $('td[data-column="' + columnName + '"]').toggle(isChecked);
+            });
         },
         error: function(xhr, status, error) {
             loadingSpinner.remove();
-
-            const toastLiveExample = document.getElementById('liveToast');
-            toastBody.textContent = `Error: ${xhr.responseText || 'Lỗi không xác định'}`;
-            const toast = new bootstrap.Toast(toastLiveExample);
-            toast.show();
+            showToast(`Thất bại! ${errorMessage}`);
         }
     });
 }
@@ -711,18 +734,8 @@ $(document).off('click', '#delete-selected-btn').on('click', '#delete-selected-b
                     }
 
                     loadData(pageId, page, search, pageSize);
-                    var toastElementSuccess = document
-                        .getElementById('liveToast');
-                    var toastBodySuccess = toastElementSuccess
-                        .querySelector('.toast-body');
-                    toastBodySuccess.innerText =
-                        "Xóa dữ liệu thành công!";
+                    showToast('Xóa dữ liệu thành công!');
 
-                    var toastSuccess = new bootstrap.Toast(
-                        toastElementSuccess, {
-                            delay: 3000
-                        });
-                    toastSuccess.show();
                     $('#select-all').prop('checked', false);
 
                 } else {
@@ -766,7 +779,7 @@ function deleteRow(rowIndex, tableName) {
             },
             success: function(response) {
                 if (response.success) {
-                    loadTabData(pageId);
+                    loadPageData(pageId);
                 } else {
                     alert(response.message || "Xóa dữ liệu không thành công.");
                 }
@@ -819,18 +832,8 @@ $(document).off('submit', '#importExcelForm').on('submit', '#importExcelForm', f
             if (response.success) {
 
                 loadData(pageId);
-                var toastElementSuccess = document
-                    .getElementById('liveToast');
-                var toastBodySuccess = toastElementSuccess
-                    .querySelector('.toast-body');
-                toastBodySuccess.innerText =
-                    "Tệp Excel được nhập thành công!";
+                showToast('Nhập dữ liệu từ Excel thành công!');
 
-                var toastSuccess = new bootstrap.Toast(
-                    toastElementSuccess, {
-                        delay: 5000
-                    });
-                toastSuccess.show();
                 $('#importExcelForm')[0].reset();
                 $('#importExelModal').modal('hide');
             } else if (response.duplicate) {
@@ -871,18 +874,11 @@ $(document).off('submit', '#importExcelForm').on('submit', '#importExcelForm', f
 
                             if (response.success) {
                                 loadData(pageId);
-                                var toastElementSuccess = document
-                                    .getElementById('liveToast');
-                                var toastBodySuccess = toastElementSuccess
-                                    .querySelector('.toast-body');
-                                toastBodySuccess.innerText =
-                                    "Tệp Excel được nhập và ghi đè [PK]s thành công!";
 
-                                var toastSuccess = new bootstrap.Toast(
-                                    toastElementSuccess, {
-                                        delay: 5000
-                                    });
-                                toastSuccess.show();
+                                showToast(
+                                    'Tệp Excel được nhập và ghi đè [PK]s thành công!'
+                                );
+
                                 // $('#importExcelForm')[0].reset();
                                 $('#importExelModal').modal('hide');
 

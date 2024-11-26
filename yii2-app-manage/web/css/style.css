@@ -36697,7 +36697,7 @@ div.dt-button-collection {
   padding: 17px 30px 17px 30px;
   bottom: 0;
   left: 0;
-  /* margin-left: 246px; */
+  /* margin-left: 260px; */
   -webkit-transition: 0.5s;
   transition: 0.5s;
 }
@@ -36711,7 +36711,7 @@ div.dt-button-collection {
 }
 
 .footer-fix {
-  width: calc(100% - 246px);
+  width: calc(100% - 260px);
   position: fixed;
 }
 
@@ -37103,7 +37103,7 @@ footer {
 footer p {
   color: #363636;
   font-weight: 500;
-  margin-left: 246px;
+  margin-left: 260px;
 }
 
 footer p .footer-icon {
@@ -39348,8 +39348,8 @@ footer p .footer-icon {
 }
 
 .page-wrapper.compact-wrapper .page-header {
-  margin-left: 246px;
-  width: calc(100% - 246px);
+  margin-left: 260px;
+  width: calc(100% - 260px);
 }
 
 .page-wrapper.compact-wrapper .hide-sidebar {
@@ -39358,8 +39358,8 @@ footer p .footer-icon {
 }
 
 .page-wrapper.compact-wrapper .page-header {
-  margin-left: 246px;
-  width: calc(100% - 246px);
+  margin-left: 260px;
+  width: calc(100% - 260px);
 }
 
 .page-wrapper.compact-wrapper .page-header.close_icon {
@@ -39382,7 +39382,7 @@ footer p .footer-icon {
   height: auto;
   line-height: inherit;
   background: #fff;
-  width: 246px;
+  width: 260px;
   text-align: left;
   -webkit-transition: 0.3s;
   transition: 0.3s;
@@ -39451,7 +39451,7 @@ footer p .footer-icon {
 }
 
 .page-wrapper.compact-wrapper .page-body-wrapper div.sidebar-wrapper.close_icon:hover {
-  width: 246px;
+  width: 260px;
   -webkit-transition: all 0.3s ease;
   transition: all 0.3s ease;
 }
@@ -39609,7 +39609,7 @@ footer p .footer-icon {
 .page-wrapper.compact-wrapper .page-body-wrapper div.sidebar-wrapper .sidebar-main .sidebar-links li a svg.svg-menu {
   width: 16px;
   height: 16px;
-  stroke-width: 0.1;
+  stroke-width: 1px;
   margin-right: 12px;
   stroke: #6e6e6e;
 }
@@ -39732,7 +39732,7 @@ footer p .footer-icon {
   width: 100%;
   padding: 0;
   position: relative !important;
-  padding-left: 5px
+  padding-left: 25px
 }
 
 .page-wrapper.compact-wrapper .page-body-wrapper div.sidebar-wrapper .sidebar-main .sidebar-links .simplebar-wrapper .simplebar-mask .simplebar-content-wrapper .simplebar-content>li .sidebar-submenu>li a {
@@ -39795,6 +39795,10 @@ footer p .footer-icon {
 }
 
 .page-wrapper.compact-wrapper .page-body-wrapper div.sidebar-wrapper .sidebar-main .sidebar-links .simplebar-wrapper .simplebar-mask .simplebar-content-wrapper .simplebar-content>li .sidebar-submenu li a.active svg.svg-menu {
+  width: 16px;
+  height: 16px;
+  stroke-width: 1px;
+  margin-right: 12px;
   stroke: var(--theme-default);
 }
 
@@ -39890,7 +39894,7 @@ footer p .footer-icon {
 .page-wrapper.compact-wrapper .page-body-wrapper .page-body {
   min-height: calc(100vh - 80px);
   margin-top: 75px;
-  margin-left: 246px;
+  margin-left: 260px;
 }
 
 .page-wrapper.compact-wrapper .page-body-wrapper-nav .page-body {
@@ -45335,6 +45339,7 @@ footer p .footer-icon {
   }
 }
 
+.toggle-all,
 .toggle-icon {
   cursor: pointer;
   font-size: 1.2em;

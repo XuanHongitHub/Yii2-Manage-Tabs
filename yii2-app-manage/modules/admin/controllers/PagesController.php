@@ -107,7 +107,7 @@ class PagesController extends Controller
                                 $columnDef = isset($isPrimary[$index]) && $isPrimary[$index] == '1'
                                     ? "\"$columnName\" SERIAL PRIMARY KEY"
                                     : "\"$columnName\" $dataType$dataSize $isNotNullColumn";
-                            } elseif (in_array($dataType, ['INT', 'BIGINT', 'SMALLINT', 'FLOAT', 'DOUBLE', 'DECIMAL'])) {
+                            } elseif (in_array($dataType, ['SERIAL', 'BIGINT', 'SMALLINT', 'FLOAT', 'DOUBLE', 'DECIMAL'])) {
                                 $columnDef = isset($isPrimary[$index]) && $isPrimary[$index] == '1'
                                     ? "\"$columnName\" SERIAL PRIMARY KEY"
                                     : "\"$columnName\" $dataType $isNotNullColumn";
@@ -379,10 +379,10 @@ class PagesController extends Controller
      * Update Page Action.
      *
      */
-    public function actionUpdateTab()
+    public function actionUpdatePage()
     {
         $pageId = Yii::$app->request->post('pageId');
-        $menuId = Yii::$app->request->post('menu_id');
+        $menuId = Yii::$app->request->post('menuId');
         $status = Yii::$app->request->post('status');
         $position = Yii::$app->request->post('position');
 

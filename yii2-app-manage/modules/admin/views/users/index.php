@@ -96,26 +96,6 @@ $this->title = 'Manage Users';
 
 
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        // Check if there's a success message
-        const successMessage = "<?= Yii::$app->session->getFlash('success') ?>";
-        const errorMessage = "<?= Yii::$app->session->getFlash('error') ?>";
-        if (successMessage) {
-            document.getElementById('toast-body').textContent = successMessage;
-            document.getElementById('toast-timestamp').textContent = new Date().toLocaleTimeString();
-            const toastElement = document.getElementById('liveToast');
-            const toast = new bootstrap.Toast(toastElement);
-            toast.show();
-        }
-        if (errorMessage) {
-            document.getElementById('toast-body').textContent = errorMessage;
-            document.getElementById('toast-timestamp').textContent = new Date().toLocaleTimeString();
-            const toastElement = document.getElementById('liveToast');
-            const toast = new bootstrap.Toast(toastElement);
-            toast.show();
-        }
-    });
-
     $(document).ready(function() {
         $('.dataTable').DataTable({
             order: [],

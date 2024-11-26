@@ -43,8 +43,7 @@ $this->title = 'Danh Sách Menu';
                                     data-bs-target="#trashBinModal">
                                     <i class="fas fa-trash me-1"></i> Thùng Rác
                                 </a>
-                                <a class="btn btn-success mb-2" href="#" data-bs-toggle="modal"
-                                    data-bs-target="#createMenuModal">
+                                <a class="btn btn-success mb-2" href="<?= \yii\helpers\Url::to(['pages/create']) ?>">
                                     <i class="fas fa-plus me-1"></i> Thêm Menu
                                 </a>
                             </div>
@@ -55,8 +54,8 @@ $this->title = 'Danh Sách Menu';
                             <table class="table table-hover table-responsive custom-scrollbar border table-bordered">
                                 <thead>
                                     <tr>
-                                        <th style="width: 2%">
-                                            <i class="fa-solid fa-caret-right"></i>
+                                        <th class="toggle-all text-center" style="width: 2%">
+                                            <i class="fa-solid fa-circle-plus"></i>
                                         </th>
                                         <th colspan="2" style="width: 20%">Tên Menu</th>
                                         <th style="width: 5%" class="text-center">Icon</th>
@@ -78,6 +77,8 @@ $this->title = 'Danh Sách Menu';
                                         <td class="toggle-icon text-center">
                                             <?php
                                                     $hasChildren = array_filter($menuChildren, fn($child) => $child->parent_id == $parentMenu->id);
+                                                    $hasParent = array_filter($menuChildren, fn($child) => $child->id == $parentMenu->parent_id);
+                                                    $hasPage = array_filter($pages, fn($page) => $page->menu_id == $parentMenu->id);
                                                     ?>
                                             <?php if (!empty($hasChildren)): ?>
                                             <i class="fa-solid fa-caret-right"></i>
@@ -105,7 +106,6 @@ $this->title = 'Danh Sách Menu';
                                             </div>
 
                                         </td>
-
                                         <td class="text-center">
                                             <?= $parentMenu->status == 1 ? '<span class="badge badge-warning">Ẩn</span>' : '<span class="badge badge-success">Hiện</span>' ?>
                                         </td>
@@ -119,16 +119,29 @@ $this->title = 'Danh Sách Menu';
                                                 data-position="<?= Html::encode($parentMenu->position) ?>">
                                                 <i class="fas fa-edit"></i>
                                             </button>
-                                            <button class="btn btn-m btn-sm btn-outline-primary edit-subpage-btn"
+                                            <?php if (!empty($hasChildren)): ?>
+                                            <button
+                                                class="btn btn-m btn-sm btn-outline-primary edit-subpage-btn me-1 disabled">
+                                                <i class="fa-solid fa-link"></i>
+                                            </button>
+                                            <?php else: ?>
+                                            <button class="btn btn-m btn-sm btn-outline-primary edit-subpage-btn me-1"
                                                 data-menu-id="<?= $parentMenu->id ?>"
                                                 data-menu-name="<?= Html::encode($parentMenu->name) ?>">
                                                 <i class="fa-solid fa-link"></i>
                                             </button>
-                                            <button class="btn btn-m btn-sm btn-info me-1" id="submenu"
+                                            <?php endif; ?>
+                                            <?php if (!empty($hasPage)): ?>
+                                            <button class="btn btn-m btn-sm btn-outline-warning me-1 disabled">
+                                                <i class="fa-solid fa-ellipsis"></i>
+                                            </button>
+                                            <?php else: ?>
+                                            <button class="btn btn-m btn-sm btn-outline-warning me-1" id="submenu"
                                                 data-menu-name="<?= Html::encode($parentMenu->name) ?>"
                                                 data-menu-id="<?= $parentMenu->id ?>">
-                                                <i class="fas fa-cogs"></i>
+                                                <i class="fa-solid fa-ellipsis"></i>
                                             </button>
+                                            <?php endif; ?>
                                             <button href="#" data-bs-toggle="modal" data-bs-target="#deleteModal"
                                                 class="btn btn-m btn-danger btn-sm delete-btn"
                                                 data-menu-id="<?= $parentMenu->id ?>">
@@ -180,24 +193,39 @@ $this->title = 'Danh Sách Menu';
                                                 data-menu-name="<?= Html::encode($childMenu->name) ?>"
                                                 data-icon="<?= Html::encode($childMenu->icon) ?>"
                                                 data-status="<?= Html::encode($childMenu->status) ?>"
-                                                data-position="<?= Html::encode($childMenu->position) ?>">
+                                                data-position="<?= Html::encode($childMenu->position) ?>"
+                                                data-bs-toggle="tooltip" title="Chỉnh sửa menu">
                                                 <i class="fas fa-edit"></i>
                                             </button>
-                                            <button class="btn btn-m btn-sm btn-outline-primary edit-subpage-btn"
+                                            <button class="btn btn-m btn-sm btn-outline-primary edit-subpage-btn me-1"
                                                 data-menu-id="<?= $childMenu->id ?>"
-                                                data-menu-name="<?= Html::encode($childMenu->name) ?>">
+                                                data-menu-name="<?= Html::encode($childMenu->name) ?>"
+                                                data-bs-toggle="tooltip" title="Chỉnh sửa trang con">
                                                 <i class="fa-solid fa-link"></i>
                                             </button>
-                                            <button class="btn btn-m btn-sm btn-info me-1" id="submenu"
-                                                data-menu-name="<?= Html::encode($childMenu->name) ?>"
-                                                data-menu-id="<?= $childMenu->id ?>">
-                                                <i class="fas fa-cogs"></i>
+
+                                            <?php if (!empty($hasChildren)): ?>
+                                            <button class="btn btn-m btn-sm btn-outline-warning me-1 disabled"
+                                                data-bs-toggle="tooltip"
+                                                title="Không thể thêm menu con (đã có mục con)">
+                                                <i class="fa-solid fa-ellipsis"></i>
                                             </button>
+                                            <?php else: ?>
+                                            <button class="btn btn-m btn-sm btn-outline-warning me-1" id="submenu"
+                                                data-menu-name="<?= Html::encode($childMenu->name) ?>"
+                                                data-menu-id="<?= $childMenu->id ?>" data-bs-toggle="tooltip"
+                                                title="Sửa menu con">
+                                                <i class="fa-solid fa-ellipsis"></i>
+                                            </button>
+                                            <?php endif; ?>
+
                                             <button href="#" data-bs-toggle="modal" data-bs-target="#deleteModal"
                                                 class="btn btn-m btn-danger btn-sm delete-btn"
-                                                data-menu-id="<?= $childMenu->id ?>">
+                                                data-menu-id="<?= $childMenu->id ?>" data-bs-toggle="tooltip"
+                                                title="Xóa menu">
                                                 <i class="fa-regular fa-trash-can"></i>
                                             </button>
+
                                         </td>
                                         <td class="sort-icon text-center" style="color: #6e6e6e;">
                                             <i class="fas fa-sort"></i>
@@ -229,61 +257,63 @@ $this->title = 'Danh Sách Menu';
 
 <script>
 $(document).ready(function() {
-    $('#toggle-all').on('click', function() {
-        const toggleIcon = $(this); // Lấy icon trong nút
-        const isExpanded = toggleIcon.hasClass(
-            'fa-caret-down'); // Kiểm tra nếu icon đang là "mở rộng" (caret down)
+    $('.toggle-all').on('click', function() {
+        const toggleIcon = $(this).find('i');
+        const isExpanded = toggleIcon.hasClass('fa-circle-minus');
 
         if (isExpanded) {
-            // Nếu đang mở rộng, thu gọn tất cả
-            $('.child-row').each(function() {
-                const childRow = $(this);
-                if (childRow.is(':visible')) {
-                    childRow.hide(); // Ẩn hàng con
-                }
-            });
-            toggleIcon.removeClass('fa-caret-down').addClass(
-                'fa-caret-right'); // Đổi biểu tượng thành thu gọn
+            // Đóng tất cả
+            $('.child-row').hide();
+            $('.toggle-icon i').removeClass('fa-caret-down').addClass(
+                'fa-caret-right');
+            toggleIcon.removeClass('fa-circle-minus').addClass('fa-circle-plus');
         } else {
-            // Nếu đang thu gọn, mở rộng tất cả
-            $('.child-row').each(function() {
-                const childRow = $(this);
-                if (childRow.is(':hidden')) {
-                    childRow.show(); // Hiển thị hàng con
-                }
-            });
-            toggleIcon.removeClass('fa-caret-right').addClass(
-                'fa-caret-down'); // Đổi biểu tượng thành mở rộng
+            // Mở tất cả
+            $('.child-row').show();
+            $('.toggle-icon i').removeClass('fa-caret-right').addClass(
+                'fa-caret-down');
+            toggleIcon.removeClass('fa-circle-plus').addClass('fa-circle-minus');
         }
     });
-    $('.toggle-icon i').on('click', function(e) {
-        const toggleIcon = $(this); // Lấy chính icon được nhấn
-        const parentRow = toggleIcon.closest('tr'); // Tìm hàng cha
-        const parentId = parentRow.data('parent-id'); // Lấy ID của hàng cha
 
-        // Tìm các hàng con liên quan
+    $('.toggle-icon').on('click', function() {
+        const toggleIcon = $(this).find('i');
+        const parentRow = $(this).closest('tr');
+        const parentId = parentRow.data('parent-id');
+
         $(`.child-row[data-parent-id='${parentId}']`).each(function() {
             const childRow = $(this);
             if (childRow.is(':visible')) {
-                childRow.hide(); // Ẩn hàng con
-                toggleIcon.removeClass('fa-solid fa-caret-down').addClass(
-                    'fa-solid fa-caret-right'); // Biểu tượng thu gọn
+                childRow.hide();
+                toggleIcon.removeClass('fa-caret-down').addClass('fa-caret-right');
             } else {
-                childRow.show(); // Hiển thị hàng con
-                toggleIcon.removeClass('fa-solid fa-caret-right').addClass(
-                    'fa-solid fa-caret-down'); // Biểu tượng mở rộng
+                childRow.show();
+                toggleIcon.removeClass('fa-caret-right').addClass('fa-caret-down');
             }
         });
+
+        const allExpanded = $('.toggle-icon i').toArray().every(icon => $(icon).hasClass(
+            'fa-caret-down'));
+        const allCollapsed = $('.toggle-icon i').toArray().every(icon => $(icon).hasClass(
+            'fa-caret-right'));
+
+        const toggleAllIcon = $('.toggle-all i');
+        if (allExpanded) {
+            toggleAllIcon.removeClass('fa-circle-plus').addClass('fa-circle-minus');
+        } else if (allCollapsed) {
+            toggleAllIcon.removeClass('fa-circle-minus').addClass('fa-circle-plus');
+        }
     });
 
-    // Sắp xếp các hàng trong bảng menu (cha và con)
+
+
     $(document).on('click', 'th.sortable', function() {
-        var columnIndex = $(this).index(); // Lấy chỉ mục cột được nhấp vào
-        var parentId = $(this).closest('table').attr('data-parent-id'); // Lấy ID của hàng cha
-        var rows = $(`tr.child-row[data-parent-id="${parentId}"]`).get(); // Lấy hàng con cùng cha
+        var columnIndex = $(this).index();
+        var parentId = $(this).closest('table').attr('data-parent-id');
+        var rows = $(`tr.child-row[data-parent-id="${parentId}"]`).get();
 
         rows.sort(function(a, b) {
-            var cellA = $(a).children('td').eq(columnIndex).text().trim(); // Lấy nội dung cột
+            var cellA = $(a).children('td').eq(columnIndex).text().trim();
             var cellB = $(b).children('td').eq(columnIndex).text().trim();
 
             if (cellA < cellB) return -1; // So sánh giá trị cột
