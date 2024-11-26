@@ -102,16 +102,12 @@ class m241125_140853_create_manager_page_manager_menu_manager_user_tables extend
 
     public function safeDown()
     {
-        // Xóa bảng manager_user
         $this->dropTable('{{%manager_user}}');
     
-        // Xóa bảng manager_menu
         $this->dropTable('{{%manager_menu}}');
     
-        // Xóa bảng manager_page
         $this->dropTable('{{%manager_page}}');
     
-        // Xóa kiểu ENUM page_type
         $this->execute("DROP TYPE page_type");
     }
     

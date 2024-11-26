@@ -417,6 +417,7 @@ function addColumn() {
                 </td>
                 <td>
                     <select name="data_types[]" class="form-select" id="data-type-${rowIndex}">
+                            <option value="TEXT" selected>TEXT<option>
                         <?php foreach ($dataTypeOptions as $option): ?>
                             <option value="<?= $option ?>"><?= $option ?></option>
                         <?php endforeach; ?>
