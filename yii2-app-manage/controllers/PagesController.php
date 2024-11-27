@@ -110,8 +110,11 @@ class PagesController extends Controller
                 $query = (new Query())->from($tableName);
 
                 if (!empty($searchTerm)) {
-                    $query->where(['or', ...array_map(fn($c) => ['like', $c, $searchTerm], $columnNames)]);
+                    $query->where(['or', ...array_map(function ($c) use ($searchTerm) {
+                        return ['ilike', "LOWER(unaccent(CAST($c AS TEXT)))", strtolower($searchTerm)];
+                    }, $columnNames)]);
                 }
+
 
                 $totalCount = $query->count();
 
@@ -197,8 +200,15 @@ class PagesController extends Controller
         $data = Yii::$app->request->post('data');
         $originalValues = Yii::$app->request->post('originalValues');
 
-        $whereCondition = isset($originalValues['id']) ? ['id' => $originalValues['id']] : [];
+        $primaryKeyColumn = Yii::$app->db->schema->getTableSchema($tableName)->primaryKey[0];
 
+        if (!isset($data[$primaryKeyColumn]) || !preg_match('/^[a-zA-Z0-9_]+$/', $data[$primaryKeyColumn])) {
+            return $this->asJson(['success' => false, 'message' => 'Khóa chính không hợp lệ.']);
+        }
+
+        $whereCondition = [$primaryKeyColumn => $originalValues[$primaryKeyColumn]];
+
+        Yii::error("DATA: " . $data);
         try {
             Yii::$app->db->createCommand()
                 ->update($tableName, $data, $whereCondition)
@@ -210,7 +220,7 @@ class PagesController extends Controller
         }
     }
 
-    //QUERYBUILD
+
     /** 
      * Create TableData Action.
      *
@@ -233,11 +243,27 @@ class PagesController extends Controller
         }
 
         try {
-            $escapedTableName = Yii::$app->db->quoteTableName($tableName);
+            $db = Yii::$app->db;
+            $escapedTableName = $db->quoteTableName($tableName);
 
-            Yii::$app->db->createCommand()->insert($escapedTableName, $validData)->execute();
+            // Lấy thông tin schema và khóa chính của bảng
+            $tableSchema = $db->getTableSchema($tableName);
+            if (!$tableSchema) {
+                throw new \Exception("Không tìm thấy thông tin bảng: $tableName");
+            }
 
-            $totalRecords = Yii::$app->db->createCommand("SELECT COUNT(*) FROM $escapedTableName")->queryScalar();
+            // Lấy tên cột khóa chính
+            $primaryKey = $tableSchema->primaryKey[0] ?? null;
+
+            // Nếu khóa chính là auto-increment, loại bỏ khỏi dữ liệu
+            if ($primaryKey && $tableSchema->columns[$primaryKey]->autoIncrement) {
+                unset($validData[$primaryKey]);
+            }
+
+            // Thực hiện chèn dữ liệu
+            $db->createCommand()->insert($escapedTableName, $validData)->execute();
+
+            $totalRecords = $db->createCommand("SELECT COUNT(*) FROM $escapedTableName")->queryScalar();
 
             $pageSize = 10;
             $totalPages = ceil($totalRecords / $pageSize);
@@ -248,11 +274,47 @@ class PagesController extends Controller
                 'redirect' => '/pages',
             ]);
         } catch (\Exception $e) {
+            // Xử lý lỗi duplicate key hoặc null value
+            if (
+                strpos($e->getMessage(), 'duplicate key value violates unique constraint') !== false ||
+                strpos($e->getMessage(), 'null value in column') !== false
+            ) {
+                try {
+                    // Đồng bộ sequence của khóa chính
+                    $sequenceName = $tableSchema->sequenceName;
+                    if ($primaryKey && $sequenceName) {
+                        $db->createCommand("
+                        SELECT setval('$sequenceName', (SELECT MAX($primaryKey) FROM $escapedTableName))
+                    ")->execute();
+                    }
+
+                    // Thử chèn lại dữ liệu
+                    $db->createCommand()->insert($escapedTableName, $validData)->execute();
+
+                    return $this->asJson(['success' => true, 'message' => 'Thêm dữ liệu thành công sau khi cập nhật sequence.']);
+                } catch (\Exception $seqException) {
+                    return $this->asJson(['success' => false, 'message' => 'Cập nhật sequence thất bại: ' . $seqException->getMessage()]);
+                }
+            }
+
             return $this->asJson(['success' => false, 'message' => $e->getMessage()]);
         }
     }
 
 
+    /**
+     * Lấy tên sequence của bảng dựa trên thông tin schema PostgreSQL.
+     */
+    protected function getSequenceName($tableName)
+    {
+        $db = Yii::$app->db;
+        $tableSchema = $db->getTableSchema($tableName);
+        if (!$tableSchema || !$tableSchema->sequenceName) {
+            throw new \Exception("Không tìm thấy sequence cho bảng: $tableName");
+        }
+
+        return $tableSchema->sequenceName;
+    }
 
     /** 
      * Delete TableData Action.
@@ -554,8 +616,6 @@ class PagesController extends Controller
 
         return $headers;
     }
-
-
     public function actionExportExcel($format, $tableName)
     {
         $columns = (new Query())
@@ -656,5 +716,173 @@ class PagesController extends Controller
         } else {
             return $this->asJson(['success' => false, 'message' => 'Không tìm thấy tập tin']);
         }
+    }
+
+    // Xuất Excel View Hiện tại
+    public function actionExportExcelCurrent()
+    {
+        // Nhận dữ liệu bảng từ client (dữ liệu đã lọc/sắp xếp)
+        $tableName = Yii::$app->request->post('tableName');
+        $format = Yii::$app->request->post('format');
+        $tableData = Yii::$app->request->post('tableData');
+
+
+        // Kiểm tra nếu không có dữ liệu, trả về lỗi
+        if (empty($tableData)) {
+            return $this->asJson(['success' => false, 'message' => 'Không có dữ liệu để xuất']);
+        }
+
+        // Lấy tên cột từ cơ sở dữ liệu (dùng lại query như trước để lấy cột)
+        $columns = (new Query())
+            ->select('column_name')
+            ->from('information_schema.columns')
+            ->where(['table_name' => $tableName])
+            ->all();
+
+        $columnNames = array_map(fn($column) => $column['column_name'], $columns);
+
+        // Tạo đối tượng Spreadsheet mới
+        $spreadsheet = new Spreadsheet();
+        $sheet = $spreadsheet->getActiveSheet();
+
+        // Điền tên cột vào header
+        $columnIndex = 1;
+        foreach ($columnNames as $column) {
+            $sheet->setCellValueByColumnAndRow($columnIndex, 1, $column);
+            $columnIndex++;
+        }
+
+        // Định dạng header (cột tên)
+        $headerStyle = [
+            'font' => ['bold' => true, 'size' => 12],
+            'alignment' => [
+                'horizontal' => Alignment::HORIZONTAL_CENTER,
+                'vertical' => Alignment::VERTICAL_CENTER,
+            ],
+            'borders' => [
+                'allBorders' => ['borderStyle' => Border::BORDER_THIN, 'color' => ['rgb' => '000000']],
+            ],
+        ];
+        $sheet->getStyle('A1:' . chr(64 + count($columnNames)) . '1')->applyFromArray($headerStyle);
+
+        // Điền dữ liệu từ bảng hiện tại (dữ liệu đã lọc/sắp xếp)
+        $rowIndex = 2;
+        foreach ($tableData as $row) {
+            $columnIndex = 1;
+            foreach ($row as $cell) {
+                $sheet->setCellValueByColumnAndRow($columnIndex, $rowIndex, $cell);
+                $columnIndex++;
+            }
+            $rowIndex++;
+        }
+
+        // Áp dụng border cho toàn bộ bảng dữ liệu
+        $sheet->getStyle('A1:' . chr(64 + count($columnNames)) . ($rowIndex - 1))->applyFromArray([
+            'borders' => [
+                'allBorders' => ['borderStyle' => Border::BORDER_THIN, 'color' => ['rgb' => '000000']],
+            ],
+        ]);
+
+        // Tự động điều chỉnh chiều rộng các cột
+        foreach (range('A', chr(64 + count($columnNames))) as $columnID) {
+            $sheet->getColumnDimension($columnID)->setAutoSize(true);
+        }
+
+        // Đảm bảo thư mục uploads tồn tại
+        $uploadDir = Yii::getAlias('@webroot/uploads');
+        if (!is_dir($uploadDir)) {
+            mkdir($uploadDir, 0777, true);
+        }
+
+        // Lưu file Excel vào thư mục uploads
+        $fileName = $tableName . '.' . $format;
+        $tempFilePath = $uploadDir . DIRECTORY_SEPARATOR . $fileName;
+
+        $writer = new Xlsx($spreadsheet);
+        $writer->save($tempFilePath);
+
+        // Tạo URL tải file
+        $fileUrl = Yii::$app->urlManager->baseUrl . '/uploads/' . $fileName;
+
+        return $this->asJson([
+            'success' => true,
+            'file_url' => $fileUrl
+        ]);
+    }
+
+    // Xuất Template
+    public function actionExportExcelHeader()
+    {
+        // Lấy tên bảng từ request
+        $tableName = Yii::$app->request->post('tableName');
+
+        // Kiểm tra xem tên bảng có hợp lệ không
+        if (empty($tableName)) {
+            return $this->asJson(['success' => false, 'message' => 'Tên bảng không hợp lệ.']);
+        }
+
+        // Truy vấn thông tin các cột từ cơ sở dữ liệu
+        $columns = (new \yii\db\Query())
+            ->select('column_name')
+            ->from('information_schema.columns')
+            ->where(['table_name' => $tableName])
+            ->all();
+
+        // Kiểm tra nếu có cột
+        if (empty($columns)) {
+            return $this->asJson(['success' => false, 'message' => 'Không có cột nào trong bảng.']);
+        }
+
+        // Lấy tên các cột vào mảng
+        $columnNames = array_map(fn($column) => $column['column_name'], $columns);
+
+        // Tạo đối tượng Spreadsheet
+        $spreadsheet = new Spreadsheet();
+        $sheet = $spreadsheet->getActiveSheet();
+
+        // Ghi các header columns vào sheet
+        $columnIndex = 1;
+        foreach ($columnNames as $column) {
+            $sheet->setCellValueByColumnAndRow($columnIndex, 1, $column);
+            $columnIndex++;
+        }
+
+        // Định dạng header (tùy chỉnh)
+        $headerStyle = [
+            'font' => ['bold' => true, 'size' => 12],
+            'alignment' => [
+                'horizontal' => Alignment::HORIZONTAL_CENTER,
+                'vertical' => Alignment::VERTICAL_CENTER,
+            ],
+            'borders' => [
+                'allBorders' => ['borderStyle' => Border::BORDER_THIN, 'color' => ['rgb' => '000000']],
+            ],
+        ];
+        $sheet->getStyle('A1:' . chr(64 + count($columnNames)) . '1')->applyFromArray($headerStyle);
+
+        // Cấu hình kích thước cột tự động
+        foreach (range('A', chr(64 + count($columnNames))) as $columnID) {
+            $sheet->getColumnDimension($columnID)->setAutoSize(true);
+        }
+
+        // Tạo file Excel và lưu
+        $uploadDir = Yii::getAlias('@webroot/uploads');
+        if (!is_dir($uploadDir)) {
+            mkdir($uploadDir, 0777, true);
+        }
+
+        $fileName = $tableName . '-template.xlsx';
+        $tempFilePath = $uploadDir . DIRECTORY_SEPARATOR . $fileName;
+
+        $writer = new Xlsx($spreadsheet);
+        $writer->save($tempFilePath);
+
+        // Trả về URL của file đã tạo
+        $fileUrl = Yii::$app->urlManager->baseUrl . '/uploads/' . $fileName;
+
+        return $this->asJson([
+            'success' => true,
+            'file_url' => $fileUrl
+        ]);
     }
 }

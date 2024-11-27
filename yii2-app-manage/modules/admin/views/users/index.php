@@ -4,7 +4,6 @@ use yii\helpers\Html;
 use app\models\User;
 
 /** @var yii\web\View $this */
-/** @var app\models\TableTab[] $tableTabs */
 
 $this->title = 'Manage Users';
 
