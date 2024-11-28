@@ -95,7 +95,7 @@ $this->title = 'Create Pages';
                                                                 "BOOLEAN",
                                                             ];
                                                             foreach ($dataTypeOptions as $option): ?>
-                                                            <option value="<?= $option ?>"><?= $option ?></option>
+                                                                <option value="<?= $option ?>"><?= $option ?></option>
                                                             <?php endforeach; ?>
                                                         </select>
                                                         <div class="text-danger data-type-error" id="data-type-error-0">
@@ -142,233 +142,233 @@ $this->title = 'Create Pages';
 </div>
 
 <script>
-$(document).ready(function() {
-    // Ẩn các trường nhập liệu liên quan đến bảng ngay từ đầu
-    $('#tableNameInput').hide();
-    $('#tableInputs').hide();
+    $(document).ready(function() {
+        // Ẩn các trường nhập liệu liên quan đến bảng ngay từ đầu
+        $('#tableNameInput').hide();
+        $('#tableInputs').hide();
 
-    // Hàm kiểm tra pageName (chỉ chứa chữ có dấu, số và gạch dưới)
-    function validatePageName(pageName) {
-        var regex =
-            /^[a-zA-Z0-9_ÀÁÂÃÄÈÉÊÌÍÒÓÔÕÖÙÚÔÜàáạãảắặằữỉỉỳýỳăặ]/; // Chỉ cho phép chữ có dấu, số và gạch dưới
-        return regex.test(pageName);
-    }
-
-    // Hàm kiểm tra tableName (không có ký tự đặc biệt)
-    function validateTableName(tableName) {
-        var regex = /^[a-zA-Z0-9_]+$/; // Không có ký tự đặc biệt, chỉ cho phép chữ, số và gạch dưới
-        return regex.test(tableName);
-    }
-
-    // Hàm kiểm tra tên cột (không trống, không ký tự đặc biệt)
-    function validateColumnName(columnName) {
-        var regex = /^[a-zA-Z0-9_]+$/; // Không có ký tự đặc biệt, chỉ cho phép chữ, số và gạch dưới
-        return regex.test(columnName) && columnName.trim() !== '';
-    }
-
-    // Hàm kiểm tra loại dữ liệu (size chuẩn SQL)
-    function validateDataSize(dataSize, dataType) {
-        var isValid = true;
-        if (dataType === "VARCHAR" || dataType === "CHAR") {
-            if (dataSize < 1 || dataSize > 1000) {
-                isValid = false;
-            }
-        }
-        return isValid;
-    }
-
-    // Kiểm tra pageName ngay lập tức
-    $(document).on('input', '#pageName', function() {
-        var pageName = $(this).val();
-
-        // Kiểm tra nếu pageName trống
-        if (pageName.trim() === '') {
-            $('#pageNameError').text('Tên trang không được để trống').show();
-            $('#pageName').addClass('is-invalid').removeClass('is-valid');
-            $('#type').prop('disabled', true); // Vô hiệu hóa chọn loại khi pageName không hợp lệ
-        } else if (!validatePageName(pageName)) {
-            $('#pageNameError').text('Tên trang chỉ được phép chứa chữ có dấu, số và gạch dưới').show();
-            $('#pageName').addClass('is-invalid').removeClass('is-valid');
-            $('#type').prop('disabled', true); // Vô hiệu hóa chọn loại khi pageName không hợp lệ
-        } else {
-            // Kiểm tra tồn tại pageName
-            checkPageNameExistence(pageName);
+        // Hàm kiểm tra pageName (chỉ chứa chữ có dấu, số và gạch dưới)
+        function validatePageName(pageName) {
+            var regex =
+                /^[a-zA-Z0-9_ÀÁÂÃÄÈÉÊÌÍÒÓÔÕÖÙÚÔÜàáạãảắặằữỉỉỳýỳăặ]/; // Chỉ cho phép chữ có dấu, số và gạch dưới
+            return regex.test(pageName);
         }
 
-        // Xử lý lại hiển thị tableNameInput khi pageName hợp lệ
-        handleTableNameInputDisplay();
-    });
-
-    // Kiểm tra loại page khi chọn
-    $(document).on('change', '#type', function() {
-        handleTableNameInputDisplay();
-    });
-
-    // Hàm kiểm tra và hiển thị tableNameInput
-    function handleTableNameInputDisplay() {
-        var pageName = $('#pageName').val();
-        var type = $('#type').val();
-
-        if (pageName && !$('#pageName').hasClass('is-invalid') && type === 'table') {
-            $('#tableNameInput').show(); // Hiển thị tableNameInput nếu pageName hợp lệ và type là 'table'
-        } else {
-            $('#tableNameInput')
-                .hide(); // Ẩn tableNameInput nếu pageName không hợp lệ hoặc type không phải 'table'
-            $('#tableInputs').hide(); // Ẩn phần input của bảng
+        // Hàm kiểm tra tableName (không có ký tự đặc biệt)
+        function validateTableName(tableName) {
+            var regex = /^[a-zA-Z0-9_]+$/; // Không có ký tự đặc biệt, chỉ cho phép chữ, số và gạch dưới
+            return regex.test(tableName);
         }
-    }
 
-    // Kiểm tra pageName có tồn tại không
-    function checkPageNameExistence(pageName) {
-        $.ajax({
-            url: '<?= \yii\helpers\Url::to(['pages/check-name-existence']) ?>',
-            headers: {
-                'X-CSRF-Token': $('meta[name="csrf-token"]').attr('content')
-            },
-            method: 'POST',
-            data: {
-                pageName: pageName
-            },
-            success: function(response) {
-                if (response.pageExists) {
-                    $('#pageNameError').text('Tên trang đã tồn tại').show();
-                    $('#pageName').addClass('is-invalid').removeClass('is-valid');
-                    $('#type').prop('disabled', true);
-                } else {
-                    $('#pageNameError').text('').hide();
-                    $('#pageName').addClass('is-valid').removeClass('is-invalid');
-                    $('#type').prop('disabled', false);
+        // Hàm kiểm tra tên cột (không trống, không ký tự đặc biệt)
+        function validateColumnName(columnName) {
+            var regex = /^[a-zA-Z0-9_]+$/; // Không có ký tự đặc biệt, chỉ cho phép chữ, số và gạch dưới
+            return regex.test(columnName) && columnName.trim() !== '';
+        }
+
+        // Hàm kiểm tra loại dữ liệu (size chuẩn SQL)
+        function validateDataSize(dataSize, dataType) {
+            var isValid = true;
+            if (dataType === "VARCHAR" || dataType === "CHAR") {
+                if (dataSize < 1 || dataSize > 1000) {
+                    isValid = false;
                 }
             }
-        });
-    }
-
-    // Kiểm tra tableName khi người dùng nhập vào
-    $(document).on('input', '#tableName', function() {
-        var tableName = $(this).val();
-
-        if (tableName.trim() === '') {
-            $('#tableNameError').text('Tên bảng không được để trống').show();
-            $('#tableName').addClass('is-invalid').removeClass('is-valid');
-            $('#tableInputs').hide(); // Ẩn phần nhập liệu bảng khi tableName không hợp lệ
-        } else if (!validateTableName(tableName)) {
-            $('#tableNameError').text('Tên bảng chỉ được phép chứa chữ, số và gạch dưới').show();
-            $('#tableName').addClass('is-invalid').removeClass('is-valid');
-            $('#tableInputs').hide(); // Ẩn phần nhập liệu bảng khi tableName không hợp lệ
-        } else {
-            // Kiểm tra tồn tại tableName trên server
-            checkTableNameExistence(tableName);
+            return isValid;
         }
-    });
 
-    // Kiểm tra sự tồn tại của tableName trên server
-    function checkTableNameExistence(tableName) {
-        $.ajax({
-            url: '<?= \yii\helpers\Url::to(['pages/check-name-existence']) ?>',
-            headers: {
-                'X-CSRF-Token': $('meta[name="csrf-token"]').attr('content')
-            },
-            method: 'POST',
-            data: {
-                tableName: tableName
-            },
-            success: function(response) {
-                if (response.tableExists) {
-                    $('#tableNameError').text('Tên bảng đã tồn tại').show();
-                    $('#tableName').addClass('is-invalid').removeClass('is-valid');
-                    $('#tableInputs').hide();
-                } else {
-                    $('#tableNameError').text('').hide();
-                    $('#tableName').addClass('is-valid').removeClass('is-invalid');
-                    $('#tableInputs').show();
+        // Kiểm tra pageName ngay lập tức
+        $(document).on('input', '#pageName', function() {
+            var pageName = $(this).val();
+
+            // Kiểm tra nếu pageName trống
+            if (pageName.trim() === '') {
+                $('#pageNameError').text('Tên trang không được để trống').show();
+                $('#pageName').addClass('is-invalid').removeClass('is-valid');
+                $('#type').prop('disabled', true); // Vô hiệu hóa chọn loại khi pageName không hợp lệ
+            } else if (!validatePageName(pageName)) {
+                $('#pageNameError').text('Tên trang chỉ được phép chứa chữ có dấu, số và gạch dưới').show();
+                $('#pageName').addClass('is-invalid').removeClass('is-valid');
+                $('#type').prop('disabled', true); // Vô hiệu hóa chọn loại khi pageName không hợp lệ
+            } else {
+                // Kiểm tra tồn tại pageName
+                checkPageNameExistence(pageName);
+            }
+
+            // Xử lý lại hiển thị tableNameInput khi pageName hợp lệ
+            handleTableNameInputDisplay();
+        });
+
+        // Kiểm tra loại page khi chọn
+        $(document).on('change', '#type', function() {
+            handleTableNameInputDisplay();
+        });
+
+        // Hàm kiểm tra và hiển thị tableNameInput
+        function handleTableNameInputDisplay() {
+            var pageName = $('#pageName').val();
+            var type = $('#type').val();
+
+            if (pageName && !$('#pageName').hasClass('is-invalid') && type === 'table') {
+                $('#tableNameInput').show(); // Hiển thị tableNameInput nếu pageName hợp lệ và type là 'table'
+            } else {
+                $('#tableNameInput')
+                    .hide(); // Ẩn tableNameInput nếu pageName không hợp lệ hoặc type không phải 'table'
+                $('#tableInputs').hide(); // Ẩn phần input của bảng
+            }
+        }
+
+        // Kiểm tra pageName có tồn tại không
+        function checkPageNameExistence(pageName) {
+            $.ajax({
+                url: '<?= \yii\helpers\Url::to(['pages/check-name-existence']) ?>',
+                headers: {
+                    'X-CSRF-Token': $('meta[name="csrf-token"]').attr('content')
+                },
+                method: 'POST',
+                data: {
+                    pageName: pageName
+                },
+                success: function(response) {
+                    if (response.pageExists) {
+                        $('#pageNameError').text('Tên trang đã tồn tại').show();
+                        $('#pageName').addClass('is-invalid').removeClass('is-valid');
+                        $('#type').prop('disabled', true);
+                    } else {
+                        $('#pageNameError').text('').hide();
+                        $('#pageName').addClass('is-valid').removeClass('is-invalid');
+                        $('#type').prop('disabled', false);
+                    }
                 }
+            });
+        }
+
+        // Kiểm tra tableName khi người dùng nhập vào
+        $(document).on('input', '#tableName', function() {
+            var tableName = $(this).val();
+
+            if (tableName.trim() === '') {
+                $('#tableNameError').text('Tên bảng không được để trống').show();
+                $('#tableName').addClass('is-invalid').removeClass('is-valid');
+                $('#tableInputs').hide(); // Ẩn phần nhập liệu bảng khi tableName không hợp lệ
+            } else if (!validateTableName(tableName)) {
+                $('#tableNameError').text('Tên bảng chỉ được phép chứa chữ, số và gạch dưới').show();
+                $('#tableName').addClass('is-invalid').removeClass('is-valid');
+                $('#tableInputs').hide(); // Ẩn phần nhập liệu bảng khi tableName không hợp lệ
+            } else {
+                // Kiểm tra tồn tại tableName trên server
+                checkTableNameExistence(tableName);
             }
         });
-    }
 
-    // Kiểm tra các cột (columns) khi người dùng nhập vào
-    $(document).on('input', '.column-name', function() {
-        var columnName = $(this).val();
-        var index = $(this).data('index');
-
-        if (columnName.trim() === '') {
-            $('#column-name-error-' + index).text('Tên cột không được để trống').show();
-            $('#column-name-' + index).addClass('is-invalid').removeClass('is-valid');
-        } else if (!validateColumnName(columnName)) {
-            $('#column-name-error-' + index).text(
-                'Tên cột không hợp lệ. Chỉ cho phép chữ, số và gạch dưới').show();
-            $('#column-name-' + index).addClass('is-invalid').removeClass('is-valid');
-        } else {
-            $('#column-name-error-' + index).text('').hide();
-            $('#column-name-' + index).addClass('is-valid').removeClass('is-invalid');
+        // Kiểm tra sự tồn tại của tableName trên server
+        function checkTableNameExistence(tableName) {
+            $.ajax({
+                url: '<?= \yii\helpers\Url::to(['pages/check-name-existence']) ?>',
+                headers: {
+                    'X-CSRF-Token': $('meta[name="csrf-token"]').attr('content')
+                },
+                method: 'POST',
+                data: {
+                    tableName: tableName
+                },
+                success: function(response) {
+                    if (response.tableExists) {
+                        $('#tableNameError').text('Tên bảng đã tồn tại').show();
+                        $('#tableName').addClass('is-invalid').removeClass('is-valid');
+                        $('#tableInputs').hide();
+                    } else {
+                        $('#tableNameError').text('').hide();
+                        $('#tableName').addClass('is-valid').removeClass('is-invalid');
+                        $('#tableInputs').show();
+                    }
+                }
+            });
         }
-    });
 
-    // Kiểm tra dữ liệu loại cột (data type)
-    $(document).on('change', '.data-type', function() {
-        var dataType = $(this).val();
-        var index = $(this).data('index');
-
-        var validDataTypes = ["SERIAL", "FLOAT", "DOUBLE", "DECIMAL", "VARCHAR", "CHAR", "TEXT",
-            "LONGTEXT", "DATE", "DATETIME", "TIMESTAMP", "TIME", "BOOLEAN"
-        ];
-        if (!validDataTypes.includes(dataType)) {
-            $('#data-type-error-' + index).text('Loại dữ liệu không hợp lệ').show();
-            $('#data-type-' + index).addClass('is-invalid').removeClass('is-valid');
-        } else {
-            $('#data-type-error-' + index).text('').hide();
-            $('#data-type-' + index).addClass('is-valid').removeClass('is-invalid');
-        }
-    });
-
-    // Kiểm tra dữ liệu kích thước khi có sự thay đổi (data-size)
-    $(document).on('input', '.data-size', function() {
-        var dataSize = $(this).val();
-        var dataType = $(this).closest('tr').find('.data-type').val();
-        var index = $(this).data('index');
-
-        if (!validateDataSize(dataSize, dataType)) {
-            $('#data-size-error-' + index).text('Kích thước không hợp lệ cho kiểu dữ liệu ' + dataType)
-                .show();
-            $('#data-size-' + index).addClass('is-invalid').removeClass('is-valid');
-        } else {
-            $('#data-size-error-' + index).text('').hide();
-            $('#data-size-' + index).addClass('is-valid').removeClass('is-invalid');
-        }
-    });
-
-    // Kiểm tra trước khi submit
-    $(document).on('submit', '#form', function(event) {
-
-        var tableNameValid = $('#tableName').hasClass('is-valid');
-        var columnValid = true;
-        var typeValid = $('#type').prop('disabled') === false;
-
-        $('.column-name').each(function() {
+        // Kiểm tra các cột (columns) khi người dùng nhập vào
+        $(document).on('input', '.column-name', function() {
+            var columnName = $(this).val();
             var index = $(this).data('index');
-            if (!$('#column-name-' + index).hasClass('is-valid')) {
-                columnValid = false;
+
+            if (columnName.trim() === '') {
+                $('#column-name-error-' + index).text('Tên cột không được để trống').show();
+                $('#column-name-' + index).addClass('is-invalid').removeClass('is-valid');
+            } else if (!validateColumnName(columnName)) {
+                $('#column-name-error-' + index).text(
+                    'Tên cột không hợp lệ. Chỉ cho phép chữ, số và gạch dưới').show();
+                $('#column-name-' + index).addClass('is-invalid').removeClass('is-valid');
+            } else {
+                $('#column-name-error-' + index).text('').hide();
+                $('#column-name-' + index).addClass('is-valid').removeClass('is-invalid');
             }
         });
 
-        if (!pageNameValid || !tableNameValid || !columnValid || !typeValid) {
-            event.preventDefault();
-            alert('Vui lòng sửa các lỗi trước khi tiếp tục');
-        }
+        // Kiểm tra dữ liệu loại cột (data type)
+        $(document).on('change', '.data-type', function() {
+            var dataType = $(this).val();
+            var index = $(this).data('index');
+
+            var validDataTypes = ["SERIAL", "FLOAT", "DOUBLE", "DECIMAL", "VARCHAR", "CHAR", "TEXT",
+                "LONGTEXT", "DATE", "DATETIME", "TIMESTAMP", "TIME", "BOOLEAN"
+            ];
+            if (!validDataTypes.includes(dataType)) {
+                $('#data-type-error-' + index).text('Loại dữ liệu không hợp lệ').show();
+                $('#data-type-' + index).addClass('is-invalid').removeClass('is-valid');
+            } else {
+                $('#data-type-error-' + index).text('').hide();
+                $('#data-type-' + index).addClass('is-valid').removeClass('is-invalid');
+            }
+        });
+
+        // Kiểm tra dữ liệu kích thước khi có sự thay đổi (data-size)
+        $(document).on('input', '.data-size', function() {
+            var dataSize = $(this).val();
+            var dataType = $(this).closest('tr').find('.data-type').val();
+            var index = $(this).data('index');
+
+            if (!validateDataSize(dataSize, dataType)) {
+                $('#data-size-error-' + index).text('Kích thước không hợp lệ cho kiểu dữ liệu ' + dataType)
+                    .show();
+                $('#data-size-' + index).addClass('is-invalid').removeClass('is-valid');
+            } else {
+                $('#data-size-error-' + index).text('').hide();
+                $('#data-size-' + index).addClass('is-valid').removeClass('is-invalid');
+            }
+        });
+
+        // Kiểm tra trước khi submit
+        $(document).on('submit', '#form', function(event) {
+
+            var tableNameValid = $('#tableName').hasClass('is-valid');
+            var columnValid = true;
+            var typeValid = $('#type').prop('disabled') === false;
+
+            $('.column-name').each(function() {
+                var index = $(this).data('index');
+                if (!$('#column-name-' + index).hasClass('is-valid')) {
+                    columnValid = false;
+                }
+            });
+
+            if (!pageNameValid || !tableNameValid || !columnValid || !typeValid) {
+                event.preventDefault();
+                alert('Vui lòng sửa các lỗi trước khi tiếp tục');
+            }
+        });
     });
-});
 
 
-// Kiểm tra và chỉ chọn một checkbox 'is_primary' duy nhất
-$(document).on('change', 'input[name="is_primary"]', function() {
-    $('input[name="is_primary"]').not(this).prop('checked', false);
-});
+    // Kiểm tra và chỉ chọn một checkbox 'is_primary' duy nhất
+    $(document).on('change', 'input[name="is_primary"]', function() {
+        $('input[name="is_primary"]').not(this).prop('checked', false);
+    });
 
 
 
-function addColumn() {
-    const rowIndex = $('#columnsContainer tr').length; // Lấy số dòng hiện tại trong tbody
-    const newRow = `
+    function addColumn() {
+        const rowIndex = $('#columnsContainer tr').length; // Lấy số dòng hiện tại trong tbody
+        const newRow = `
             <tr>
                 <td>
                     <input type="text" name="columns[]" class="form-control" id="column-name-${rowIndex}" placeholder="Column Name">
@@ -399,12 +399,12 @@ function addColumn() {
                 </td>
             </tr>
         `;
-    $('#columnsContainer').append(newRow);
-}
+        $('#columnsContainer').append(newRow);
+    }
 
 
-function removeColumn(button) {
-    const row = button.closest('tr');
-    row.remove();
-}
+    function removeColumn(button) {
+        const row = button.closest('tr');
+        row.remove();
+    }
 </script>

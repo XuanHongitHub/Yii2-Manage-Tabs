@@ -528,8 +528,6 @@ class PagesController extends Controller
 
         return $this->asJson(['success' => false, 'message' => 'Không thể tải tệp Excel lên']);
     }
-
-
     // Validate Data Import
     private function isValidColumnType($value, $columnSchema)
     {

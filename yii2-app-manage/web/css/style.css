@@ -45379,3 +45379,11 @@ footer p .footer-icon {
   transform: translateY(-50%);
   pointer-events: none;
 }
+
+.default-row {
+  display: none;
+}
+
+.hidden-column {
+  display: none;
+}
