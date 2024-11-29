@@ -7,6 +7,7 @@ use yii\web\Controller;
 use app\models\Page;
 
 use app\models\Menu;
+use app\models\User;
 use yii\filters\AccessControl;
 use yii\data\Pagination;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
@@ -19,8 +20,10 @@ use yii\web\NotFoundHttpException;
 use yii\db\Query;
 use yii\grid\GridView;
 use yii\data\ActiveDataProvider;
+use yii\data\Sort;
 use yii\data\SqlDataProvider;
 use yii\helpers\ArrayHelper;
+use yii\helpers\Html;
 
 class PagesController extends Controller
 {
@@ -81,18 +84,16 @@ class PagesController extends Controller
     public function actionLoadPageData($pageId)
     {
         $pageId = Yii::$app->request->get('pageId');
-
         $pageTab = Page::findOne($pageId);
         $userId = Yii::$app->user->id;
 
         // Retrieve search keyword if it exists
-
         $searchTerm = Yii::$app->request->get('search', '');
         $pageSize = intval(Yii::$app->request->get('pageSize', 10));
         $page = intval(Yii::$app->request->get('page', 0));
 
-        $sort = Yii::$app->request->get('sort', 'id');
-        $sortDirection = Yii::$app->request->get('sortDirection', SORT_ASC);
+        // $sort = Yii::$app->request->get('column', 'id');
+        $sortDirection = Yii::$app->request->get('sortDirection', 'asc');
 
         if ($page === null) {
             return 'No data';
@@ -106,14 +107,15 @@ class PagesController extends Controller
 
             if ($tableName) {
                 $columns = Yii::$app->db->schema->getTableSchema($tableName)->columns;
+                //$column =['name1','name2']
                 $columnNames = array_keys($columns);
 
                 $query = (new Query())->from($tableName);
 
+                // Tìm kiếm nếu có
                 if (!empty($searchTerm)) {
                     $condition = [];
                     foreach ($columnNames as $columnName) {
-                        // Bao tên cột trong dấu ngoặc kép
                         $columnNameQuoted = "\"$columnName\"";
                         $condition[] = "LOWER(unaccent(CAST($columnNameQuoted AS TEXT))) ILIKE LOWER(unaccent(:searchTerm))";
                     }
@@ -123,31 +125,58 @@ class PagesController extends Controller
                     }
                 }
 
-                $totalCount = $query->count();
+                // Tính toán tổng số bản ghi
+                // $totalCount = $query->count();
 
-                $pagination = new Pagination([
-                    'defaultPageSize' => $pageSize,
-                    'pageSize' => $pageSize,
-                    'totalCount' => $totalCount,
-                    'page' => Yii::$app->request->get('page', 0)
-                ]);
+                // Phân trang
+                // $pagination = new Pagination([
+                //     'defaultPageSize' => $pageSize,
+                //     'pageSize' => $pageSize,
+                //     'totalCount' => $totalCount,
+                //     'page' => Yii::$app->request->get('page', 0)
+                // ]);
 
-                $query->orderBy(['id' => SORT_ASC])
-                    ->offset($page * $pageSize)
-                    ->limit($pageSize);
+                // Sắp xếp dữ liệu
+                // $query->orderBy([$sort => $sortDirection === 'asc' ? SORT_ASC : SORT_DESC]);
 
-                $data = $query->offset($pagination->offset)
-                    ->limit($pagination->limit)
-                    ->all();
+                // $data = $query->offset($pagination->offset)
+                //     ->limit($pagination->limit)
+                //     ->all();
+
+                $provider = new ActiveDataProvider(
+                    [
+                        'query' => $query,
+                        'pagination' => [
+                            'pageSize' => $pageSize,
+                        ],
+                        // 'sort' => [
+                        //     'attributes' => $columns,
+                        //     'default' => 'id'
+                        // ],
+
+                    ]
+                );
+
+                unset($columnNames[0]);
+                $columnNames[] = [
+                    'class' => 'yii\grid\ActionColumn',
+                    'template' => '{update}',  // the default buttons + your custom button
+                    'buttons' => [
+                        'update' => function ($url, $model, $key) use ($tableName) {     // render your custom button
+                            return Html::button(Html::tag('i', '', ['class' => 'fa-solid fa-pen-to-square']), [
+                                'class' => 'btn btn-secondary btn-sm save-row-btn',
+                                'onclick' => 'openEdit(' . $key . ', "' . $tableName . '")'
+                            ]);
+                        }
+                    ]
+                ];
 
                 return $this->renderPartial('_tableData', [
-                    'columns' => $columns,
-                    'data' => $data,
                     'tableName' => $tableName,
-                    'pagination' => $pagination,
-                    'totalCount' => $totalCount,
+                    'columns' => $columns,
+                    'columnNames' => $columnNames,
+                    'provider' => $provider,
                     'pageSize' => $pageSize,
-                    'pageId' => $pageId,
                 ]);
             }
         } elseif ($pageType === 'richtext') {
@@ -164,7 +193,8 @@ class PagesController extends Controller
 
         return 'No data';
     }
-    /** 
+
+    /**
      * Update RichtextData Action.
      *
      */
@@ -184,21 +214,21 @@ class PagesController extends Controller
         }
         return json_encode(['status' => 'error', 'message ' => 'Đã xảy ra lỗi khi cập nhật nội dung.']);
     }
-    /** 
+    /**
      * Download RichtextData Action.
      *
      */
     // public function actionDownload($pageId)
     // {
-    //     $filePath = Yii::getAlias('@runtime/richtext/' . $pageId . '.txt');
+    // $filePath = Yii::getAlias('@runtime/richtext/' . $pageId . '.txt');
 
-    //     if (file_exists($filePath)) {
-    //         return Yii::$app->response->sendFile($filePath);
-    //     } else {
-    //         throw new NotFoundHttpException('Không tìm thấy tệp tin.');
-    //     }
+    // if (file_exists($filePath)) {
+    // return Yii::$app->response->sendFile($filePath);
+    // } else {
+    // throw new NotFoundHttpException('Không tìm thấy tệp tin.');
     // }
-    /** 
+    // }
+    /**
      * Update TableData Action.
      *
      */
@@ -229,7 +259,7 @@ class PagesController extends Controller
     }
 
 
-    /** 
+    /**
      * Create TableData Action.
      *
      */
@@ -292,8 +322,8 @@ class PagesController extends Controller
                     $sequenceName = $tableSchema->sequenceName;
                     if ($primaryKey && $sequenceName) {
                         $db->createCommand("
-                        SELECT setval('$sequenceName', (SELECT MAX($primaryKey) FROM $escapedTableName))
-                    ")->execute();
+SELECT setval('$sequenceName', (SELECT MAX($primaryKey) FROM $escapedTableName))
+")->execute();
                     }
 
                     // Thử chèn lại dữ liệu
@@ -324,7 +354,7 @@ class PagesController extends Controller
         return $tableSchema->sequenceName;
     }
 
-    /** 
+    /**
      * Delete TableData Action.
      *
      */
@@ -334,6 +364,8 @@ class PagesController extends Controller
 
         $table = $postData['table'];
         $conditions = isset($postData['conditions']) ? $postData['conditions'] : [];
+
+        Yii::error("Conditions: " . print_r($conditions, true));
 
         if (!preg_match('/^[a-zA-Z_][a-zA-Z0-9_]*$/', $table)) {
             return $this->asJson(['success' => false, 'message' => 'Tên bảng không hợp lệ.']);
@@ -388,7 +420,7 @@ class PagesController extends Controller
     }
     /**
      * Import + Export Excel
-     * 
+     *
      */
     public function actionImportExcel()
     {
@@ -448,13 +480,11 @@ class PagesController extends Controller
 
                 while ($rowIndex < $totalRows) {
                     $rowsToInsert = array_slice($data, $rowIndex, $chunkSize);
-                    $rowIndex += count($rowsToInsert);
-
+                    $rowIndex
+                        += count($rowsToInsert);
                     if (empty($rowsToInsert)) {
                         break;
-                    }
-
-                    // Chuẩn bị dữ liệu cho câu lệnh INSERT
+                    } // Chuẩn bị dữ liệu cho câu lệnh INSERT
                     $sql = sprintf(
                         'INSERT INTO "%s" ("%s") VALUES %s',
                         $tableName,
@@ -519,8 +549,8 @@ class PagesController extends Controller
     // Validate columns
     private function validateColumns($excelHeaders, $expectedColumns)
     {
-        Yii::error("expectedColumns: " . print_r($expectedColumns, true), __METHOD__);
-        Yii::error("excelHeaders: " . print_r($excelHeaders, true), __METHOD__);
+        Yii::error(" expectedColumns: " . print_r($expectedColumns, true), __METHOD__);
+        Yii::error(" excelHeaders: " . print_r($excelHeaders, true), __METHOD__);
 
         if (count($excelHeaders) !== count($expectedColumns)) {
             return false;
@@ -647,7 +677,7 @@ class PagesController extends Controller
 
     public function getExportData($tableName)
     {
-        $columns = Yii::$app->db->createCommand("DESCRIBE $tableName")->queryAll();
+        $columns = Yii::$app->db->createCommand(" DESCRIBE $tableName")->queryAll();
         $columnNames = array_map(fn($column) => $column['Field'], $columns);
 
         $data = [];

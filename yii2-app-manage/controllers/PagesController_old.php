@@ -3,24 +3,25 @@
 namespace app\controllers;
 
 use Yii;
+use app\models\User;
+use yii\web\Response;
 use yii\web\Controller;
 use app\models\Page;
 
 use app\models\Menu;
+use yii\filters\VerbFilter;
 use yii\filters\AccessControl;
+use yii\db\Exception;
 use yii\data\Pagination;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use PhpOffice\PhpSpreadsheet\Style\Border;
 use PhpOffice\PhpSpreadsheet\Style\Alignment;
+use PhpOffice\PhpSpreadsheet\Style\Font;
 use PhpOffice\PhpSpreadsheet\IOFactory;
 use yii\db\Schema;
 use yii\web\NotFoundHttpException;
 use yii\db\Query;
-use yii\grid\GridView;
-use yii\data\ActiveDataProvider;
-use yii\data\SqlDataProvider;
-use yii\helpers\ArrayHelper;
 
 class PagesController extends Controller
 {
@@ -91,8 +92,6 @@ class PagesController extends Controller
         $pageSize = intval(Yii::$app->request->get('pageSize', 10));
         $page = intval(Yii::$app->request->get('page', 0));
 
-        $sort = Yii::$app->request->get('sort', 'id');
-        $sortDirection = Yii::$app->request->get('sortDirection', SORT_ASC);
 
         if ($page === null) {
             return 'No data';
@@ -111,17 +110,11 @@ class PagesController extends Controller
                 $query = (new Query())->from($tableName);
 
                 if (!empty($searchTerm)) {
-                    $condition = [];
-                    foreach ($columnNames as $columnName) {
-                        // Bao tên cột trong dấu ngoặc kép
-                        $columnNameQuoted = "\"$columnName\"";
-                        $condition[] = "LOWER(unaccent(CAST($columnNameQuoted AS TEXT))) ILIKE LOWER(unaccent(:searchTerm))";
-                    }
-
-                    if (!empty($condition)) {
-                        $query->where(implode(' OR ', $condition), [':searchTerm' => '%' . $searchTerm . '%']);
-                    }
+                    $query->where(['or', ...array_map(function ($c) use ($searchTerm) {
+                        return ['ilike', "LOWER(unaccent(CAST($c AS TEXT)))", strtolower($searchTerm)];
+                    }, $columnNames)]);
                 }
+
 
                 $totalCount = $query->count();
 
@@ -132,8 +125,7 @@ class PagesController extends Controller
                     'page' => Yii::$app->request->get('page', 0)
                 ]);
 
-                $query->orderBy(['id' => SORT_ASC])
-                    ->offset($page * $pageSize)
+                $query->offset($page * $pageSize)
                     ->limit($pageSize);
 
                 $data = $query->offset($pagination->offset)
@@ -394,6 +386,7 @@ class PagesController extends Controller
     {
         $file = $_FILES['import-excel-file'];
         $tableName = Yii::$app->request->post('tableName');
+        $removeId = Yii::$app->request->post('removeId');
 
         if ($file['error'] === UPLOAD_ERR_OK) {
             $filePath = $file['tmp_name'];
@@ -410,41 +403,61 @@ class PagesController extends Controller
             $columns = $tableSchema->columns;
             $expectedColumns = array_keys($columns);
 
-            // Loại bỏ cột 'id' khỏi danh sách cột dự kiến
-            $expectedColumns = array_filter($expectedColumns, fn($column) => strtolower($column) !== 'id');
-
-            // Lấy header từ tệp Excel và loại bỏ 'id' nếu tồn tại
             $excelHeaders = $this->getColumnHeadersFromExcel($filePath);
-            $excelHeaders = array_filter($excelHeaders, fn($header) => strtolower($header) !== 'id');
 
-            // Kiểm tra tiêu đề cột
             if ($this->validateColumns($excelHeaders, $expectedColumns) === false) {
+                $errorMessage = "\nCác tiêu đề cột trong tệp Excel không khớp với các cột cơ sở dữ liệu. Vui lòng xem lại các chi tiết sau:\n\n";
+
+                $errorMessage .= "Cột tệp trong tệp Excel:\n" . "<div class='d-flex gap-3'>" . implode("", array_map(function ($header) {
+                    return "<div class='p-2 text-danger'>" . htmlspecialchars($header) . "</div>";
+                }, $excelHeaders)) . "</div>\n\n";
+
+                $errorMessage .= "Các cột dự kiến ​​trong bảng:\n" . "<div class='d-flex gap-3'>" . implode("", array_map(function ($column) {
+                    return "<div class='p-2 text-success'>" . htmlspecialchars($column) . "</div>";
+                }, $expectedColumns)) . "</div>\n\n";
+
                 return $this->asJson([
                     'success' => false,
-                    'message' => 'Các tiêu đề cột trong tệp Excel không khớp với các cột trong cơ sở dữ liệu.',
+                    'message' => $errorMessage
                 ]);
             }
 
-            // Loại bỏ hàng đầu tiên (header) để chỉ lấy dữ liệu
             $data = array_slice($data, 1);
 
-            // Loại bỏ cột 'id' khỏi dữ liệu
-            $data = array_map(function ($row) use ($excelHeaders) {
-                return array_filter($row, function ($key) use ($excelHeaders) {
-                    return strtolower($key) !== 'id';
-                }, ARRAY_FILTER_USE_KEY);
-            }, $data);
+            $primaryKey = $tableSchema->primaryKey[0];
+            $duplicateIds = [];
+
+            if (!$removeId && isset($columns[$primaryKey])) {
+                $primaryKeyValues = array_filter(array_column($data, $primaryKey));
+                if (!empty($primaryKeyValues)) {
+                    $existingIds = Yii::$app->db->createCommand("SELECT $primaryKey FROM {$tableName} WHERE $primaryKey IN (" . implode(',', $primaryKeyValues) . ")")
+                        ->queryColumn();
+
+                    foreach ($data as $key => $row) {
+                        if (in_array($row[$primaryKey], $existingIds)) {
+                            $duplicateIds[] = $row[$primaryKey];
+                            unset($data[$key]);  // 
+                        }
+                    }
+
+                    if (!empty($duplicateIds)) {
+                        return $this->asJson([
+                            'success' => false,
+                            'duplicate' => true,
+                            'message' => 'Dữ liệu có PK(s) trùng lặp: ' . implode(', ', $duplicateIds) . '. Những hàng có PK(s) trên sẽ bị ghi đè.'
+                        ]);
+                    }
+                }
+            }
 
             // Transaction
             $transaction = Yii::$app->db->beginTransaction();
-            try {
-                // Xóa toàn bộ dữ liệu trong bảng
-                Yii::$app->db->createCommand()->delete($tableName)->execute();
 
-                // Chèn dữ liệu mới
+            try {
                 $chunkSize = 1000;
                 $rowIndex = 0;
                 $totalRows = count($data);
+                $errors = [];
 
                 while ($rowIndex < $totalRows) {
                     $rowsToInsert = array_slice($data, $rowIndex, $chunkSize);
@@ -454,23 +467,57 @@ class PagesController extends Controller
                         break;
                     }
 
-                    // Chuẩn bị dữ liệu cho câu lệnh INSERT
-                    $sql = sprintf(
-                        'INSERT INTO "%s" ("%s") VALUES %s',
-                        $tableName,
-                        implode('", "', $excelHeaders),
-                        implode(', ', array_map(function ($row) {
-                            return '(' . implode(', ', array_map(function ($value) {
+                    // INSERT ... ON DUPLICATE KEY UPDATE
+                    foreach ($rowsToInsert as $index => $row) {
+                        $currentRowIndex = $rowIndex - count($rowsToInsert) + $index + 2;
+                        $rowData = [];
+                        $rowErrors = [];
+
+                        // Update
+                        foreach ($expectedColumns as $column) {
+                            $columnSchema = $columns[$column];
+                            $value = isset($row[$column]) ? $row[$column] : null;
+
+                            if (!$this->isValidColumnType($value, $columnSchema)) {
+                                $rowErrors[] = "Giá trị '<strong class=\"txt-danger\">{$value}</strong>' cho cột '<strong class=\"txt-danger\">{$column}</strong>' không hợp lệ.  
+                                Loại dữ liệu dự kiến: <strong class=\"text-success\">" . strtoupper($columnSchema->type) . "</strong> nhưng đã nhận được: <strong class=\"txt-danger\">" . strtoupper(gettype($value)) . "</strong>";
+                            }
+
+                            $rowData[$column] = $value;
+                        }
+
+                        if (!empty($rowErrors)) {
+                            $errors[] = "Error at row {$currentRowIndex}:\n" . implode("\n\n", $rowErrors);
+                        } else {
+                            $columnsList = implode('`, `', array_keys($rowData));
+                            $valuesList = implode(', ', array_map(function ($value) {
                                 return is_null($value) ? 'NULL' : Yii::$app->db->quoteValue($value);
-                            }, $row)) . ')';
-                        }, $rowsToInsert))
-                    );
-                    Yii::$app->db->createCommand($sql)->execute();
+                            }, $rowData));
+
+                            $updateList = implode(', ', array_map(function ($column) {
+                                return "$column = VALUES($column)";
+                            }, array_keys($rowData)));
+
+                            $sql = "INSERT INTO {$tableName} ($columnsList) VALUES ($valuesList) ON DUPLICATE KEY UPDATE $updateList";
+                            Yii::$app->db->createCommand($sql)->execute();
+                        }
+                    }
                 }
 
+                if (!empty($errors)) {
+                    $errorMessages = [];
+                    foreach ($errors as $error) {
+                        $errorMessages[] = "<strong class=\"\">{$error}</strong>";
+                    }
+                    throw new \Exception("Đã tìm thấy lỗi trong quá trình nhập: \n\n" . implode("\n\n", $errorMessages));
+                }
+
+                // Commit transaction 
                 $transaction->commit();
+
                 return $this->asJson(['success' => true]);
             } catch (\Exception $e) {
+                // Rollback transaction 
                 $transaction->rollBack();
                 return $this->asJson([
                     'success' => false,
@@ -481,8 +528,6 @@ class PagesController extends Controller
 
         return $this->asJson(['success' => false, 'message' => 'Không thể tải tệp Excel lên']);
     }
-
-
     // Validate Data Import
     private function isValidColumnType($value, $columnSchema)
     {
@@ -775,7 +820,7 @@ class PagesController extends Controller
         }
 
         // Truy vấn thông tin các cột từ cơ sở dữ liệu
-        $columns = (new Query())
+        $columns = (new \yii\db\Query())
             ->select('column_name')
             ->from('information_schema.columns')
             ->where(['table_name' => $tableName])
@@ -786,15 +831,8 @@ class PagesController extends Controller
             return $this->asJson(['success' => false, 'message' => 'Không có cột nào trong bảng.']);
         }
 
-        // Lấy tên các cột và loại bỏ cột 'id'
-        $columnNames = array_filter(
-            array_map(fn($column) => $column['column_name'], $columns),
-            fn($columnName) => strtolower($columnName) !== 'id' // Loại bỏ cột 'id'
-        );
-
-        if (empty($columnNames)) {
-            return $this->asJson(['success' => false, 'message' => 'Không có cột nào để xuất sau khi loại bỏ cột "id".']);
-        }
+        // Lấy tên các cột vào mảng
+        $columnNames = array_map(fn($column) => $column['column_name'], $columns);
 
         // Tạo đối tượng Spreadsheet
         $spreadsheet = new Spreadsheet();

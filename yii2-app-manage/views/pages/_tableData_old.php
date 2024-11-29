@@ -11,34 +11,21 @@ $globalIndexOffset = $page * $rowsPerPage;
 ?>
 <!-- Modal Nhập Excel -->
 <div class="modal fade" id="importExelModal" tabindex="-1" aria-labelledby="importExelModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
+    <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
                 <h4 class="modal-title" id="importExelModalLabel">Nhập Excel</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
             </div>
             <div class="modal-body">
-                <div class="row">
-                    <div class="col-6 me-auto">
-                        <form id="importExcelForm" enctype="multipart/form-data">
-                            <div class="mb-3">
-                                <label for="import-excel-file" class="form-label">Chọn Tệp Excel</label>
-                                <input class="form-control" type="file" id="import-excel-file" name="import-excel-file"
-                                    accept=".xlsx, .xls" required>
-                            </div>
-                            <button type="submit" class="btn btn-primary">Nhập Excel</button>
-                        </form>
+                <form id="importExcelForm" enctype="multipart/form-data">
+                    <div class="mb-3">
+                        <label for="import-excel-file" class="form-label">Chọn Tệp Excel</label>
+                        <input class="form-control" type="file" id="import-excel-file" name="import-excel-file"
+                            accept=".xlsx, .xls" required>
                     </div>
-                    <div class="col-4">
-                        <div class="mb-3">
-                            <p class="my-1 f-m-light">Xuất Template (Chỉ Header):
-                            </p>
-                            <button class="btn btn-sm btn-outline-primary" id="exportTemplateButton">Xuất
-                                Template</button>
-                        </div>
-                    </div>
-
-                </div>
+                    <button type="submit" class="btn btn-primary">Nhập Excel</button>
+                </form>
             </div>
         </div>
     </div>
@@ -96,7 +83,10 @@ $globalIndexOffset = $page * $rowsPerPage;
                 <button class="btn btn-secondary mb-2 w-100" id="exportCurrentViewButton">
                     <i class="fa-solid fa-eye"></i> Xuất View Hiện Tại
                 </button>
-
+                <!-- Nút Xuất Template (Chỉ Header Columns) -->
+                <button class="btn btn-primary w-100" id="exportTemplateButton">
+                    <i class="fa-solid fa-columns"></i> Xuất Template (Chỉ Header)
+                </button>
             </div>
         </div>
     </div>
@@ -142,12 +132,9 @@ $globalIndexOffset = $page * $rowsPerPage;
             <tr>
                 <th class="px-2 py-0" style="width: 3%;"><input class="" type="checkbox" id="select-all"></th>
                 <?php foreach ($columns as $column): ?>
-                    <th class="column-header" data-column="<?= htmlspecialchars($column->name) ?>"
-                        <?php if (isset($columns[$column->name]) && $columns[$column->name]->isPrimaryKey) echo 'hidden'; ?>>
-                        <?= htmlspecialchars($column->name) ?>
-                    </th>
+                    <th class="column-header" data-column="<?= htmlspecialchars($column->name) ?>">
+                        <?= htmlspecialchars($column->name) ?></th>
                 <?php endforeach; ?>
-
                 <th style="width: 8%;">Thao Tác</th>
             </tr>
         </thead>
@@ -162,8 +149,7 @@ $globalIndexOffset = $page * $rowsPerPage;
                                 id="<?= $rowIndex ?>" data-table-name="<?= $tableName ?>">
                         </td>
                         <?php foreach ($columns as $column): ?>
-                            <td class="column-data <?= isset($columns[$column->name]) && $columns[$column->name]->isPrimaryKey ? 'hidden-column' : '' ?>"
-                                data-column="<?= htmlspecialchars($column->name) ?>">
+                            <td class="column-data" data-column="<?= htmlspecialchars($column->name) ?>">
                                 <?= htmlspecialchars($row[$column->name]) ?>
                             </td>
                         <?php endforeach; ?>
@@ -231,7 +217,6 @@ $globalIndexOffset = $page * $rowsPerPage;
         </div>
 
         <!-- Nút Tùy chỉnh cột -->
-        <!-- Nút Tùy chỉnh cột -->
         <div class="btn-group">
             <button class="btn btn-primary btn-sm mx-2 dropdown-toggle" type="button" data-bs-toggle="dropdown"
                 data-popper-placement="top-start" aria-expanded="false"><i class="fa-solid fa-border-all"></i> Tùy
@@ -239,35 +224,20 @@ $globalIndexOffset = $page * $rowsPerPage;
             <ul class="dropdown-menu border dropdown-block">
                 <table class="table table-borderless" id="columns-visibility">
                     <?php foreach ($columns as $column): ?>
-                        <?php if (isset($columns[$column->name]) && $columns[$column->name]->isPrimaryKey): ?>
-                            <!-- Nếu cột là khóa chính, ẩn checkbox -->
-                            <tr class="border" style="display:none;">
-                                <td class="d-flex justify-content-between align-items-center">
-                                    <span data-checkbox-column="<?= htmlspecialchars($column->name) ?>">
-                                        <?= htmlspecialchars($column->name) ?>
-                                    </span>
-                                    <input class="form-check-input column-checkbox" type="checkbox" checked
-                                        id="checkbox-<?= htmlspecialchars($column->name) ?>"
-                                        data-column="<?= htmlspecialchars($column->name) ?>" disabled>
-                                </td>
-                            </tr>
-                        <?php else: ?>
-                            <tr class="border">
-                                <td class="d-flex justify-content-between align-items-center">
-                                    <span data-checkbox-column="<?= htmlspecialchars($column->name) ?>">
-                                        <?= htmlspecialchars($column->name) ?>
-                                    </span>
-                                    <input class="form-check-input column-checkbox" type="checkbox" checked
-                                        id="checkbox-<?= htmlspecialchars($column->name) ?>"
-                                        data-column="<?= htmlspecialchars($column->name) ?>">
-                                </td>
-                            </tr>
-                        <?php endif; ?>
+                        <tr class="border">
+                            <td class="d-flex justify-content-between align-items-center">
+                                <span data-checkbox-column="<?= htmlspecialchars($column->name) ?>">
+                                    <?= htmlspecialchars($column->name) ?>
+                                </span>
+                                <input class="form-check-input column-checkbox" type="checkbox" checked
+                                    id="checkbox-<?= htmlspecialchars($column->name) ?>"
+                                    data-column="<?= htmlspecialchars($column->name) ?>">
+                            </td>
+                        </tr>
                     <?php endforeach; ?>
                 </table>
             </ul>
         </div>
-
 
         <!-- Pagination Links -->
         <div class="dataTables_paginate paging_simple_numbers ms-md-auto">
@@ -338,16 +308,14 @@ $globalIndexOffset = $page * $rowsPerPage;
             </div>
             <div class="modal-body">
                 <?php foreach ($columns as $column): ?>
-                    <?php if (isset($columns[$column->name]) && !$columns[$column->name]->isPrimaryKey): ?>
-                        <div class="form-group">
-                            <label
-                                for="<?= htmlspecialchars($column->name) ?>"><?= htmlspecialchars($column->name) ?>:</label>
-                            <input type="text" class="form-control new-data-input"
-                                data-column="<?= htmlspecialchars($column->name) ?>"
-                                id="<?= htmlspecialchars($column->name) ?>"
-                                placeholder="<?= htmlspecialchars($column->name) ?>">
-                        </div>
-                    <?php endif; ?>
+                    <div class="form-group">
+                        <label
+                            for="<?= htmlspecialchars($column->name) ?>"><?= htmlspecialchars($column->name) ?>:</label>
+                        <input type="text" class="form-control new-data-input"
+                            data-column="<?= htmlspecialchars($column->name) ?>"
+                            id="<?= htmlspecialchars($column->name) ?>"
+                            placeholder="<?= htmlspecialchars($column->name) ?>">
+                    </div>
                 <?php endforeach; ?>
             </div>
             <div class="modal-footer">
@@ -431,12 +399,6 @@ $globalIndexOffset = $page * $rowsPerPage;
         form.innerHTML = ''; // Xóa nội dung cũ trong form
 
         columnsArray.forEach(column => {
-            // Kiểm tra xem cột có bị ẩn hay không
-            const columnHeader = document.querySelector(`th[data-column='${column.name}']`);
-            if (columnHeader && columnHeader.classList.contains('hidden-column')) {
-                return; // Bỏ qua cột bị ẩn
-            }
-
             const label = document.createElement('label');
             label.htmlFor = column.name;
             label.innerText = column.name + ":"; // Không chuyển đổi chữ cái đầu thành chữ hoa
@@ -462,7 +424,6 @@ $globalIndexOffset = $page * $rowsPerPage;
 
         $('#editModal').modal('show');
     }
-
 
 
     document.getElementById('save-row-btn').addEventListener('click', function() {
@@ -644,14 +605,6 @@ $globalIndexOffset = $page * $rowsPerPage;
 
                 var data = responseData.data;
 
-                // Lưu trạng thái ẩn/hiện của các cột
-                var columnVisibility = {};
-                $('.column-checkbox').each(function() {
-                    var columnName = $(this).data('column');
-                    columnVisibility[columnName] = $(this).prop('checked');
-                });
-
-                // Cập nhật nội dung tbody của bảng
                 var newTbodyHtml = $(responseData).find('.dataTable tbody').html();
                 $('.dataTable tbody').html(newTbodyHtml);
 
@@ -675,27 +628,13 @@ $globalIndexOffset = $page * $rowsPerPage;
                 $('#pageSize').val(pageSize);
                 $('#lastPageButton').attr('data-last-page', lastPage);
 
-                // Xác định cột khóa chính (tên các cột khóa chính sẽ được lưu trong danh sách này)
-                var primaryKeyColumns = ['id']; // Thay 'id' bằng tên cột khóa chính thực tế của bạn
+                $('.column-checkbox').each(function() {
+                    var columnName = $(this).data('column');
+                    var isChecked = $(this).prop('checked');
 
-                // Lặp qua các cột và ẩn các cột khóa chính
-                primaryKeyColumns.forEach(function(columnName) {
-                    // Ẩn th và td tương ứng với cột khóa chính
-                    $('th[data-column="' + columnName + '"]').addClass('hidden-column');
-                    $('td[data-column="' + columnName + '"]').addClass('hidden-column');
+                    $('th[data-column="' + columnName + '"]').toggle(isChecked);
+                    $('td[data-column="' + columnName + '"]').toggle(isChecked);
                 });
-
-                // Áp dụng lại trạng thái ẩn/hiện cho các cột không phải khóa chính
-                for (var columnName in columnVisibility) {
-                    if (columnVisibility.hasOwnProperty(columnName) && !primaryKeyColumns.includes(
-                            columnName)) {
-                        var isChecked = columnVisibility[columnName];
-                        $('th[data-column="' + columnName + '"]').toggle(isChecked);
-                        $('td[data-column="' + columnName + '"]').toggle(isChecked);
-                        // Cập nhật lại checkbox để giữ trạng thái
-                        $('#checkbox-' + columnName).prop('checked', isChecked);
-                    }
-                }
             },
             error: function(xhr, status, error) {
                 loadingSpinner.remove();
@@ -919,7 +858,7 @@ $globalIndexOffset = $page * $rowsPerPage;
                 loadingSpinner.remove();
 
                 if (response.success) {
-                    var pageId = <?= json_encode($pageId) ?>;
+
                     loadData(pageId);
                     showToast('Nhập dữ liệu từ Excel thành công!');
 
@@ -962,7 +901,6 @@ $globalIndexOffset = $page * $rowsPerPage;
                                 newLoadingSpinner.remove();
 
                                 if (response.success) {
-                                    var pageId = <?= json_encode($pageId) ?>;
                                     loadData(pageId);
 
                                     showToast(
@@ -1008,35 +946,24 @@ $globalIndexOffset = $page * $rowsPerPage;
 
     // Xử lý xuất view hiện tại
     $(document).off('click', '#exportCurrentViewButton').on('click', '#exportCurrentViewButton', function() {
-        var tableData = [];
-        var columnMappings = []; // Lưu thông tin tiêu đề và thứ tự cột
+        var tableData = []; // Mảng lưu dữ liệu bảng
 
-        // Lấy danh sách các tiêu đề cột (bao gồm cột ẩn)
-        $('#mainTable thead th').each(function(index) {
-            columnMappings.push({
-                index: index, // Vị trí của cột
-                name: $(this).text().trim(), // Tên cột
-                visible: $(this).is(':visible') // Trạng thái hiển thị
-            });
-        });
-
-        // Lấy dữ liệu của từng dòng, đúng thứ tự cột
         $('#mainTable tbody tr').each(function() {
             var rowData = [];
+
             $(this).find('td').each(function(index) {
-                rowData.push({
-                    index: index, // Vị trí của cột
-                    value: $(this).text().trim() // Giá trị của ô
-                });
+                // Kiểm tra nếu cột hiện tại không phải cột đầu tiên hoặc cuối cùng và cột đó không bị ẩn
+                if (index !== 0 && index !== $(this).parent().find('td').length - 1 && $(this).is(
+                        ':visible')) {
+                    rowData.push($(this).text().trim());
+                }
             });
             tableData.push(rowData);
         });
-
-        console.log("🚀 ~ columnMappings:", columnMappings);
-        console.log("🚀 ~ tableData:", tableData);
+        console.log("🚀 ~ $ ~ tableData:", tableData);
 
         var tableName = '<?= $tableName ?>';
-        var loadingSpinner = $(`
+        var loadingSpinner = $(` 
         <div class="loading-overlay">
             <div class="loading-content">
                 <div class="spinner-border text-primary" role="status">
@@ -1049,16 +976,15 @@ $globalIndexOffset = $page * $rowsPerPage;
         $('body').append(loadingSpinner);
 
         $.ajax({
-            url: '<?= \yii\helpers\Url::to(['pages/export-excel-current']) ?>',
+            url: '<?= \yii\helpers\Url::to(['pages/export-excel-current']) ?>', // Địa chỉ controller
             type: 'POST',
             headers: {
-                'X-CSRF-Token': $('meta[name="csrf-token"]').attr('content')
+                'X-CSRF-Token': $('meta[name="csrf-token"]').attr('content') // CSRF token nếu có
             },
             data: {
                 tableName: tableName,
-                columnMappings: columnMappings, // Gửi thông tin cột
                 tableData: tableData, // Gửi dữ liệu bảng
-                format: 'xlsx'
+                format: 'xlsx' // Định dạng xuất Excel
             },
             success: function(response) {
                 loadingSpinner.remove();
@@ -1066,10 +992,32 @@ $globalIndexOffset = $page * $rowsPerPage;
                     if (response.file_url) {
                         var link = document.createElement('a');
                         link.href = response.file_url;
-                        link.download = tableName + '.xlsx';
+                        link.download = tableName + '.xlsx'; // Đổi tên file nếu cần
                         document.body.appendChild(link);
                         link.click();
                         document.body.removeChild(link);
+
+                        // Xóa file tạm sau khi tải xuống thành công
+                        $.ajax({
+                            url: '<?= \yii\helpers\Url::to(['pages/delete-export-file']) ?>', // Địa chỉ xóa file
+                            type: 'POST',
+                            headers: {
+                                'X-CSRF-Token': $('meta[name="csrf-token"]').attr('content')
+                            },
+                            data: {
+                                file_url: response.file_url,
+                            },
+                            success: function(deleteResponse) {
+                                if (deleteResponse.success) {
+                                    console.log('Đã xóa file tmp thành công.');
+                                } else {
+                                    console.error('Không xóa được tập tin.');
+                                }
+                            },
+                            error: function(xhr, status, error) {
+                                console.error('Đã xảy ra lỗi khi xóa file.');
+                            }
+                        });
                     } else {
                         alert('URL tệp bị thiếu trong phản hồi.');
                     }
@@ -1083,6 +1031,7 @@ $globalIndexOffset = $page * $rowsPerPage;
             }
         });
     });
+
 
     // Xử lý xuất template (chỉ header columns)
     $(document).off('click', '#exportTemplateButton').on('click', '#exportTemplateButton', function() {
