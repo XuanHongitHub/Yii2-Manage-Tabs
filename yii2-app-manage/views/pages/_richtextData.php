@@ -1,5 +1,5 @@
 <?php
-
+\app\assets\RichtextAsset::register($this);
 // $pageId = $_GET['pageId'];
 
 ?>

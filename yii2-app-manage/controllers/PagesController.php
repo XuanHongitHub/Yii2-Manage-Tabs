@@ -57,19 +57,65 @@ class PagesController extends Controller
 
         $menu = Menu::findOne($menuId);
 
-        if ($menu) {
-            $pages = Page::find()
-                ->where(['status' => 0, 'menu_id' => $menuId])
-                ->orderBy(['position' => SORT_ASC, 'id' => SORT_DESC])
-                ->all();
-
-
-            return $this->render('menu', [
-                'pages' => $pages,
-            ]);
+        if (!$menu){
+            throw new NotFoundHttpException('Không tìm thấy dữ liệu phù hợp.');
         }
 
-        throw new NotFoundHttpException('Không tìm thấy dữ liệu phù hợp.');
+        /** @var Page[] $pages */
+        $pages = Page::find()
+            ->where(['status' => 0, 'menu_id' => $menuId, 'deleted' => 0])
+            ->orderBy(['position' => SORT_ASC, 'id' => SORT_DESC])
+            ->all();
+
+        if (!$pages){
+            throw new NotFoundHttpException('Không tìm thấy dữ liệu phù hợp.');
+        }
+        if (count($pages) == 1){
+            $page = $pages[0];
+            if ($page->type == 'table'){
+                $columns = Yii::$app->db->schema->getTableSchema($page->table_name)->columns;
+                //$column =['name1','name2']
+                $columnNames = array_keys($columns);
+                $query = (new Query())->from($page->table_name);
+
+                // Tìm kiếm nếu có
+                if (!empty($searchTerm)) {
+                    $condition = [];
+                    foreach ($columnNames as $columnName) {
+                        $columnNameQuoted = "\"$columnName\"";
+                        $condition[] = "LOWER(unaccent(CAST($columnNameQuoted AS TEXT))) ILIKE LOWER(unaccent(:searchTerm))";
+                    }
+
+                    if (!empty($condition)) {
+                        $query->where(implode(' OR ', $condition), [':searchTerm' => '%' . $searchTerm . '%']);
+                    }
+                }
+                $dataProvider = new ActiveDataProvider([
+                    'query' => $query
+                ]);
+
+                return $this->render('singlePageTable', [
+                    'dataProvider' => $dataProvider,
+                    'columns' => $columnNames,
+                    'pagesize' => 10
+                ]);
+            }else{
+                $filePath = Yii::getAlias('@runtime/richtext/' . $page->id . '.txt');
+                if (!is_file($filePath)){
+                    throw new NotFoundHttpException('file not found');
+                }
+                $content = file_get_contents($filePath);
+                return $this->render('singlePageRichText', [
+                    'page' => $page,
+                    'content' => $content,
+                ]);
+            }
+
+        }
+        return $this->render('multiTabPage', [
+            'pages' => $pages,
+        ]);
+
     }
 
 

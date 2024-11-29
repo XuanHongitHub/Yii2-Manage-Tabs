@@ -2,6 +2,7 @@
 
 namespace app\modules\admin\controllers;
 
+use app\modules\admin\components\BaseAdminController;
 use yii\web\Controller;
 use Yii;
 use app\models\User;
@@ -15,26 +16,8 @@ use yii\filters\AccessControl;
 use yii\db\Query;
 
 
-class MenusController extends Controller
+class MenusController extends BaseAdminController
 {
-    public function behaviors()
-    {
-        return [
-            'access' => [
-                'class' => AccessControl::className(),
-                'rules' => [
-                    [
-                        'allow' => true,
-                        'roles' => ['@'],
-                    ],
-                    [
-                        'allow' => false,
-                        'roles' => ['?'],
-                    ],
-                ],
-            ],
-        ];
-    }
     public function actionIndex()
     {
         $menus = Menu::find()

@@ -63,7 +63,7 @@ class m241125_140853_create_manager_page_manager_menu_manager_user_tables extend
         'id' => $this->primaryKey(),
         'user_id' => $this->integer()->notNull(),
         'name' => $this->string(255)->unique(),
-        'table_name' => $this->string(255)->unique(),
+        'table_name' => $this->string(255),
         'type' => "page_type NOT NULL",
         'menu_id' => $this->integer(),
         'status' => $this->smallInteger()->defaultValue(0),

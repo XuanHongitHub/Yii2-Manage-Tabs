@@ -2,6 +2,7 @@
 
 namespace app\modules\admin\controllers;
 
+use app\modules\admin\components\BaseAdminController;
 use yii\web\Controller;
 use Yii;
 use app\models\User;
@@ -13,26 +14,10 @@ use yii\web\Exception;
 use yii\filters\AccessControl;
 
 
-class PagesController extends Controller
+class PagesController extends BaseAdminController
 {
-    public function behaviors()
-    {
-        return [
-            'access' => [
-                'class' => AccessControl::className(),
-                'rules' => [
-                    [
-                        'allow' => true,
-                        'roles' => ['@'],
-                    ],
-                    [
-                        'allow' => false,
-                        'roles' => ['?'],
-                    ],
-                ],
-            ],
-        ];
-    }
+
+
 
     public function actionIndex()
     {

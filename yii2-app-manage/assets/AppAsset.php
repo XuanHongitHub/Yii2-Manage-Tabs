@@ -30,28 +30,21 @@ class AppAsset extends AssetBundle
         'css/scrollbar.css',
         // 'css/jquery.dataTables.min.css',
         'css/datatables.css',
-        'css/bootstrap.css',
         'css/style.css',
         'css/responsive.css',
     ];
     public $js = [
-        'js/jquery.min.js',
-        'js/bootstrap.bundle.min.js',
         'js/simplebar.js',
         'js/custom.js',
         'js/sidebar-menu.js',
         'js/bootstrap-notify.min.js',
-        'js/jquery.dataTables.min.js',
-        'js/datatable.custom.js',
-        'js/datatable.custom1.js',
         'js/custom-notify.js',
         'js/script.js',
-        'js/jquery-ui.js',
         'js/sweet-alert.min.js',
 
     ];
     public $depends = [
-        // 'yii\web\YiiAsset',
-        // 'yii\bootstrap5\BootstrapAsset'
+         'yii\web\YiiAsset',
+         'yii\bootstrap5\BootstrapAsset'
     ];
 }
