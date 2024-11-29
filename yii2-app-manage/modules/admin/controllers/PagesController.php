@@ -201,7 +201,7 @@ class PagesController extends Controller
      * Delete Page Action.
      *
      */
-    public function actionDeleteTab()
+    public function actionDeletePage()
     {
         $postData = Yii::$app->request->post();
 
@@ -230,7 +230,7 @@ class PagesController extends Controller
      * Update Restore Action.
      *
      */
-    public function actionRestoreTab()
+    public function actionRestorePage()
     {
         $postData = Yii::$app->request->post();
 
@@ -259,7 +259,7 @@ class PagesController extends Controller
      * Delete Permanently Page Action.
      *
      */
-    public function actionDeletePermanentlyTab()
+    public function actionDeletePermanentlyPage()
     {
         $postData = Yii::$app->request->post();
 
@@ -272,7 +272,7 @@ class PagesController extends Controller
             return $this->asJson(['success' => false, 'message' => 'Page không tồn tại.']);
         }
         if ($page->type == 'table') {
-            $tableName = $postData['tableName'];
+            $tableName = $page->table_name;
 
             if (!preg_match('/^[a-zA-Z_][a-zA-Z0-9_]*$/', $tableName)) {
                 Yii::$app->session->setFlash('error', 'Tên bảng không hợp lệ.');

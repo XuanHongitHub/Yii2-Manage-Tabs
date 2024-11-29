@@ -548,7 +548,7 @@ $(document).ready(function() {
 
     $(document).on('click', '#delete-permanently-btn', function() {
         const pageId = $(this).data('page-id');
-        const tableName = $(this).data('page-name');
+        const pageName = $(this).data('page-name');
 
         if (confirm("Bạn có chắc chắn muốn xóa hoàn toàn page này không?")) {
             $.ajax({
@@ -559,7 +559,7 @@ $(document).ready(function() {
                 },
                 data: {
                     pageId: pageId,
-                    tableName: tableName,
+                    pageName: pageName,
                 },
                 success: function(response) {
                     if (response.success) {
@@ -603,7 +603,6 @@ $(document).ready(function() {
 
     $('#confirm-delete-permanently-btn').on('click', function() {
         const pageId = $(this).data('page-id');
-        const tableName = $(this).data('page-name');
 
         if (confirm("Bạn có chắc chắn muốn xóa hoàn toàn không?")) {
             $.ajax({
@@ -614,7 +613,6 @@ $(document).ready(function() {
                 },
                 data: {
                     pageId: pageId,
-                    tableName: tableName,
                 },
                 success: function(response) {
                     if (response.success) {
