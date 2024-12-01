@@ -1,6 +1,6 @@
 <?php
 
-namespace app\modules\admin\components;
+namespace app\components;
 
 use yii\filters\AccessControl;
 use yii\web\Controller;
@@ -8,7 +8,7 @@ use yii\web\Controller;
 /**
  * Default controller for the `admin` module
  */
-class BaseAdminController  extends Controller
+class BaseController extends Controller
 {
 
     public $layout = 'main';

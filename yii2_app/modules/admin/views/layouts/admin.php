@@ -6,10 +6,11 @@
 use app\assets\AppAsset;
 use yii\bootstrap5\Html;
 use yii\helpers\Json;
+use yii\web\JqueryAsset;
+use yii\web\View;
+use app\assets\FontAwesomeAsset;
 
-$errorMessage = Yii::$app->session->getFlash('error');
-$successMessage = Yii::$app->session->getFlash('success');
-
+FontAwesomeAsset::register($this);
 AppAsset::register($this);
 
 $this->registerCsrfMetaTags();
@@ -18,6 +19,8 @@ $this->registerMetaTag(['name' => 'viewport', 'content' => 'width=device-width, 
 $this->registerMetaTag(['name' => 'description', 'content' => $this->params['meta_description'] ?? '']);
 $this->registerMetaTag(['name' => 'keywords', 'content' => $this->params['meta_keywords'] ?? '']);
 $this->registerLinkTag(['rel' => 'icon', 'type' => 'image/x-icon', 'href' => Yii::getAlias('@web/favicon.ico')]);
+$errorMessage = Yii::$app->session->getFlash('error');
+$successMessage = Yii::$app->session->getFlash('success');
 ?>
 <?php $this->beginPage() ?>
 <!DOCTYPE html>
@@ -27,16 +30,37 @@ $this->registerLinkTag(['rel' => 'icon', 'type' => 'image/x-icon', 'href' => Yii
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title><?= Html::encode($this->title) ?></title>
     <?php $this->head() ?>
-    <!-- <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css" /> -->
-    <!-- <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.css"> -->
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+    <?php
+    $this->registerAssetBundle(JqueryAsset::class,View::POS_HEAD);
+        $cssFile = [
+            'css/font.css',
+            'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css',
+            'css/font-awesome.css',
+            'css/scrollbar.css',
+            'css/bootstrap.css',
+            'css/style.css',
+            'css/responsive.css',
+            
+        ];
+        foreach ($cssFile as $css) {
+            $this->registerCssFile($css, ['depends' => [\yii\web\YiiAsset::class]]);
+        }
+
+    ?>
 
 </head>
 
 
 <body>
     <?php $this->beginBody(); ?>
-
+    <!-- loader starts-->
+    <div class="loader-wrapper">
+        <div class="theme-loader">
+            <div class="loader-p"></div>
+        </div>
+    </div>
+    <!-- loader ends-->
     <div class="page-wrapper compact-wrapper" id="pageWrapper">
         <!-- Page Header Start-->
         <div class="page-header">
@@ -110,6 +134,7 @@ $this->registerLinkTag(['rel' => 'icon', 'type' => 'image/x-icon', 'href' => Yii
                             </div>
                             <?php endif; ?>
                         </li>
+                    </ul>
                 </div>
             </div>
         </div>
@@ -135,79 +160,88 @@ $this->registerLinkTag(['rel' => 'icon', 'type' => 'image/x-icon', 'href' => Yii
                         <div class="left-arrow" id="left-arrow"><i data-feather="arrow-left"></i></div>
                         <div id="sidebar-menu">
                             <ul class="sidebar-links" id="simple-bar">
-                                <li class="back-btn">
-                                    <a href="<?= \yii\helpers\Url::to(['/']) ?>"><img class="img-fluid"
+                                <li class="back-btn"><a href="<?= \yii\helpers\Url::to(['/']) ?>"><img class="img-fluid"
                                             src="<?= Yii::getAlias('@web') ?>/images/logo-icon.png" alt=""></a>
                                     <div class="mobile-back text-end"><span>Back</span><i class="fa fa-angle-right ps-2"
                                             aria-hidden="true"></i></div>
                                 </li>
+
                                 <li class="sidebar-main-title pt-4">
                                     <div>
-                                        <h6 class="lan-1">Menu</h6>
+                                        <h6 class="lan-1">Cài đặt </h6>
                                     </div>
                                 </li>
-                                <?php if (!empty($tabMenus)): ?>
-                                <?php foreach ($tabMenus as $menu): ?>
-                                <?php if ($menu->parent_id === null): ?>
-                                <li class="sidebar-list">
-                                    <?php
-                                                // Kiểm tra menu có con và có page con không
-                                                $hasChildren = $menu->getChildMenus()->exists();
-                                                ?>
-                                    <?php if ($hasChildren): ?>
-                                    <!-- Nếu có menu con hoặc page con -->
-                                    <a class="sidebar-link sidebar-title" href="#">
+
+                                <li class="sidebar-list"><a class="sidebar-link sidebar-title" href="#">
                                         <svg class="stroke-icon">
                                             <use
-                                                href="<?= Yii::getAlias('@web') ?>/images/icon-sprite.svg#<?= $menu->icon ?>">
+                                                href="<?= Yii::getAlias('@web') ?>/images/icon-sprite.svg#stroke-social">
                                             </use>
                                         </svg>
                                         <svg class="fill-icon">
-                                            <use
-                                                href="<?= Yii::getAlias('@web') ?>/images/icon-sprite.svg#fill-editors">
+                                            <use href="<?= Yii::getAlias('@web') ?>/images/icon-sprite.svg#fill-social">
                                             </use>
-                                        </svg>
-                                        <span><?= Html::encode($menu->name) ?></span>
+                                        </svg><span>Quản Lý Page</span>
                                         <div class="according-menu"><i class="fa fa-angle-right"></i></div>
                                     </a>
                                     <ul class="sidebar-submenu" style="display: none;">
-                                        <?php if ($hasChildren): ?>
-                                        <?php foreach ($menu->getChildMenus()->all() as $childMenu): ?>
-                                        <li class="sidebar-list">
-                                            <a href="<?= \yii\helpers\Url::to(['/pages', 'menuId' => $childMenu->id]) ?>"
-                                                data-menu-id="<?= $childMenu->id ?>"
-                                                class="<?= Yii::$app->request->get('pageId') === $childMenu->id ? 'active' : '' ?>">
+                                        <li><a href="<?= \yii\helpers\Url::to(['pages/index']) ?>">
                                                 <svg class="svg-menu">
                                                     <use
-                                                        href="<?= Yii::getAlias('@web') ?>/images/icon-sprite.svg#<?= $childMenu->icon ?>">
+                                                        href="<?= Yii::getAlias('@web') ?>/images/icon-sprite.svg#right-3">
                                                     </use>
-                                                </svg>
-                                                <?= Html::encode($childMenu->name) ?>
-                                            </a>
-                                        </li>
-                                        <?php endforeach; ?>
-                                        <?php endif; ?>
+                                                </svg>Danh sách</a></li>
+                                        <li><a href="<?= \yii\helpers\Url::to(['pages/create']) ?>">
+                                                <svg class="svg-menu">
+                                                    <use
+                                                        href="<?= Yii::getAlias('@web') ?>/images/icon-sprite.svg#right-3">
+                                                    </use>
+                                                </svg>Thêm mới</a></li>
                                     </ul>
-                                    <?php else: ?>
-                                    <!-- Xử lý trường hợp mặc định cho menu không có con và không có page -->
-                                    <a class="sidebar-link sidebar-title link-nav"
-                                        href="<?= \yii\helpers\Url::to(['/pages', 'menuId' => $menu->id]) ?>"
-                                        data-menu-id="<?= $menu->id ?>">
+                                </li>
+                                <li class="sidebar-list"><a class="sidebar-link sidebar-title" href="#">
                                         <svg class="stroke-icon">
                                             <use
-                                                href="<?= Yii::getAlias('@web') ?>/images/icon-sprite.svg#<?= $menu->icon ?>">
+                                                href="<?= Yii::getAlias('@web') ?>/images/icon-sprite.svg#stroke-icons">
                                             </use>
                                         </svg>
-                                        <span><?= Html::encode($menu->name) ?></span>
+                                        <svg class="fill-icon">
+                                            <use href="<?= Yii::getAlias('@web') ?>/images/icon-sprite.svg#fill-icons">
+                                            </use>
+                                        </svg><span>Quản Lý Menu</span>
+                                        <div class="according-menu"><i class="fa fa-angle-right"></i></div>
                                     </a>
-                                    <?php endif; ?>
+                                    <ul class="sidebar-submenu" style="display: none;">
+                                        <li><a href="<?= \yii\helpers\Url::to(['menus/index']) ?>">
+                                                <svg class="svg-menu">
+                                                    <use
+                                                        href="<?= Yii::getAlias('@web') ?>/images/icon-sprite.svg#right-3">
+                                                    </use>
+                                                </svg>Danh sách</a></li>
+                                        <li><a href="<?= \yii\helpers\Url::to(['menus/create']) ?>">
+                                                <svg class="svg-menu">
+                                                    <use
+                                                        href="<?= Yii::getAlias('@web') ?>/images/icon-sprite.svg#right-3">
+                                                    </use>
+                                                </svg>Thêm mới</a></li>
+                                    </ul>
+                                </li>
+
+                                <?php if ($isAdmin): ?>
+                                <li class="sidebar-list"><a class="sidebar-link sidebar-title link-nav"
+                                        href="<?= \yii\helpers\Url::to(['users/index']) ?>">
+                                        <svg class="stroke-icon">
+                                            <use href="<?= Yii::getAlias('@web') ?>/images/icon-sprite.svg#stroke-user">
+                                            </use>
+                                        </svg>
+                                        <svg class="fill-icon">
+                                            <use href="<?= Yii::getAlias('@web') ?>/images/icon-sprite.svg#fill-user">
+                                            </use>
+                                        </svg><span>Người dùng</span>
+                                    </a>
                                 </li>
                                 <?php endif; ?>
-                                <?php endforeach; ?>
-                                <?php endif; ?>
                             </ul>
-
-
                         </div>
                         <div class="right-arrow" id="right-arrow"><i data-feather="arrow-right"></i></div>
                     </nav>
@@ -216,7 +250,7 @@ $this->registerLinkTag(['rel' => 'icon', 'type' => 'image/x-icon', 'href' => Yii
             <!-- Page Sidebar Ends-->
             <div class="page-body">
                 <!-- Container-fluid starts-->
-                <div class="container-fluid">
+                <div class="container-fluid pt-2">
                     <div class="row">
                         <div class="col-sm-12">
                             <?= $content ?>
@@ -240,42 +274,59 @@ $this->registerLinkTag(['rel' => 'icon', 'type' => 'image/x-icon', 'href' => Yii
             </footer>
         </div>
     </div>
+    <!-- Toast -->
+    <div class="toast-container position-fixed top-0 end-0 p-3 toast-index toast-rtl">
+        <div class="toast fade" id="liveToast" role="alert" aria-live="assertive" aria-atomic="true">
+            <div class="toast-header">
+                <strong class="me-auto">Thông báo</strong>
+                <small id="toast-timestamp"></small>
+                <button class="btn-close" type="button" data-bs-dismiss="toast" aria-label="Close"></button>
+            </div>
+            <div class="toast-body" id="toast-body">Thông Báo</div>
+        </div>
+    </div>
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const errorMessage = <?= Json::encode($errorMessage) ?>;
 
+        const successMessage = <?= Json::encode($successMessage) ?>;
+        if (successMessage) {
+            document.getElementById('toast-body').textContent = successMessage;
+            document.getElementById('toast-timestamp').textContent = new Date().toLocaleTimeString();
+            const toastElement = document.getElementById('liveToast');
+            const toast = new bootstrap.Toast(toastElement);
+            toast.show();
+        }
+        if (errorMessage) {
+            document.getElementById('toast-body').textContent = errorMessage;
+            document.getElementById('toast-timestamp').textContent = new Date().toLocaleTimeString();
+            const toastElement = document.getElementById('liveToast');
+            const toast = new bootstrap.Toast(toastElement);
+            toast.show();
+        }
+    });
+    </script>
+    <?php
+            $jsFiles = [
+                'js/bootstrap.bundle.min.js',
+                'js/simplebar.js',
+                'js/custom.js',
+                'js/sidebar-menu.js',
+                'js/bootstrap-notify.min.js',
+                'js/custom-notify.js',
+                'js/script.js',
+                'js/jquery-ui.js',
+                'js/sweet-alert.min.js',
+            ];
+
+            foreach ($jsFiles as $js) {
+                $this->registerJsFile($js, ['depends' => [\yii\web\YiiAsset::class]]);
+            }
+        ?>
     <?php $this->endBody() ?>
 
 </body>
-<!-- Toast -->
-<div class="toast-container position-fixed top-0 end-0 p-3 toast-index toast-rtl">
-    <div class="toast fade" id="liveToast" role="alert" aria-live="assertive" aria-atomic="true">
-        <div class="toast-header">
-            <strong class="me-auto">Thông báo</strong>
-            <small id="toast-timestamp"></small>
-            <button class="btn-close" type="button" data-bs-dismiss="toast" aria-label="Close"></button>
-        </div>
-        <div class="toast-body" id="toast-body">Thông Báo</div>
-    </div>
-</div>
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    const errorMessage = <?= Json::encode($errorMessage) ?>;
 
-    const successMessage = <?= Json::encode($successMessage) ?>;
-    if (successMessage) {
-        document.getElementById('toast-body').textContent = successMessage;
-        document.getElementById('toast-timestamp').textContent = new Date().toLocaleTimeString();
-        const toastElement = document.getElementById('liveToast');
-        const toast = new bootstrap.Toast(toastElement);
-        toast.show();
-    }
-    if (errorMessage) {
-        document.getElementById('toast-body').textContent = errorMessage;
-        document.getElementById('toast-timestamp').textContent = new Date().toLocaleTimeString();
-        const toastElement = document.getElementById('liveToast');
-        const toast = new bootstrap.Toast(toastElement);
-        toast.show();
-    }
-});
-</script>
 
 </html>
 <?php $this->endPage() ?>

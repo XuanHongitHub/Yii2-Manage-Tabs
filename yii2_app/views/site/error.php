@@ -9,28 +9,15 @@ use yii\helpers\Html;
 
 $this->title = $name;
 ?>
-<?php include Yii::getAlias('@app/views/layouts/_sidebar.php'); ?>
 
-<div class="page-body">
-    <div class="container-fluid">
-        <div class="page-title">
-            <div class="row">
-            </div>
-        </div>
-    </div>
-    <div class="container-fluid">
-        <div class="error-wrapper">
-            <div class="container">
-                <div class="error">
-                    <i class="fa-solid fa-triangle-exclamation fw-900 text-primary error-image"
-                        style="font-size: 6.5rem !important;"></i>
-                    <div class="error__title"><?= Html::encode($this->title) ?></div>
-                    <div class="error__subtitle">Hmmm...</div>
-                    <div class="error__description"><?= nl2br(Html::encode($message)) ?></div>
-                    <a href="<?= \yii\helpers\Url::to(['/']) ?>" class="error__button error__button--active">Home</a>
-                </div>
-            </div>
-        </div>
+<div class="card">
+    <div class="error pt-5">
+        <i class="fa-solid fa-triangle-exclamation fw-900 text-primary error-image"
+            style="font-size: 6.5rem !important;"></i>
+        <div class="error__title"><?= Html::encode($this->title) ?></div>
+        <div class="error__subtitle">Hmmm...</div>
+        <div class="error__description"><?= nl2br(Html::encode($message)) ?></div>
+        <a href="<?= \yii\helpers\Url::to(['/']) ?>" class="error__button error__button--active">Home</a>
     </div>
 </div>
 
@@ -46,13 +33,10 @@ $this->title = $name;
 }
 
 .error {
-    position: relative;
-    left: 50%;
-    top: 50%;
-    transform: translate(-50%, -10%);
     font-family: 'Righteous', cursive !important;
     color: #363e49;
     text-align: center;
+    height: 100vh;
 }
 
 .error-image {

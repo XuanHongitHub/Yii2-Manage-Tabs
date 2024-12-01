@@ -103,12 +103,19 @@ class m241125_140853_create_manager_page_manager_menu_manager_user_tables extend
 
     public function safeDown()
     {
-        $this->dropTable('{{%manager_user}}');
+        // Xóa các bảng có khóa ngoại tham chiếu
+        $this->dropForeignKey('fk_manager_page_menu_id', '{{%manager_page}}');
+        $this->dropForeignKey('fk_manager_page_user_id', '{{%manager_page}}');
+        $this->dropForeignKey('fk_manager_menu_parent_id', '{{%manager_menu}}');
 
+        // Xóa bảng manager_page và manager_menu trước
+        $this->dropTable('{{%manager_page}}');
         $this->dropTable('{{%manager_menu}}');
 
-        $this->dropTable('{{%manager_page}}');
+        // Cuối cùng xóa bảng manager_user
+        $this->dropTable('{{%manager_user}}');
 
+        // Xóa kiểu dữ liệu ENUM
         $this->execute("DROP TYPE page_type");
     }
 }

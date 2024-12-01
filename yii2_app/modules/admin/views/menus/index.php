@@ -1,256 +1,225 @@
 <?php
 
 use yii\helpers\Html;
-
+use app\assets\Select2Asset;
+Select2Asset::register($this);
 /** @var yii\web\View $this */
 $this->title = 'Danh Sách Menu';
 
-
 ?>
 <?php include Yii::getAlias('@app/views/layouts/_icon.php'); ?>
-<?php include Yii::getAlias('@app/views/layouts/_sidebar-settings.php'); ?>
-
-
-<div class="page-body">
-    <div class="container-fluid">
-        <div class="page-title">
-            <div class="row">
-                <!-- You can add page title or breadcrumbs here -->
+<div class="card">
+    <div class="card-header card-no-border pb-0">
+        <div class="d-flex flex-column flex-md-row align-items-md-center">
+            <div class="me-auto mb-3 mb-md-0 text-center text-md-start">
+                <h4>Danh sách Menu</h4>
+                <p class="mt-1 f-m-light">Menu Nhóm | Menu Đơn</p>
+            </div>
+            <div class="d-flex flex-wrap justify-content-center align-items-center me-md-2 mb-3 mb-md-0">
+                <a class="btn btn-outline-warning me-2 mb-2" href="#" data-bs-toggle="modal"
+                    data-bs-target="#hideModal">
+                    <i class="fas fa-eye me-1"></i> Hiện/Ẩn
+                </a>
+                <a class="btn btn-outline-primary me-2 mb-2" href="#" data-bs-toggle="modal"
+                    data-bs-target="#sortModal">
+                    <i class="fas fa-sort-amount-down me-1"></i> Sắp Xếp
+                </a>
+                <a class="btn btn-danger me-2 mb-2" href="#" data-bs-toggle="modal" data-bs-target="#trashBinModal">
+                    <i class="fas fa-trash me-1"></i> Thùng Rác
+                </a>
+                <a class="btn btn-success mb-2" href="<?= \yii\helpers\Url::to(['pages/create']) ?>">
+                    <i class="fas fa-plus me-1"></i> Thêm Menu
+                </a>
             </div>
         </div>
     </div>
-    <div class="container-fluid">
-        <div class="row">
-            <div class="col-sm-12">
-                <div class="card">
-                    <div class="card-header card-no-border pb-0">
-                        <div class="d-flex flex-column flex-md-row align-items-md-center">
-                            <div class="me-auto mb-3 mb-md-0 text-center text-md-start">
-                                <h4>Danh sách Menu</h4>
-                                <p class="mt-1 f-m-light">Menu Nhóm | Menu Đơn</p>
-                            </div>
-                            <div
-                                class="d-flex flex-wrap justify-content-center align-items-center me-md-2 mb-3 mb-md-0">
-                                <a class="btn btn-outline-warning me-2 mb-2" href="#" data-bs-toggle="modal"
-                                    data-bs-target="#hideModal">
-                                    <i class="fas fa-eye me-1"></i> Hiện/Ẩn
-                                </a>
-                                <a class="btn btn-outline-primary me-2 mb-2" href="#" data-bs-toggle="modal"
-                                    data-bs-target="#sortModal">
-                                    <i class="fas fa-sort-amount-down me-1"></i> Sắp Xếp
-                                </a>
-                                <a class="btn btn-danger me-2 mb-2" href="#" data-bs-toggle="modal"
-                                    data-bs-target="#trashBinModal">
-                                    <i class="fas fa-trash me-1"></i> Thùng Rác
-                                </a>
-                                <a class="btn btn-success mb-2" href="<?= \yii\helpers\Url::to(['pages/create']) ?>">
-                                    <i class="fas fa-plus me-1"></i> Thêm Menu
-                                </a>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="card-body">
-                        <div class="table-responsive">
-                            <table class="table table-hover table-responsive custom-scrollbar border table-bordered">
-                                <thead>
-                                    <tr>
-                                        <th class="toggle-all text-center" style="width: 2%">
-                                            <i class="fa-solid fa-circle-plus"></i>
-                                        </th>
-                                        <th colspan="2" style="width: 20%">Tên Menu</th>
-                                        <th style="width: 5%" class="text-center">Icon</th>
-                                        <th style="width: 25%">Page</th>
-                                        <th style="width: 6%" class="text-center">Trạng Thái</th>
-                                        <th style="width: 6%">Thao tác</th>
-                                        <th style="width: 3%"></th>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover table-responsive custom-scrollbar border table-bordered">
+                <thead>
+                    <tr>
+                        <th class="toggle-all text-center" style="width: 2%">
+                            <i class="fa-solid fa-circle-plus"></i>
+                        </th>
+                        <th colspan="2" style="width: 20%">Tên Menu</th>
+                        <th style="width: 5%" class="text-center">Icon</th>
+                        <th style="width: 25%">Page</th>
+                        <th style="width: 6%" class="text-center text-nowrap">Trạng Thái</th>
+                        <th style="width: 6%">Thao tác</th>
+                        <th style="width: 3%"></th>
 
-                                    </tr>
-                                </thead>
-                                <?php
+                    </tr>
+                </thead>
+                <?php
                                 $menuParents = array_filter($menus, fn($menu) => $menu->parent_id === null);
                                 $menuChildren = array_filter($menus, fn($menu) => $menu->parent_id !== null);
                                 ?>
-                                <tbody id="columnsContainer">
-                                    <?php foreach ($menuParents as $parentMenu): ?>
-                                    <?php if ($parentMenu->deleted != 1): ?>
-                                    <tr class="parent-row" data-parent-id="<?= Html::encode($parentMenu->id) ?>">
-                                        <td class="toggle-icon text-center">
-                                            <?php
+                <tbody id="columnsContainer">
+                    <?php foreach ($menuParents as $parentMenu): ?>
+                    <?php if ($parentMenu->deleted != 1): ?>
+                    <tr class="parent-row" data-parent-id="<?= Html::encode($parentMenu->id) ?>">
+                        <td class="toggle-icon text-center">
+                            <?php
                                                     $hasChildren = array_filter($menuChildren, fn($child) => $child->parent_id == $parentMenu->id);
                                                     $hasParent = array_filter($menuChildren, fn($child) => $child->id == $parentMenu->parent_id);
                                                     $hasPage = array_filter($pages, fn($page) => $page->menu_id == $parentMenu->id);
                                                     ?>
-                                            <?php if (!empty($hasChildren)): ?>
-                                            <i class="fa-solid fa-caret-right"></i>
-                                            <?php endif; ?>
-                                        </td>
-                                        <td colspan="2"><?= Html::encode($parentMenu->name) ?></td>
-                                        <td>
-                                            <div class="d-flex justify-content-center align-items-center"
-                                                id="icon-display">
-                                                <svg class="stroke-icon" width="24" height="24">
-                                                    <use
-                                                        href="<?= Yii::getAlias('@web') ?>/images/icon-sprite.svg#<?= $parentMenu->icon ?>">
-                                                    </use>
-                                                </svg>
-                                            </div>
-                                        </td>
-                                        <td>
-                                            <div>
-                                                <?php foreach ($pages as $page): ?>
-                                                <?php if ($page->menu_id == $parentMenu->id): ?>
-                                                <span
-                                                    class="badge badge-primary"><?= Html::encode($page->name) ?></span>
-                                                <?php endif; ?>
-                                                <?php endforeach; ?>
-                                            </div>
+                            <?php if (!empty($hasChildren)): ?>
+                            <i class="fa-solid fa-caret-right"></i>
+                            <?php endif; ?>
+                        </td>
+                        <td colspan="2"><?= Html::encode($parentMenu->name) ?></td>
+                        <td>
+                            <div class="d-flex justify-content-center align-items-center" id="icon-display">
+                                <svg class="stroke-icon" width="24" height="24">
+                                    <use
+                                        href="<?= Yii::getAlias('@web') ?>/images/icon-sprite.svg#<?= $parentMenu->icon ?>">
+                                    </use>
+                                </svg>
+                            </div>
+                        </td>
+                        <td>
+                            <div>
+                                <?php foreach ($pages as $page): ?>
+                                <?php if ($page->menu_id == $parentMenu->id): ?>
+                                <span class="badge badge-primary"><?= Html::encode($page->name) ?></span>
+                                <?php endif; ?>
+                                <?php endforeach; ?>
+                            </div>
 
-                                        </td>
-                                        <td class="text-center">
-                                            <?= $parentMenu->status == 1 ? '<span class="badge badge-warning">Ẩn</span>' : '<span class="badge badge-success">Hiện</span>' ?>
-                                        </td>
-                                        <td class="text-nowrap text-center">
-                                            <button class="btn btn-m btn-sm btn-primary me-1 edit-btn"
-                                                data-bs-toggle="modal" data-bs-target="#editModal"
-                                                data-page-menu-id="<?= $parentMenu->id ?>"
-                                                data-menu-name="<?= Html::encode($parentMenu->name) ?>"
-                                                data-icon="<?= Html::encode($parentMenu->icon) ?>"
-                                                data-status="<?= Html::encode($parentMenu->status) ?>"
-                                                data-position="<?= Html::encode($parentMenu->position) ?>">
-                                                <i class="fas fa-edit"></i>
-                                            </button>
-                                            <?php if (!empty($hasChildren)): ?>
-                                            <button
-                                                class="btn btn-m btn-sm btn-outline-primary edit-subpage-btn me-1 disabled">
-                                                <i class="fa-solid fa-link"></i>
-                                            </button>
-                                            <?php else: ?>
-                                            <button class="btn btn-m btn-sm btn-outline-primary edit-subpage-btn me-1"
-                                                data-menu-id="<?= $parentMenu->id ?>"
-                                                data-menu-name="<?= Html::encode($parentMenu->name) ?>">
-                                                <i class="fa-solid fa-link"></i>
-                                            </button>
-                                            <?php endif; ?>
-                                            <?php if (!empty($hasPage)): ?>
-                                            <button class="btn btn-m btn-sm btn-outline-warning me-1 disabled">
-                                                <i class="fa-solid fa-ellipsis"></i>
-                                            </button>
-                                            <?php else: ?>
-                                            <button class="btn btn-m btn-sm btn-outline-warning me-1" id="submenu"
-                                                data-menu-name="<?= Html::encode($parentMenu->name) ?>"
-                                                data-menu-id="<?= $parentMenu->id ?>">
-                                                <i class="fa-solid fa-ellipsis"></i>
-                                            </button>
-                                            <?php endif; ?>
-                                            <button href="#" data-bs-toggle="modal" data-bs-target="#deleteModal"
-                                                class="btn btn-m btn-danger btn-sm delete-btn"
-                                                data-menu-id="<?= $parentMenu->id ?>">
-                                                <i class="fa-regular fa-trash-can"></i>
-                                            </button>
-                                        </td>
-                                        <td>
-                                        </td>
-                                    </tr>
-                                <tbody id="children-<?= Html::encode($parentMenu->id) ?>" class="child-group">
-                                    <?php foreach ($menuChildren as $childMenu): ?>
-                                    <?php if ($childMenu->parent_id == $parentMenu->id): ?>
-                                    <tr class="child-row" data-parent-id="<?= Html::encode($parentMenu->id) ?>"
-                                        data-sort-id="<?= Html::encode($childMenu->id) ?>" style="display: none;">
-                                        <td colspan="2" rowspan=""></td>
-                                        <td style="width: 18%" class="text-nowrap">
-                                            <?= Html::encode($childMenu->name) ?></td>
-                                        <td>
-                                            <div class="d-flex justify-content-center align-items-center"
-                                                id="icon-display">
-                                                <svg class="stroke-icon" width="24" height="24">
-                                                    <use
-                                                        href="<?= Yii::getAlias('@web') ?>/images/icon-sprite.svg#<?= $childMenu->icon ?>">
-                                                    </use>
-                                                </svg>
-                                            </div>
-                                        </td>
-                                        <td>
-                                            <div>
-                                                <?php foreach ($pages as $page): ?>
-                                                <?php if ($page->menu_id == $childMenu->id): ?>
-                                                <span
-                                                    class="badge badge-primary"><?= Html::encode($page->name) ?></span>
-                                                <?php endif; ?>
-                                                <?php endforeach; ?>
-                                            </div>
+                        </td>
+                        <td class="text-center">
+                            <?= $parentMenu->status == 1 ? '<span class="badge badge-warning">Ẩn</span>' : '<span class="badge badge-success">Hiện</span>' ?>
+                        </td>
+                        <td class="text-nowrap text-center">
+                            <button class="btn btn-m btn-sm btn-primary me-1 edit-btn" data-bs-toggle="modal"
+                                data-bs-target="#editModal" data-page-menu-id="<?= $parentMenu->id ?>"
+                                data-menu-name="<?= Html::encode($parentMenu->name) ?>"
+                                data-icon="<?= Html::encode($parentMenu->icon) ?>"
+                                data-status="<?= Html::encode($parentMenu->status) ?>"
+                                data-position="<?= Html::encode($parentMenu->position) ?>">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <?php if (!empty($hasChildren)): ?>
+                            <button class="btn btn-m btn-sm btn-outline-primary edit-subpage-btn me-1 disabled">
+                                <i class="fa-solid fa-link"></i>
+                            </button>
+                            <?php else: ?>
+                            <button class="btn btn-m btn-sm btn-outline-primary edit-subpage-btn me-1"
+                                data-menu-id="<?= $parentMenu->id ?>"
+                                data-menu-name="<?= Html::encode($parentMenu->name) ?>">
+                                <i class="fa-solid fa-link"></i>
+                            </button>
+                            <?php endif; ?>
+                            <?php if (!empty($hasPage)): ?>
+                            <button class="btn btn-m btn-sm btn-outline-warning me-1 disabled">
+                                <i class="fa-solid fa-ellipsis"></i>
+                            </button>
+                            <?php else: ?>
+                            <button class="btn btn-m btn-sm btn-outline-warning me-1" id="submenu"
+                                data-menu-name="<?= Html::encode($parentMenu->name) ?>"
+                                data-menu-id="<?= $parentMenu->id ?>">
+                                <i class="fa-solid fa-ellipsis"></i>
+                            </button>
+                            <?php endif; ?>
+                            <button href="#" data-bs-toggle="modal" data-bs-target="#deleteModal"
+                                class="btn btn-m btn-danger btn-sm delete-btn" data-menu-id="<?= $parentMenu->id ?>">
+                                <i class="fa-regular fa-trash-can"></i>
+                            </button>
+                        </td>
+                        <td>
+                        </td>
+                    </tr>
+                <tbody id="children-<?= Html::encode($parentMenu->id) ?>" class="child-group">
+                    <?php foreach ($menuChildren as $childMenu): ?>
+                    <?php if ($childMenu->parent_id == $parentMenu->id): ?>
+                    <tr class="child-row" data-parent-id="<?= Html::encode($parentMenu->id) ?>"
+                        data-sort-id="<?= Html::encode($childMenu->id) ?>" style="display: none;">
+                        <td colspan="2" rowspan=""></td>
+                        <td style="width: 18%" class="text-nowrap">
+                            <?= Html::encode($childMenu->name) ?></td>
+                        <td>
+                            <div class="d-flex justify-content-center align-items-center" id="icon-display">
+                                <svg class="stroke-icon" width="24" height="24">
+                                    <use
+                                        href="<?= Yii::getAlias('@web') ?>/images/icon-sprite.svg#<?= $childMenu->icon ?>">
+                                    </use>
+                                </svg>
+                            </div>
+                        </td>
+                        <td>
+                            <div>
+                                <?php foreach ($pages as $page): ?>
+                                <?php if ($page->menu_id == $childMenu->id): ?>
+                                <span class="badge badge-primary"><?= Html::encode($page->name) ?></span>
+                                <?php endif; ?>
+                                <?php endforeach; ?>
+                            </div>
 
-                                        </td>
+                        </td>
 
-                                        <td class="text-center">
-                                            <?= $childMenu->status == 1 ?
+                        <td class="text-center">
+                            <?= $childMenu->status == 1 ?
                                                         '<span class="badge badge-warning">Ẩn</span>' :
                                                         '<span class="badge badge-success">Hiện</span>' ?>
-                                        </td>
-                                        <td class="text-nowrap text-center">
-                                            <button class="btn btn-m btn-sm btn-primary me-1 edit-btn"
-                                                data-bs-toggle="modal" data-bs-target="#editModal"
-                                                data-page-menu-id="<?= $childMenu->id ?>"
-                                                data-menu-name="<?= Html::encode($childMenu->name) ?>"
-                                                data-icon="<?= Html::encode($childMenu->icon) ?>"
-                                                data-status="<?= Html::encode($childMenu->status) ?>"
-                                                data-position="<?= Html::encode($childMenu->position) ?>"
-                                                data-bs-toggle="tooltip" title="Chỉnh sửa menu">
-                                                <i class="fas fa-edit"></i>
-                                            </button>
-                                            <button class="btn btn-m btn-sm btn-outline-primary edit-subpage-btn me-1"
-                                                data-menu-id="<?= $childMenu->id ?>"
-                                                data-menu-name="<?= Html::encode($childMenu->name) ?>"
-                                                data-bs-toggle="tooltip" title="Chỉnh sửa trang con">
-                                                <i class="fa-solid fa-link"></i>
-                                            </button>
+                        </td>
+                        <td class="text-nowrap text-center">
+                            <button class="btn btn-m btn-sm btn-primary me-1 edit-btn" data-bs-toggle="modal"
+                                data-bs-target="#editModal" data-page-menu-id="<?= $childMenu->id ?>"
+                                data-menu-name="<?= Html::encode($childMenu->name) ?>"
+                                data-icon="<?= Html::encode($childMenu->icon) ?>"
+                                data-status="<?= Html::encode($childMenu->status) ?>"
+                                data-position="<?= Html::encode($childMenu->position) ?>" data-bs-toggle="tooltip"
+                                title="Chỉnh sửa menu">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="btn btn-m btn-sm btn-outline-primary edit-subpage-btn me-1"
+                                data-menu-id="<?= $childMenu->id ?>"
+                                data-menu-name="<?= Html::encode($childMenu->name) ?>" data-bs-toggle="tooltip"
+                                title="Chỉnh sửa trang con">
+                                <i class="fa-solid fa-link"></i>
+                            </button>
 
-                                            <?php if (!empty($hasChildren)): ?>
-                                            <button class="btn btn-m btn-sm btn-outline-warning me-1 disabled"
-                                                data-bs-toggle="tooltip"
-                                                title="Không thể thêm menu con (đã có mục con)">
-                                                <i class="fa-solid fa-ellipsis"></i>
-                                            </button>
-                                            <?php else: ?>
-                                            <button class="btn btn-m btn-sm btn-outline-warning me-1" id="submenu"
-                                                data-menu-name="<?= Html::encode($childMenu->name) ?>"
-                                                data-menu-id="<?= $childMenu->id ?>" data-bs-toggle="tooltip"
-                                                title="Sửa menu con">
-                                                <i class="fa-solid fa-ellipsis"></i>
-                                            </button>
-                                            <?php endif; ?>
+                            <?php if (!empty($hasChildren)): ?>
+                            <button class="btn btn-m btn-sm btn-outline-warning me-1 disabled" data-bs-toggle="tooltip"
+                                title="Không thể thêm menu con (đã có mục con)">
+                                <i class="fa-solid fa-ellipsis"></i>
+                            </button>
+                            <?php else: ?>
+                            <button class="btn btn-m btn-sm btn-outline-warning me-1" id="submenu"
+                                data-menu-name="<?= Html::encode($childMenu->name) ?>"
+                                data-menu-id="<?= $childMenu->id ?>" data-bs-toggle="tooltip" title="Sửa menu con">
+                                <i class="fa-solid fa-ellipsis"></i>
+                            </button>
+                            <?php endif; ?>
 
-                                            <button href="#" data-bs-toggle="modal" data-bs-target="#deleteModal"
-                                                class="btn btn-m btn-danger btn-sm delete-btn"
-                                                data-menu-id="<?= $childMenu->id ?>" data-bs-toggle="tooltip"
-                                                title="Xóa menu">
-                                                <i class="fa-regular fa-trash-can"></i>
-                                            </button>
+                            <button href="#" data-bs-toggle="modal" data-bs-target="#deleteModal"
+                                class="btn btn-m btn-danger btn-sm delete-btn" data-menu-id="<?= $childMenu->id ?>"
+                                data-bs-toggle="tooltip" title="Xóa menu">
+                                <i class="fa-regular fa-trash-can"></i>
+                            </button>
 
-                                        </td>
-                                        <td class="sort-icon text-center" style="color: #6e6e6e;">
-                                            <i class="fas fa-sort"></i>
-                                        </td>
-                                    </tr>
-                                    <?php endif; ?>
-                                    <?php endforeach; ?>
-                                </tbody>
-                                <?php foreach ($menuChildren as $index => $childMenu): ?>
-                                <?php if ($childMenu->parent_id == $parentMenu->id): ?>
+                        </td>
+                        <td class="sort-icon text-center" style="color: #6e6e6e;">
+                            <i class="fas fa-sort"></i>
+                        </td>
+                    </tr>
+                    <?php endif; ?>
+                    <?php endforeach; ?>
+                </tbody>
+                <?php foreach ($menuChildren as $index => $childMenu): ?>
+                <?php if ($childMenu->parent_id == $parentMenu->id): ?>
 
 
-                                <?php endif; ?>
-                                <?php endforeach; ?>
-                                <?php endif; ?>
-                                <?php endforeach; ?>
-                                <!-- Hiển thị menu con -->
+                <?php endif; ?>
+                <?php endforeach; ?>
+                <?php endif; ?>
+                <?php endforeach; ?>
+                <!-- Hiển thị menu con -->
 
 
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-            </div>
+                </tbody>
+            </table>
         </div>
     </div>
 </div>
@@ -902,7 +871,6 @@ $(document).on('click', '#saveSubPageChanges', function() {
         }
     });
 });
-
 
 $(document).ready(function() {
     $(document).on('click', '.edit-btn', function() {

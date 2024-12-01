@@ -8,6 +8,7 @@ use app\assets\AppAsset;
 use yii\bootstrap5\ActiveForm;
 use yii\bootstrap5\Html;
 
+$this->title = 'Đăng nhập';
 ?>
 <?php $this->beginPage() ?>
 <?php
@@ -21,6 +22,7 @@ foreach ($cssFile as $css) {
     $this->registerCssFile($css, ['depends' => [\yii\web\YiiAsset::class]]);
 }
 ?>
+<title><?= Html::encode($this->title) ?></title>
 
 <?php $this->beginBody(); ?>
 <div class="login-card">

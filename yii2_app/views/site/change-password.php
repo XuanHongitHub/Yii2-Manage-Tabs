@@ -12,49 +12,31 @@ use yii\bootstrap5\Html;
 
 $this->title = 'Đổi mật khẩu';
 ?>
-<?php include Yii::getAlias('@app/views/layouts/_sidebar.php'); ?>
 
-<div class="page-body">
-    <div class="container-fluid">
-        <div class="page-title">
-            <div class="row">
-
+<div class="row justify-content-center">
+    <div class="col-lg-6 col-md-8 col-sm-12">
+        <div class="card">
+            <div class="card-header pb-0">
+                <h4 class="card-title mb-0"><?= Html::encode($this->title) ?></h4>
             </div>
-        </div>
-    </div>
-    <!-- Container-fluid starts -->
-
-    <div class="container-fluid">
-        <div class="edit-profile">
-            <div class="row justify-content-center">
-                <div class="col-lg-6 col-md-8 col-sm-12">
-                    <div class="card">
-                        <div class="card-header pb-0">
-                            <h4 class="card-title mb-0"><?= Html::encode($this->title) ?></h4>
-                        </div>
-                        <div class="card-body">
-                            <?php $form = ActiveForm::begin([
+            <div class="card-body">
+                <?php $form = ActiveForm::begin([
                                 'id' => 'change-password-form',
                                 'method' => 'post',
                             ]); ?>
 
-                            <?= $form->field($model, 'old_password')->passwordInput()->label('Mật khẩu cũ') ?>
+                <?= $form->field($model, 'old_password')->passwordInput()->label('Mật khẩu cũ') ?>
 
-                            <?= $form->field($model, 'new_password')->passwordInput()->label('Mật khẩu mới') ?>
+                <?= $form->field($model, 'new_password')->passwordInput()->label('Mật khẩu mới') ?>
 
-                            <?= $form->field($model, 'confirm_new_password')->passwordInput()->label('Nhập lại mật khẩu') ?>
+                <?= $form->field($model, 'confirm_new_password')->passwordInput()->label('Nhập lại mật khẩu') ?>
 
-                            <div class="form-footer">
-                                <?= Html::submitButton('Lưu', ['class' => 'btn btn-primary btn-block']) ?>
-                            </div>
-
-                            <?php ActiveForm::end(); ?>
-                        </div>
-                    </div>
+                <div class="form-footer">
+                    <?= Html::submitButton('Lưu', ['class' => 'btn btn-primary btn-block']) ?>
                 </div>
+
+                <?php ActiveForm::end(); ?>
             </div>
         </div>
     </div>
-
-    <!-- Container-fluid Ends-->
 </div>

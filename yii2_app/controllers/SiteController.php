@@ -13,10 +13,10 @@ use app\models\ChangePasswordForm;
 use app\models\ContactForm;
 use app\models\User;
 use app\models\Page;
-use app\modules\admin\components\BaseAdminController;
+use app\components\BaseController;
 use yii\db\Exception;
 
-class SiteController extends BaseAdminController
+class SiteController extends BaseController
 {
     /**
      * {@inheritdoc}

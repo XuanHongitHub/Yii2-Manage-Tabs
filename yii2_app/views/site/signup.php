@@ -22,7 +22,7 @@ foreach ($cssFile as $css) {
     $this->registerCssFile($css, ['depends' => [\yii\web\YiiAsset::class]]);
 }
 ?>
-
+<title><?= Html::encode($this->title) ?></title>
 <?php $this->beginBody(); ?>
 <div class="login-card login-dark">
     <div>

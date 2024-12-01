@@ -15,7 +15,14 @@ $tabMenus = Menu::find()
     ->where(['deleted' => 0])
     ->orderBy(['position' => SORT_ASC])
     ->all();
+    
+$cssFile = [
+    'css/datatables.css',
 
+];
+foreach ($cssFile as $css) {
+    $this->registerCssFile($css, ['depends' => [\yii\web\YiiAsset::class]]);
+}
 
 ?>
 

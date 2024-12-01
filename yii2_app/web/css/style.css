@@ -39863,15 +39863,14 @@ footer p .footer-icon {
 .page-wrapper.compact-wrapper .page-body-wrapper .according-menu {
   position: absolute;
   right: 15px;
-  top: 6px;
+  top: 10px;
   display: block;
-  font-size: 18px;
+  font-size: 15px;
 }
 
 .page-wrapper.compact-wrapper .page-body-wrapper .according-menu i {
   vertical-align: middle;
   color: #363636;
-  font-weight: 500;
 }
 
 .page-wrapper.compact-wrapper .page-body-wrapper .main-menu.border-section {

@@ -5,6 +5,7 @@
 
 use yii\bootstrap5\Html;
 use app\assets\Select2Asset;
+Select2Asset::register($this);
 
 use app\models\User;
 use app\models\Page;
@@ -13,7 +14,6 @@ use app\models\Menu;
 $isAdmin = User::isUserAdmin(Yii::$app->user->identity->username);
 $tabsWithoutGroup = Page::find()->where(['menu_id' => null])->all();
 
-Select2Asset::register($this);
 
 ?>
 
@@ -86,6 +86,7 @@ Select2Asset::register($this);
                     </div>
                     <?php endif; ?>
                 </li>
+            </ul>
         </div>
 
         <script class="result-template" type="text/x-handlebars-template">

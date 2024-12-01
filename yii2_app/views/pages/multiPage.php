@@ -1,42 +1,27 @@
 <?php
 
-use app\models\User;
-
+use app\models\Menu;
 /** @var yii\web\View $this */
 /** @var app\models\Page[] $pages */
 
-$this->title = 'Tất cả Page';
+
+$menuId = $_GET['menuId'];
+$menuName = Menu::findOne($menuId)->name ?? 'Menu Page';
+$this->title = $menuName;
+
 ?>
+
 <div class="card">
-    <div class="card-header card-no-border pb-0">
-        <h4>Tất cả Page</h4>
-    </div>
     <div class="card-body">
         <ul class="simple-wrapper nav nav-tabs" id="page-list">
-            <?php if (!empty($pages)): ?>
-            <?php $hasValidTabs = false; ?>
             <?php foreach ($pages as $index => $page): ?>
-            <?php if ($page->deleted == 0): ?>
-            <?php $hasValidTabs = true; ?>
             <li class="nav-item">
                 <a class="nav-link <?= $index === 0 ? 'active' : '' ?>" href="#" data-id="<?= $page->id ?>"
                     onclick="loadPageData(<?= $page->id ?>, null)">
                     <?= htmlspecialchars($page->name) ?>
                 </a>
             </li>
-            <?php endif; ?>
             <?php endforeach; ?>
-
-            <?php if (!$hasValidTabs): ?>
-            <div class="align-items-center m-2">
-                Không có page nào. Vui lòng tạo Page mới trong cài đặt.
-            </div>
-            <?php endif; ?>
-            <?php else: ?>
-            <div class="align-items-center m-2">
-                Không có page nào. Vui lòng tạo Page mới trong cài đặt.
-            </div>
-            <?php endif; ?>
         </ul>
         <div class="page-content">
             <div class="page-pane fade show active" id="page-data-current">
@@ -67,35 +52,6 @@ $(document).ready(function() {
     } else {
         console.log("No pages available to load data.");
     }
-
-    function loadPageData(pageId, page, search, pageSize) {
-        localStorage.clear();
-
-        $.ajax({
-            url: "<?= \yii\helpers\Url::to(['pages/load-page-data']) ?>",
-            type: "GET",
-            data: {
-                pageId: pageId,
-                page: page,
-                search: search,
-                pageSize: pageSize,
-            },
-            success: function(data) {
-                $('#table-data-current').html(data);
-                // Cập nhật trạng thái của page hiện tại
-                $('.nav-link').removeClass('active');
-                $('.nav-item').removeClass('active');
-                $(`[data-id="${pageId}"]`).addClass('active');
-                $(`[data-id="${pageId}"]`).closest('.nav-item').addClass('active');
-            },
-            error: function(xhr, status, error) {
-                console.error('Error:', error);
-                alert('Đã xảy ra lỗi khi tải dữ liệu. Vui lòng thử lại sau.');
-            }
-        });
-    }
-
-
     $(document).off('keydown', '#goToPageInput').on('keydown', '#goToPageInput',
         function(e) {
             if (e.key === 'Enter') {
@@ -108,6 +64,9 @@ $(document).ready(function() {
             e.preventDefault();
             var page = $(this).data('page');
             var pageId = $('.nav-link.active').data('id');
+            var column = $(this).data('column');
+            var sortDirection = $(this).data('sort-direction');
+
             var search = $('input[name="search"]').val();
             var pageSize = $('#pageSize').val();
 
@@ -115,13 +74,15 @@ $(document).ready(function() {
                 search = search.trim();
             }
 
-            loadData(pageId, page, search, pageSize);
+            loadData(pageId, page, search, pageSize, column, sortDirection);
         });
 
     $(document).off('click', '#goToPageButton').on('click', '#goToPageButton', function() {
         var page = $('#goToPageInput').val();
         var pageId = $('.nav-link.active').data('id');
         var search = $('input[name="search"]').val();
+        var column = $(this).data('column');
+        var sortDirection = $(this).data('sort-direction');
         var pageSize = $('#pageSize').val();
 
         if (search && typeof search === 'string') {
@@ -130,7 +91,7 @@ $(document).ready(function() {
 
         if (page && !isNaN(page)) {
             page = parseInt(page) - 1;
-            loadData(pageId, page, search, pageSize);
+            loadData(pageId, page, search, pageSize, column, sortDirection);
         } else {
             console.log('Invalid page number.');
         }
@@ -145,20 +106,22 @@ $(document).ready(function() {
         var search = $('input[name="search"]').val();
         var pageSize = $('#pageSize').val();
         var totalCount = $('#totalCount').val();
-
+        var column = $(this).data('column');
+        var sortDirection = $(this).data('sort-direction');
         if (search && typeof search === 'string') {
             search = search.trim();
         }
 
         lastPage = Math.ceil(totalCount / pageSize) - 1;
 
-        loadData(pageId, lastPage, search, pageSize);
+        loadData(pageId, lastPage, search, pageSize, column, sortDirection);
     });
 
 
     $(document).off('change', '#pageSize').on('change', '#pageSize', function() {
         var pageSize = $(this).val();
-
+        var column = $(this).data('column');
+        var sortDirection = $(this).data('sort-direction');
         var pageId = $('.nav-link.active').data('id');
         var search = $('input[name="search"]').val();
 
@@ -167,7 +130,7 @@ $(document).ready(function() {
         }
 
         if (pageSize && (pageSize === 'all' || !isNaN(pageSize))) {
-            loadData(pageId, 0, search, pageSize);
+            loadData(pageId, 0, search, pageSize, column, sortDirection);
         } else {
             console.log('Invalid page size.');
         }
@@ -175,4 +138,34 @@ $(document).ready(function() {
 
 
 });
+
+function loadPageData(pageId, page, search, pageSize, column, sortDirection) {
+    localStorage.clear();
+
+    $.ajax({
+        url: "<?= \yii\helpers\Url::to(['pages/load-page-data']) ?>",
+        type: "GET",
+        data: {
+            pageId: pageId,
+            page: page,
+            search: search,
+            pageSize: pageSize,
+            column,
+            sortDirection
+        },
+        success: function(data) {
+            $('#table-data-current').html(data);
+            // Cập nhật trạng thái của page hiện tại
+            $('.nav-link').removeClass('active');
+            $('.nav-item').removeClass('active');
+            $(`[data-id="${pageId}"]`).addClass('active');
+            $(`[data-id="${pageId}"]`).closest('.nav-item').addClass('active');
+
+        },
+        error: function(xhr, status, error) {
+            console.error('Error:', error);
+            alert('Đã xảy ra lỗi khi tải dữ liệu. Vui lòng thử lại sau.');
+        }
+    });
+}
 </script>

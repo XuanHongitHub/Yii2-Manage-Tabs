@@ -2,102 +2,105 @@
 
 use yii\helpers\Html;
 use app\models\Menu;
-
+use app\assets\Select2Asset;
+Select2Asset::register($this);
 /** @var yii\web\View $this */
 $tableCreationData = Yii::$app->session->getFlash('tableCreationData', []);
 
-$this->title = 'List Pages';
+$this->title = 'Danh sách Page';
+
+$this->registerCssFile('@web/css/datatables.css', ['depends' => [\yii\web\JqueryAsset::class]]);
 
 ?>
 
 <div class="card">
-        <div class="card-header card-no-border pb-0">
-            <div class="d-flex flex-column flex-md-row align-items-md-center">
-                <div class="me-auto mb-3 mb-md-0 text-center text-md-start">
-                    <h4>Danh sách Pages</h4>
-                    <p class="mt-1 f-m-light">Table Page | Richtext Page</p>
-                </div>
-                <div class="d-flex flex-wrap justify-content-center align-items-center me-md-2 mb-3 mb-md-0">
-                    <a class="btn btn-outline-warning me-2 mb-2" href="#" data-bs-toggle="modal"
-                        data-bs-target="#hideModal">
-                        <i class="fas fa-eye me-1"></i> Hiện/Ẩn
-                    </a>
-                    <a class="btn btn-outline-primary me-2 mb-2" href="#" data-bs-toggle="modal"
-                        data-bs-target="#sortModal">
-                        <i class="fas fa-sort-amount-down me-1"></i> Sắp Xếp
-                    </a>
-                    <a class="btn btn-danger me-2 mb-2" href="#" data-bs-toggle="modal" data-bs-target="#trashBinModal">
-                        <i class="fas fa-trash me-1"></i> Thùng Rác
-                    </a>
-                    <a class="btn btn-success mb-2" href="<?= \yii\helpers\Url::to(['pages/create']) ?>">
-                        <i class="fas fa-plus me-1"></i> Thêm Page
-                    </a>
-                </div>
-
+    <div class="card-header card-no-border pb-0">
+        <div class="d-flex flex-column flex-md-row align-items-md-center">
+            <div class="me-auto mb-3 mb-md-0 text-center text-md-start">
+                <h4>Danh sách Pages</h4>
+                <p class="mt-1 f-m-light">Table Page | Richtext Page</p>
+            </div>
+            <div class="d-flex flex-wrap justify-content-center align-items-center me-md-2 mb-3 mb-md-0">
+                <a class="btn btn-outline-warning me-2 mb-2" href="#" data-bs-toggle="modal"
+                    data-bs-target="#hideModal">
+                    <i class="fas fa-eye me-1"></i> Hiện/Ẩn
+                </a>
+                <a class="btn btn-outline-primary me-2 mb-2" href="#" data-bs-toggle="modal"
+                    data-bs-target="#sortModal">
+                    <i class="fas fa-sort-amount-down me-1"></i> Sắp Xếp
+                </a>
+                <a class="btn btn-danger me-2 mb-2" href="#" data-bs-toggle="modal" data-bs-target="#trashBinModal">
+                    <i class="fas fa-trash me-1"></i> Thùng Rác
+                </a>
+                <a class="btn btn-success mb-2" href="<?= \yii\helpers\Url::to(['pages/create']) ?>">
+                    <i class="fas fa-plus me-1"></i> Thêm Page
+                </a>
             </div>
 
         </div>
 
-        <div class="card-body">
+    </div>
 
-            <div class="table-responsive">
-                <table class="display border table-bordered dataTable no-footer">
-                    <thead>
-                        <tr>
-                            <th>Tên</th>
-                            <th class="text-center">Loại</th>
-                            <th>Menu Cha</th>
-                            <th class="text-center">Trạng thái</th>
-                            <th style="width: 12%">Thao tác</th>
-                        </tr>
-                    </thead>
-                    <tbody id="columnsContainer">
-                        <?php foreach ($pages as $page): ?>
-                        <?php if ($page->deleted != 1): ?>
-                        <tr>
-                            <td><?= Html::encode($page->name) ?></td>
-                            <td class="text-center">
-                                <?php if ($page->type == 'table'): ?>
-                                <span class="badge badge-light-primary">Table</span>
-                                <?php else: ?>
-                                <span class="badge badge-light-danger">Richtext</span>
-                                <?php endif; ?>
-                            </td>
-                            <td class="text-center">
-                                <?= $page && $page->menu_id ? Menu::findOne($page->menu_id)->name : ''; ?>
-                            </td>
+    <div class="card-body">
 
-                            <td class="text-center">
-                                <?= $page->status == 1 ?
+        <div class="table-responsive">
+            <table class="display border table-bordered dataTable no-footer">
+                <thead>
+                    <tr>
+                        <th>Tên</th>
+                        <th class="text-center">Loại</th>
+                        <th>Menu Cha</th>
+                        <th class="text-center">Trạng thái</th>
+                        <th style="width: 12%">Thao tác</th>
+                    </tr>
+                </thead>
+                <tbody id="columnsContainer">
+                    <?php foreach ($pages as $page): ?>
+                    <?php if ($page->deleted != 1): ?>
+                    <tr>
+                        <td><?= Html::encode($page->name) ?></td>
+                        <td class="text-center">
+                            <?php if ($page->type == 'table'): ?>
+                            <span class="badge badge-light-primary">Table</span>
+                            <?php else: ?>
+                            <span class="badge badge-light-danger">Richtext</span>
+                            <?php endif; ?>
+                        </td>
+                        <td class="text-center">
+                            <?= $page && $page->menu_id ? Menu::findOne($page->menu_id)->name : ''; ?>
+                        </td>
+
+                        <td class="text-center">
+                            <?= $page->status == 1 ?
                                                         '<span class="badge badge-warning">Ẩn</span>' : '<span class="badge badge-success">Hiện</span>'
                                                     ?>
-                            </td>
-                            <td class="text-center text-nowrap">
-                                <button class="btn btn-primary btn-sm edit-btn me-1" data-bs-toggle="modal"
-                                    data-bs-target="#editModal" data-page-id="<?= htmlspecialchars($page->id) ?>"
-                                    data-page-name="<?= htmlspecialchars($page->name) ?>"
-                                    data-page-type="<?= htmlspecialchars($page->type) ?>"
-                                    data-menu-id="<?= htmlspecialchars($page->menu_id) ?>"
-                                    data-status="<?= htmlspecialchars($page->status) ?>"
-                                    data-position="<?= htmlspecialchars($page->position) ?>">
-                                    <i class="fa-solid fa-pen-to-square"></i>
-                                </button>
-                                <button href="#" data-bs-toggle="modal" data-bs-target="#deleteModal"
-                                    class="btn btn-danger btn-sm delete-btn"
-                                    data-page-id="<?= htmlspecialchars($page->id) ?>">
-                                    <i class="fa-regular fa-trash-can"></i>
-                                </button>
-                            </td>
-                        </tr>
-                        <?php endif; ?>
+                        </td>
+                        <td class="text-center text-nowrap">
+                            <button class="btn btn-primary btn-sm edit-btn me-1" data-bs-toggle="modal"
+                                data-bs-target="#editModal" data-page-id="<?= htmlspecialchars($page->id) ?>"
+                                data-page-name="<?= htmlspecialchars($page->name) ?>"
+                                data-page-type="<?= htmlspecialchars($page->type) ?>"
+                                data-menu-id="<?= htmlspecialchars($page->menu_id) ?>"
+                                data-status="<?= htmlspecialchars($page->status) ?>"
+                                data-position="<?= htmlspecialchars($page->position) ?>">
+                                <i class="fa-solid fa-pen-to-square"></i>
+                            </button>
+                            <button href="#" data-bs-toggle="modal" data-bs-target="#deleteModal"
+                                class="btn btn-danger btn-sm delete-btn"
+                                data-page-id="<?= htmlspecialchars($page->id) ?>">
+                                <i class="fa-regular fa-trash-can"></i>
+                            </button>
+                        </td>
+                    </tr>
+                    <?php endif; ?>
 
-                        <?php endforeach; ?>
-                    </tbody>
-                </table>
-            </div>
-
+                    <?php endforeach; ?>
+                </tbody>
+            </table>
         </div>
+
     </div>
+</div>
 <!-- Modal sửa -->
 <div class="modal fade" id="editModal" tabindex="-1" aria-labelledby="editModalLabel" aria-hidden="true">
     <div class="modal-dialog">
@@ -624,3 +627,19 @@ document.addEventListener("DOMContentLoaded", function() {
     });
 });
 </script>
+
+<?php
+    $jsFiles = [
+   
+        'js/jquery.dataTables.min.js',
+        'js/datatable.custom.js',
+        'js/datatable.custom1.js',
+
+        'js/jquery-ui.js',
+
+    ];
+
+    foreach ($jsFiles as $js) {
+        $this->registerJsFile($js, ['depends' => [\yii\web\YiiAsset::class]]);
+    }
+?>

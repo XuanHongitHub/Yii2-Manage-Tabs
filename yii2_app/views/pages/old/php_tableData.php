@@ -3,7 +3,6 @@
 use yii\widgets\LinkPager;
 use yii\grid\GridView;
 use yii\helpers\Html;
-use yii\widgets\Pjax;
 
 /* @var $this yii\web\View */
 /* @var $data array */
@@ -145,67 +144,119 @@ $globalIndexOffset = $page * $rowsPerPage;
         </form>
     </div>
 
+    <table class="table table-hover table-responsive custom-scrollbar border table-bordered tableData" id="mainTable">
+        <thead>
+            <tr>
+                <th class="text-center" style="width: 3%;"><input class="" type="checkbox" id="select-all"></th>
+                <?php foreach ($columns as $column): ?>
+                    <th class="column-header" data-column="<?= htmlspecialchars($column->name) ?>"
+                        <?php if (isset($columns[$column->name]) && $columns[$column->name]->isPrimaryKey) echo 'hidden'; ?>>
 
-    <?php Pjax::begin(); ?>
-    <?= GridView::widget([
-        'dataProvider' => $provider,
-        'columns' => $columnNames,
-    ]);
-    ?>
-    <?php Pjax::end(); ?>
+                        <a href="javascript:void(0);" class="sort-column"
+                            data-column="<?= htmlspecialchars($column->name) ?>"
+                            data-sort-direction="<?= $sort === $column->name ? ($sortDirection === 'asc' ? 'desc' : 'asc') : 'desc' ?>"
+                            data-page-id="<?= $pageId ?>" data-page="<?= $page ?>">
+                            <?= htmlspecialchars($column->name) ?>
 
-    <script>
-        function getRowData(rowIndex) {
-            const table = document.querySelector('.tableData tbody');
-            const row = table.rows[rowIndex];
+                            <?php if ($sort === $column->name): ?>
+                                <i class="fa <?= $sortDirection === 'asc' ? 'fa-sort-desc' : 'fa-sort-asc' ?>"></i>
+                            <?php else: ?>
+                                <i class="fa fa-sort"></i>
+                            <?php endif; ?>
+                        </a>
+                    </th>
+                <?php endforeach; ?>
+                <th class="text-center" style="width: 5%">Thao tác</th>
+            </tr>
+        </thead>
+        <?php if (!empty($data)): ?>
+            <tbody id="tbodyData">
+                <?php foreach ($data as $rowIndex => $row): ?>
+                    <?php
+                    $globalIndex = $globalIndexOffset + $rowIndex + 1;
+                    ?>
+                    <tr>
+                        <td class="text-center"><input type="checkbox" class="row-checkbox" data-row="<?= $rowIndex ?>"
+                                id="<?= $rowIndex ?>" data-table-name="<?= $tableName ?>">
+                        </td>
+                        <?php foreach ($columns as $column): ?>
+                            <td class="column-data <?= isset($columns[$column->name]) && $columns[$column->name]->isPrimaryKey ? 'hidden-column' : '' ?>"
+                                data-column="<?= htmlspecialchars($column->name) ?>">
+                                <?= htmlspecialchars($row[$column->name]) ?>
+                            </td>
+                        <?php endforeach; ?>
+                        <td class="text-nowrap">
+                            <button class="btn btn-secondary btn-sm save-row-btn"
+                                onclick="openEdit(<?= $rowIndex ?>, '<?= $tableName ?>')"><i
+                                    class="fa-solid fa-pen-to-square"></i></button>
+                            <button class="btn btn-danger btn-sm" onclick="deleteRow(<?= $rowIndex ?>, '<?= $tableName ?>')"><i
+                                    class="fa-regular fa-trash-can"></i></button>
+                        </td>
+                    </tr>
+                <?php endforeach; ?>
 
-            if (!row) {
-                console.error("Row not found:", rowIndex);
-                return undefined;
-            }
+            </tbody>
+            <script>
+                function getRowData(rowIndex) {
+                    const table = document.querySelector('.tableData tbody');
+                    const row = table.rows[rowIndex];
 
-            const headerCells = document.querySelectorAll('.tableData thead th');
-            const rowData = {};
-
-            headerCells.forEach((headerCell, idx) => {
-                if (idx < headerCells.length - 1) {
-                    const columnName = headerCell.innerText.trim();
-                    const cellValue = row.cells[idx].innerText.trim();
-
-                    if (columnName) {
-                        rowData[columnName] = cellValue;
+                    if (!row) {
+                        console.error("Row not found:", rowIndex);
+                        return undefined;
                     }
+
+                    const headerCells = document.querySelectorAll('.tableData thead th');
+                    const rowData = {};
+
+                    headerCells.forEach((headerCell, idx) => {
+                        if (idx < headerCells.length - 1) {
+                            const columnName = headerCell.innerText.trim();
+                            const cellValue = row.cells[idx].innerText.trim();
+
+                            if (columnName) {
+                                rowData[columnName] = cellValue;
+                            }
+                        }
+                    });
+
+                    return rowData;
                 }
-            });
+                $(document).off('click', '.sort-column').on('click', '.sort-column', function(e) {
+                    e.preventDefault();
 
-            return rowData;
-        }
-        $(document).off('click', '.sort-column').on('click', '.sort-column', function(e) {
-            e.preventDefault();
+                    var column = $(this).data('column');
+                    var currentSortDirection = $(this).data('sort-direction');
+                    var newSortDirection = currentSortDirection === 'asc' ? 'desc' : 'asc';
 
-            var column = $(this).data('column');
-            var currentSortDirection = $(this).data('sort-direction');
-            var newSortDirection = currentSortDirection === 'asc' ? 'desc' : 'asc';
+                    $(this).data('sort-direction', newSortDirection);
 
-            $(this).data('sort-direction', newSortDirection);
+                    $(this).find('i').removeClass('fa-sort-asc fa-sort-desc').addClass(newSortDirection === 'asc' ?
+                        'fa-sort-asc' : 'fa-sort-desc');
 
-            $(this).find('i').removeClass('fa-sort-asc fa-sort-desc').addClass(newSortDirection === 'asc' ?
-                'fa-sort-asc' : 'fa-sort-desc');
+                    var pageId = $(this).data('page-id');
+                    var page = $(this).data('page');
+                    var search = $('input[name="search"]').val();
+                    var pageSize = $('#pageSize').val();
 
-            var pageId = $(this).data('page-id');
-            var page = $(this).data('page');
-            var search = $('input[name="search"]').val();
-            var pageSize = $('#pageSize').val();
+                    if (search && typeof search === 'string') {
+                        search = search.trim();
+                    }
 
-            if (search && typeof search === 'string') {
-                search = search.trim();
-            }
-
-            loadData(pageId, page, search, pageSize, column, currentSortDirection);
-        });
-    </script>
+                    loadData(pageId, page, search, pageSize, column, currentSortDirection);
+                });
+            </script>
+    </table>
 
     <div class="d-flex flex-column flex-md-row align-items-center my-3">
+        <!-- Go to Page input and button -->
+        <div class="go-to-page d-flex align-items-center me-md-5 mb-2 mb-md-0">
+            <span class="me-2">Đến trang:</span>
+            <input class="form-control form-control-sm me-2" type="number" id="goToPageInput" min="1"
+                max="<?= $pagination->getPageCount() ?>" style="width: 5rem;" />
+            <button id="goToPageButton" class="btn btn-primary btn-sm">Đi</button>
+        </div>
+
         <!-- Number of items per page -->
         <div class="number-of-items d-flex align-items-center mb-2 mb-md-0">
             <span class="me-2">Xem:</span>
@@ -256,59 +307,98 @@ $globalIndexOffset = $page * $rowsPerPage;
                 </table>
             </ul>
         </div>
-    </div>
 
 
+        <!-- Pagination Links -->
+        <div class="dataTables_paginate paging_simple_numbers ms-md-auto">
+            <?= LinkPager::widget([
+                'pagination' => $pagination,
+                'options' => ['class' => 'pagination justify-content-end align-items-center'],
+                'linkContainerOptions' => ['tag' => 'span'],
+                'linkOptions' => [
+                    'class' => 'paginate_button',
+                    'data-page' => function ($page) {
+                        return $page + 1;
+                    },
+                ],
+                'activePageCssClass' => 'current',
+                'disabledPageCssClass' => 'disabled',
+                'disabledListItemSubTagOptions' => ['tag' => 'span', 'class' => 'paginate_button'],
+                'prevPageLabel' => 'Previous',
+                'nextPageLabel' => 'Next',
+                'maxButtonCount' => 5,
+            ]) ?>
+        </div>
 
-    <!-- Modal Sửa dữ liệu-->
-    <div class="modal fade" id="editModal" tabindex="-1" role="dialog" aria-labelledby="editModalLabel">
-        <div class="modal-dialog" role="document">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h4 class="modal-title" id="editModalLabel">Sửa dữ liệu</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cancel"></button>
-                </div>
-                <div class="modal-body">
-                    <form id="editForm"></form> <!-- Để trống và sẽ được điền động -->
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"
-                        aria-label="Cancel">Hủy</button>
-                    <button type="button" class="btn btn-primary" id="save-row-btn">Lưu</button>
-                </div>
-            </div>
+        <!-- Last Page Button -->
+        <div class="d-flex justify-content-end last-page-btn">
+            <?php if ($pagination->getPageCount() > 1): ?>
+
+                <span class="paginate_button">
+                    <input type="hidden" id="totalCount" value="<?= $totalCount ?>">
+                    <input type="hidden" id="pageSize" value="<?= $pageSize ?>">
+                    <button id="lastPageButton" class="btn btn-secondary btn-sm"
+                        data-page="<?= $pagination->getPageCount() - 1 ?>">
+                        Last
+                    </button>
+                </span>
+            <?php endif; ?>
+
         </div>
     </div>
 
-    <!-- Modal Thêm Dữ Liệu -->
-    <div class="modal fade" id="addDataModal" tabindex="-1" aria-labelledby="addDataModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h4 class="modal-title" id="addDataModalLabel">Nhập dữ liệu</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <?php foreach ($columns as $column): ?>
-                        <?php if (isset($columns[$column->name]) && !$columns[$column->name]->isPrimaryKey): ?>
-                            <div class="form-group">
-                                <label
-                                    for="<?= htmlspecialchars($column->name) ?>"><?= htmlspecialchars($column->name) ?>:</label>
-                                <input type="text" class="form-control new-data-input"
-                                    data-column="<?= htmlspecialchars($column->name) ?>"
-                                    id="<?= htmlspecialchars($column->name) ?>"
-                                    placeholder="<?= htmlspecialchars($column->name) ?>">
-                            </div>
-                        <?php endif; ?>
-                    <?php endforeach; ?>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
-                    <button type="button" id="add-row-btn" class="btn btn-primary">Thêm</button>
-                </div>
+
+<?php endif; ?>
+
+<!-- Modal Sửa dữ liệu-->
+<div class="modal fade" id="editModal" tabindex="-1" role="dialog" aria-labelledby="editModalLabel">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title" id="editModalLabel">Sửa dữ liệu</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cancel"></button>
+            </div>
+            <div class="modal-body">
+                <form id="editForm"></form> <!-- Để trống và sẽ được điền động -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"
+                    aria-label="Cancel">Hủy</button>
+                <button type="button" class="btn btn-primary" id="save-row-btn">Lưu</button>
             </div>
         </div>
     </div>
+</div>
+
+<!-- Modal Thêm Dữ Liệu -->
+<div class="modal fade" id="addDataModal" tabindex="-1" aria-labelledby="addDataModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title" id="addDataModalLabel">Nhập dữ liệu</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <?php foreach ($columns as $column): ?>
+                    <?php if (isset($columns[$column->name]) && !$columns[$column->name]->isPrimaryKey): ?>
+                        <div class="form-group">
+                            <label
+                                for="<?= htmlspecialchars($column->name) ?>"><?= htmlspecialchars($column->name) ?>:</label>
+                            <input type="text" class="form-control new-data-input"
+                                data-column="<?= htmlspecialchars($column->name) ?>"
+                                id="<?= htmlspecialchars($column->name) ?>"
+                                placeholder="<?= htmlspecialchars($column->name) ?>">
+                        </div>
+                    <?php endif; ?>
+                <?php endforeach; ?>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                <button type="button" id="add-row-btn" class="btn btn-primary">Thêm</button>
+            </div>
+        </div>
+    </div>
+</div>
 </div>
 
 
