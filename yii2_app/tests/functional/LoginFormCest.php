@@ -10,7 +10,6 @@ class LoginFormCest
     public function openLoginPage(\FunctionalTester $I)
     {
         $I->see('Login', 'h1');
-
     }
 
     // demonstrates `amLoggedInAs` method
@@ -33,8 +32,8 @@ class LoginFormCest
     {
         $I->submitForm('#login-form', []);
         $I->expectTo('see validations errors');
-        $I->see('Username cannot be blank.');
-        $I->see('Password cannot be blank.');
+        $I->see('Username không được để trống.');
+        $I->see('Password không được để trống.');
     }
 
     public function loginWithWrongCredentials(\FunctionalTester $I)
@@ -44,7 +43,7 @@ class LoginFormCest
             'LoginForm[password]' => 'wrong',
         ]);
         $I->expectTo('see validations errors');
-        $I->see('Incorrect username or password.');
+        $I->see('Tên người dùng hoặc mật khẩu không chính xác.');
     }
 
     public function loginSuccessfully(\FunctionalTester $I)
@@ -54,6 +53,6 @@ class LoginFormCest
             'LoginForm[password]' => 'admin',
         ]);
         $I->see('Logout (admin)');
-        $I->dontSeeElement('form#login-form');              
+        $I->dontSeeElement('form#login-form');
     }
 }

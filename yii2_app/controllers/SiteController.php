@@ -92,7 +92,6 @@ class SiteController extends BaseController
 
         return $this->render('index', [
             'pages' => $pages,
-            // 'tableTabs' => $tableTabs,
         ]);
     }
 

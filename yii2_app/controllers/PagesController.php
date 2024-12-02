@@ -24,6 +24,7 @@ use yii\data\Sort;
 use yii\data\SqlDataProvider;
 use yii\helpers\ArrayHelper;
 use yii\helpers\Html;
+use yii\web\Response;
 
 class PagesController extends Controller
 {
@@ -57,10 +58,9 @@ class PagesController extends Controller
     public function actionIndex()
     {
         $menuId = Yii::$app->request->get('menuId');
-
+        $searchTerm = Yii::$app->request->get('search', '');
         $menu = Menu::findOne($menuId);
-
-        if (!$menu){
+        if (!$menu) {
             throw new NotFoundHttpException('Không tìm thấy dữ liệu phù hợp.');
         }
 
@@ -70,12 +70,12 @@ class PagesController extends Controller
             ->orderBy(['position' => SORT_ASC, 'id' => SORT_DESC])
             ->all();
 
-        if (!$pages){
+        if (!$pages) {
             throw new NotFoundHttpException('Không tìm thấy dữ liệu phù hợp.');
         }
-        if (count($pages) == 1){
+        if (count($pages) == 1) {
             $page = $pages[0];
-            if ($page->type == 'table'){
+            if ($page->type == 'table') {
                 $columns = Yii::$app->db->schema->getTableSchema($page->table_name)->columns;
                 //$column =['name1','name2']
                 $columnNames = array_keys($columns);
@@ -93,18 +93,30 @@ class PagesController extends Controller
                         $query->where(implode(' OR ', $condition), [':searchTerm' => '%' . $searchTerm . '%']);
                     }
                 }
+
                 $dataProvider = new ActiveDataProvider([
-                    'query' => $query
+                    'query' => $query,
+                    'pagination' => [
+                        'pageSize' => 10,
+                    ],
+                    'sort' => [
+                        'defaultOrder' => [
+                            'id' => SORT_DESC, // Mặc định sắp xếp giảm dần theo cột 'id'
+                        ],
+                        'attributes' => $columnNames, // Đảm bảo các cột này có thể sắp xếp
+                    ],
                 ]);
+
 
                 return $this->render('singlePageTable', [
                     'dataProvider' => $dataProvider,
                     'columns' => $columnNames,
-                    'pagesize' => 10
+                    'pagesize' => 10,
+                    'columnSchema' => $columns,
                 ]);
             } else {
                 $filePath = Yii::getAlias('@runtime/richtext/' . $page->id . '.txt');
-                if (!is_file($filePath)){
+                if (!is_file($filePath)) {
                     throw new NotFoundHttpException('file not found');
                 }
                 $content = file_get_contents($filePath);
@@ -113,15 +125,11 @@ class PagesController extends Controller
                     'content' => $content,
                 ]);
             }
-
         }
         return $this->render('multiPage', [
             'pages' => $pages,
         ]);
-
     }
-
-
 
     /**
      * Load Page Data Action.
@@ -132,19 +140,19 @@ class PagesController extends Controller
         $pageId = Yii::$app->request->get('pageId');
         $pageTab = Page::findOne($pageId);
         $userId = Yii::$app->user->id;
-    
+
         if ($pageTab === null) {
             return 'No data';
         }
-    
+
         if ($pageTab->type === 'table') {
             $tableName = $pageTab->table_name;
             if ($tableName) {
                 $columns = Yii::$app->db->schema->getTableSchema($tableName)->columns;
                 $columnNames = array_keys($columns);
-    
+
                 $query = (new Query())->from($tableName);
-    
+
                 // Lấy từ khóa tìm kiếm
                 $searchTerm = Yii::$app->request->get('search', '');
                 if (!empty($searchTerm)) {
@@ -154,12 +162,12 @@ class PagesController extends Controller
                     }
                     $query->andWhere($condition);
                 }
-    
+
                 // Sắp xếp
                 $sort = Yii::$app->request->get('column', 'id');
                 $sortDirection = Yii::$app->request->get('sortDirection', 'asc') === 'asc' ? SORT_ASC : SORT_DESC;
                 $query->orderBy([$sort => $sortDirection]);
-    
+
                 // ActiveDataProvider
                 $dataProvider = new ActiveDataProvider([
                     'query' => $query,
@@ -167,7 +175,7 @@ class PagesController extends Controller
                         'pageSize' => intval(Yii::$app->request->get('pageSize', 10)),
                     ],
                 ]);
-    
+
                 // Thêm cột hành động
                 $columnNames[] = [
                     'class' => 'yii\grid\ActionColumn',
@@ -188,21 +196,20 @@ class PagesController extends Controller
                         },
                     ],
                 ];
-    
+
                 // Render partial view to update PJAX container
                 return $this->renderPartial('_tableData', [
                     'dataProvider' => $dataProvider,
                     'columns' => $columnNames,
                 ]);
             }
-        }
-        elseif ($pageTab->type === 'richtext') {
+        } elseif ($pageTab->type === 'richtext') {
             // Richtext Page
             $filePath = Yii::getAlias('@runtime/richtext/' . $pageId . '.txt');
             $content = file_exists($filePath) ? file_get_contents($filePath) : '';
 
             return $this->renderPartial('_richtextData', [
-                'richtextTab' => $page,
+                'richtextTab' => $pageTab,
                 'content' => $content,
                 'filePath' => $filePath,
             ]);
@@ -251,30 +258,74 @@ class PagesController extends Controller
      */
     public function actionUpdateData()
     {
-        $tableName = Yii::$app->request->post('table');
-        $data = Yii::$app->request->post('data');
-        $originalValues = Yii::$app->request->post('originalValues');
+        Yii::$app->response->format = Response::FORMAT_JSON;
 
-        $primaryKeyColumn = Yii::$app->db->schema->getTableSchema($tableName)->primaryKey[0];
+        if (Yii::$app->request->isPost) {
+            $postData = Yii::$app->request->post();
 
-        if (!isset($data[$primaryKeyColumn]) || !preg_match('/^[a-zA-Z0-9_]+$/', $data[$primaryKeyColumn])) {
-            return $this->asJson(['success' => false, 'message' => 'Khóa chính không hợp lệ.']);
+            // Lấy giá trị của ID
+            $id = $postData['id'];
+
+            // Lấy các cột cần cập nhật
+            unset($postData['id']);  // Xoá 'id' khỏi mảng để chỉ còn lại các cột cần cập nhật
+
+            // Xử lý dữ liệu, ví dụ cập nhật vào bảng `page_1`
+            $tableName = $postData['tableName'];  // Lấy tên bảng từ dữ liệu gửi lên
+            unset($postData['tableName']);  // Xoá 'tableName' khỏi mảng
+
+            try {
+                $db = Yii::$app->db;
+                $escapedTableName = $db->quoteTableName($tableName);
+
+                // Kiểm tra xem bảng có tồn tại không
+                $tableSchema = $db->getTableSchema($tableName);
+                if (!$tableSchema) {
+                    throw new \Exception("Không tìm thấy thông tin bảng: $tableName");
+                }
+
+                // Kiểm tra và chỉ giữ lại các cột hợp lệ
+                $validData = [];
+                foreach ($postData as $column => $value) {
+                    if (array_key_exists($column, $tableSchema->columns)) {
+                        $validData[$column] = $value === '' ? null : $value;
+                    }
+                }
+
+                if (empty($validData)) {
+                    return $this->asJson(['success' => false, 'message' => 'Không có cột hợp lệ để cập nhật dữ liệu.']);
+                }
+
+                // Cập nhật dữ liệu vào bảng
+                $result = $db->createCommand()->update($escapedTableName, $validData, 'id = :id', [':id' => $id])->execute();
+
+                if ($result) {
+                    // Trả về thông báo thành công
+                    return $this->asJson([
+                        'success' => true,
+                        'message' => 'Cập nhật dữ liệu thành công.'
+                    ]);
+                } else {
+                    // Trả về thông báo lỗi nếu không có thay đổi
+                    return $this->asJson([
+                        'success' => false,
+                        'message' => 'Không có thay đổi nào để cập nhật.'
+                    ]);
+                }
+            } catch (\Exception $e) {
+                // Trả về lỗi khi có ngoại lệ
+                return $this->asJson([
+                    'success' => false,
+                    'message' => 'Có lỗi xảy ra: ' . $e->getMessage()
+                ]);
+            }
         }
 
-        $whereCondition = [$primaryKeyColumn => $originalValues[$primaryKeyColumn]];
-
-        Yii::error("DATA: " . $data);
-        try {
-            Yii::$app->db->createCommand()
-                ->update($tableName, $data, $whereCondition)
-                ->execute();
-
-            return $this->asJson(['success' => true]);
-        } catch (\Exception $e) {
-            return $this->asJson(['success' => false, 'message' => $e->getMessage()]);
-        }
+        // Trả về lỗi nếu không phải là POST
+        return $this->asJson([
+            'success' => false,
+            'message' => 'Không có dữ liệu gửi đến.'
+        ]);
     }
-
 
     /** 
      * Create TableData Action.
@@ -282,32 +333,42 @@ class PagesController extends Controller
      */
     public function actionAddData()
     {
-        $tableName = Yii::$app->request->post('table');
-        $data = Yii::$app->request->post('data');
+        Yii::$app->response->format = Response::FORMAT_JSON;
 
-        // Kiểm tra và chỉ giữ lại các cột hợp lệ
-        $validData = [];
-        foreach ($data as $column => $value) {
-            if (preg_match('/^[a-zA-Z_][a-zA-Z0-9_]*$/', $column)) {
-                $validData[$column] = $value === '' ? null : $value;
-            }
-        }
+        // Nhận tên bảng và dữ liệu từ request
+        $tableName = Yii::$app->request->post('tableName');
+        $data = Yii::$app->request->post();
 
-        if (empty($validData)) {
-            return $this->asJson(['success' => false, 'message' => 'Không có cột hợp lệ để thêm dữ liệu.']);
+        // Xóa `tableName` ra khỏi dữ liệu cần chèn
+        unset($data['tableName']);
+
+        if (empty($tableName) || empty($data)) {
+            return $this->asJson(['success' => false, 'message' => 'Tên bảng hoặc dữ liệu không hợp lệ.']);
         }
 
         try {
             $db = Yii::$app->db;
             $escapedTableName = $db->quoteTableName($tableName);
 
-            // Lấy thông tin schema và khóa chính của bảng
+            // Lấy thông tin schema và kiểm tra tồn tại bảng
             $tableSchema = $db->getTableSchema($tableName);
             if (!$tableSchema) {
                 throw new \Exception("Không tìm thấy thông tin bảng: $tableName");
             }
 
-            // Lấy tên cột khóa chính
+            // Kiểm tra và chỉ giữ lại các cột hợp lệ
+            $validData = [];
+            foreach ($data as $column => $value) {
+                if (array_key_exists($column, $tableSchema->columns)) {
+                    $validData[$column] = $value === '' ? null : $value;
+                }
+            }
+
+            if (empty($validData)) {
+                return $this->asJson(['success' => false, 'message' => 'Không có cột hợp lệ để thêm dữ liệu.']);
+            }
+
+            // Lấy thông tin khóa chính
             $primaryKey = $tableSchema->primaryKey[0] ?? null;
 
             // Nếu khóa chính là auto-increment, loại bỏ khỏi dữ liệu
@@ -318,15 +379,15 @@ class PagesController extends Controller
             // Thực hiện chèn dữ liệu
             $db->createCommand()->insert($escapedTableName, $validData)->execute();
 
+            // Lấy tổng số bản ghi để tính số trang
             $totalRecords = $db->createCommand("SELECT COUNT(*) FROM $escapedTableName")->queryScalar();
-
-            $pageSize = 10;
+            $pageSize = 10; // Đặt số lượng bản ghi trên mỗi trang
             $totalPages = ceil($totalRecords / $pageSize);
 
             return $this->asJson([
                 'success' => true,
                 'totalPages' => $totalPages,
-                'redirect' => '/pages',
+                'message' => 'Thêm dữ liệu thành công.',
             ]);
         } catch (\Exception $e) {
             // Xử lý lỗi duplicate key hoặc null value
@@ -339,8 +400,8 @@ class PagesController extends Controller
                     $sequenceName = $tableSchema->sequenceName;
                     if ($primaryKey && $sequenceName) {
                         $db->createCommand("
-                        SELECT setval('$sequenceName', (SELECT MAX($primaryKey) FROM $escapedTableName))
-                    ")->execute();
+                            SELECT setval('$sequenceName', (SELECT MAX($primaryKey) FROM $escapedTableName))
+                        ")->execute();
                     }
 
                     // Thử chèn lại dữ liệu
@@ -352,6 +413,7 @@ class PagesController extends Controller
                 }
             }
 
+            // Trả về lỗi khác
             return $this->asJson(['success' => false, 'message' => $e->getMessage()]);
         }
     }
@@ -371,71 +433,99 @@ class PagesController extends Controller
         return $tableSchema->sequenceName;
     }
 
-    /** 
-     * Delete TableData Action.
-     *
+    /**
+     * Xóa một bản ghi.
      */
     public function actionDeleteData()
     {
-        $postData = Yii::$app->request->post();
+        Yii::$app->response->format = Response::FORMAT_JSON;
 
-        $table = $postData['table'];
-        $conditions = isset($postData['conditions']) ? $postData['conditions'] : [];
+        if (Yii::$app->request->isPost) {
+            $postData = Yii::$app->request->post();
+            $id = $postData['id'] ?? null; // Lấy ID từ dữ liệu gửi lên
 
-        Yii::error("Conditions: " . print_r($conditions, true));
+            if (!$id) {
+                return $this->asJson(['success' => false, 'message' => 'ID không hợp lệ.']);
+            }
 
+            // Lấy tên bảng và xử lý
+            $tableName = $postData['tableName'] ?? null;  // Lấy tên bảng
+            if (!$tableName) {
+                return $this->asJson(['success' => false, 'message' => 'Tên bảng không hợp lệ.']);
+            }
 
-        if (!preg_match('/^[a-zA-Z_][a-zA-Z0-9_]*$/', $table)) {
-            return $this->asJson(['success' => false, 'message' => 'Tên bảng không hợp lệ.']);
-        }
+            try {
+                $db = Yii::$app->db;
+                $escapedTableName = $db->quoteTableName($tableName);
 
-        $whereConditions = [];
-
-        foreach ($conditions as $condition) {
-            $tempConditions = [];
-
-            foreach ($condition as $column => $value) {
-
-                if (preg_match('/^[a-zA-Z_0-9][a-zA-Z0-9_]*$/', $column)) {
-                    if ($value === '') {
-                        $tempConditions[] = "$column IS NULL";
-                    } else {
-                        $tempConditions[] = "$column = '" . addslashes($value) . "'";
-                    }
-                } else {
-                    Yii::error("Invalid column name: $column", __METHOD__);
+                // Kiểm tra xem bảng có tồn tại không
+                $tableSchema = $db->getTableSchema($tableName);
+                if (!$tableSchema) {
+                    throw new \Exception("Không tìm thấy bảng: $tableName");
                 }
-            }
 
-            if (!empty($tempConditions)) {
-                $whereConditions[] = '(' . implode(' AND ', $tempConditions) . ')';
-            } else {
-                Yii::error("No valid conditions for this set: " . json_encode($condition), __METHOD__);
+                // Thực hiện xóa bản ghi
+                $result = $db->createCommand()->delete($escapedTableName, ['id' => $id])->execute();
+
+                if ($result > 0) {
+                    return $this->asJson(['success' => true, 'message' => 'Dữ liệu đã được xóa thành công.']);
+                } else {
+                    return $this->asJson(['success' => false, 'message' => 'Không có bản ghi nào để xóa.']);
+                }
+            } catch (\Exception $e) {
+                return $this->asJson(['success' => false, 'message' => 'Có lỗi xảy ra: ' . $e->getMessage()]);
             }
         }
 
-
-        if (empty($whereConditions)) {
-            $sql = "DELETE FROM $table WHERE ";
-            $columns = array_keys($conditions[0]);
-            $nullConditions = [];
-
-            foreach ($columns as $column) {
-                $nullConditions[] = "$column IS NULL";
-            }
-
-            $sql .= implode(' AND ', $nullConditions);
-        } else {
-            $sql = "DELETE FROM $table WHERE " . implode(' OR ', $whereConditions);
-        }
-
-        try {
-            Yii::$app->db->createCommand($sql)->execute();
-            return $this->asJson(['success' => true, 'message' => 'Successfully!']);
-        } catch (\Exception $e) {
-            return $this->asJson(['success' => false, 'message' => $e->getMessage()]);
-        }
+        return $this->asJson(['success' => false, 'message' => 'Yêu cầu không hợp lệ.']);
     }
+
+    /**
+     * Xóa nhiều bản ghi.
+     */
+    public function actionDeleteSelectedData()
+    {
+        Yii::$app->response->format = Response::FORMAT_JSON;
+
+        if (Yii::$app->request->isPost) {
+            $ids = Yii::$app->request->post('ids'); // Lấy danh sách ID cần xóa
+
+            if (empty($ids)) {
+                return $this->asJson(['success' => false, 'message' => 'Danh sách ID không hợp lệ.']);
+            }
+
+            // Lấy tên bảng và xử lý
+            $tableName = Yii::$app->request->post('tableName');
+            if (!$tableName) {
+                return $this->asJson(['success' => false, 'message' => 'Tên bảng không hợp lệ.']);
+            }
+
+            try {
+                $db = Yii::$app->db;
+                $escapedTableName = $db->quoteTableName($tableName);
+
+                // Kiểm tra xem bảng có tồn tại không
+                $tableSchema = $db->getTableSchema($tableName);
+                if (!$tableSchema) {
+                    throw new \Exception("Không tìm thấy bảng: $tableName");
+                }
+
+                // Xóa các bản ghi đã chọn
+                $result = $db->createCommand()->delete($escapedTableName, ['id' => $ids])->execute();
+
+                if ($result > 0) {
+                    return $this->asJson(['success' => true, 'message' => 'Dữ liệu đã được xóa thành công.']);
+                } else {
+                    return $this->asJson(['success' => false, 'message' => 'Không có bản ghi nào để xóa.']);
+                }
+            } catch (\Exception $e) {
+                return $this->asJson(['success' => false, 'message' => 'Có lỗi xảy ra: ' . $e->getMessage()]);
+            }
+        }
+
+        return $this->asJson(['success' => false, 'message' => 'Yêu cầu không hợp lệ.']);
+    }
+
     /**
      * Import + Export Excel
      * 

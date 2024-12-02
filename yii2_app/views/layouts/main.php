@@ -13,7 +13,6 @@ use app\models\User;
 use app\models\Page;
 use app\models\Menu;
 
-FontAwesomeAsset::register($this);
 AppAsset::register($this);
 
 $this->registerCsrfMetaTags();
@@ -40,8 +39,10 @@ $tabMenus = Menu::find()
     <title><?= Html::encode($this->title) ?></title>
     <?php
     $this->head();
-    $this->registerAssetBundle(JqueryAsset::class,View::POS_HEAD);
+    $this->registerAssetBundle(JqueryAsset::class, View::POS_HEAD);
     $cssFile = [
+        'css/font-awesome.min.css',
+        'css/font-awesome.css',
         'css/font.css',
         'css/scrollbar.css',
         'css/bootstrap.css',
@@ -90,23 +91,23 @@ $tabMenus = Menu::find()
                         <li class="profile-nav onhover-dropdown p-0">
                             <div class="d-flex align-items-center profile-media">
                                 <?php if (!Yii::$app->user->isGuest): ?>
-                                <svg style="margin-bottom: -5px; width: 30px !important; height: 30px !important;">
-                                    <use href="<?= Yii::getAlias('@web') ?>/images/icon-sprite.svg#fill-user"></use>
-                                </svg>
-                                <div class="flex-grow-1">
-                                    <span><?= Html::encode(Yii::$app->user->identity->username) ?></span>
-                                    <p class="mb-0">
-                                        <?php if (Yii::$app->user->identity->role == 10): ?>
-                                        User
-                                        <?php elseif (Yii::$app->user->identity->role == 20): ?>
-                                        Admin
-                                        <?php else: ?>
-                                        <?= Html::encode(Yii::$app->user->identity->role) ?>
-                                        <?php endif; ?>
-                                        <i class="middle fa fa-angle-down"></i>
-                                    </p>
+                                    <svg style="margin-bottom: -5px; width: 30px !important; height: 30px !important;">
+                                        <use href="<?= Yii::getAlias('@web') ?>/images/icon-sprite.svg#fill-user"></use>
+                                    </svg>
+                                    <div class="flex-grow-1">
+                                        <span><?= Html::encode(Yii::$app->user->identity->username) ?></span>
+                                        <p class="mb-0">
+                                            <?php if (Yii::$app->user->identity->role == 10): ?>
+                                                User
+                                            <?php elseif (Yii::$app->user->identity->role == 20): ?>
+                                                Admin
+                                            <?php else: ?>
+                                                <?= Html::encode(Yii::$app->user->identity->role) ?>
+                                            <?php endif; ?>
+                                            <i class="middle fa fa-angle-down"></i>
+                                        </p>
 
-                                </div>
+                                    </div>
                             </div>
                             <ul class="profile-dropdown onhover-show-div">
                                 <li><a href="<?= Yii::$app->urlManager->createUrl(['admin/pages/index']) ?>"><span><i
@@ -125,7 +126,7 @@ $tabMenus = Menu::find()
                                     </form>
                                 </li>
                             </ul>
-                            <?php else: ?>
+                        <?php else: ?>
                             <div class="auth-buttons">
                                 <a href="<?= Yii::$app->urlManager->createUrl(['site/login']) ?>"
                                     class="btn btn-primary me-1">
@@ -136,7 +137,7 @@ $tabMenus = Menu::find()
                                     <i class="fa-solid fa-user-plus"></i> Sign Up
                                 </a>
                             </div>
-                            <?php endif; ?>
+                        <?php endif; ?>
                         </li>
                 </div>
             </div>
@@ -175,63 +176,63 @@ $tabMenus = Menu::find()
                                     </div>
                                 </li>
                                 <?php if (!empty($tabMenus)): ?>
-                                <?php foreach ($tabMenus as $menu): ?>
-                                <?php if ($menu->parent_id === null): ?>
-                                <li class="sidebar-list">
-                                    <?php
+                                    <?php foreach ($tabMenus as $menu): ?>
+                                        <?php if ($menu->parent_id === null): ?>
+                                            <li class="sidebar-list">
+                                                <?php
                                                 // Kiểm tra menu có con và có page con không
                                                 $hasChildren = $menu->getChildMenus()->exists();
                                                 ?>
-                                    <?php if ($hasChildren): ?>
-                                    <!-- Nếu có menu con hoặc page con -->
-                                    <a class="sidebar-link sidebar-title" href="#">
-                                        <svg class="stroke-icon">
-                                            <use
-                                                href="<?= Yii::getAlias('@web') ?>/images/icon-sprite.svg#<?= $menu->icon ?>">
-                                            </use>
-                                        </svg>
-                                        <svg class="fill-icon">
-                                            <use
-                                                href="<?= Yii::getAlias('@web') ?>/images/icon-sprite.svg#fill-editors">
-                                            </use>
-                                        </svg>
-                                        <span><?= Html::encode($menu->name) ?></span>
-                                        <div class="according-menu"><i class="fa fa-angle-right"></i></div>
-                                    </a>
-                                    <ul class="sidebar-submenu" style="display: none;">
-                                        <?php if ($hasChildren): ?>
-                                        <?php foreach ($menu->getChildMenus()->all() as $childMenu): ?>
-                                        <li class="sidebar-list">
-                                            <a href="<?= \yii\helpers\Url::to(['/pages', 'menuId' => $childMenu->id]) ?>"
-                                                data-menu-id="<?= $childMenu->id ?>"
-                                                class="<?= Yii::$app->request->get('pageId') === $childMenu->id ? 'active' : '' ?>">
-                                                <svg class="svg-menu">
-                                                    <use
-                                                        href="<?= Yii::getAlias('@web') ?>/images/icon-sprite.svg#<?= $childMenu->icon ?>">
-                                                    </use>
-                                                </svg>
-                                                <?= Html::encode($childMenu->name) ?>
-                                            </a>
-                                        </li>
-                                        <?php endforeach; ?>
+                                                <?php if ($hasChildren): ?>
+                                                    <!-- Nếu có menu con hoặc page con -->
+                                                    <a class="sidebar-link sidebar-title" href="#">
+                                                        <svg class="stroke-icon">
+                                                            <use
+                                                                href="<?= Yii::getAlias('@web') ?>/images/icon-sprite.svg#<?= $menu->icon ?>">
+                                                            </use>
+                                                        </svg>
+                                                        <svg class="fill-icon">
+                                                            <use
+                                                                href="<?= Yii::getAlias('@web') ?>/images/icon-sprite.svg#fill-editors">
+                                                            </use>
+                                                        </svg>
+                                                        <span><?= Html::encode($menu->name) ?></span>
+                                                        <div class="according-menu"><i class="fa fa-angle-right"></i></div>
+                                                    </a>
+                                                    <ul class="sidebar-submenu" style="display: none;">
+                                                        <?php if ($hasChildren): ?>
+                                                            <?php foreach ($menu->getChildMenus()->all() as $childMenu): ?>
+                                                                <li class="sidebar-list">
+                                                                    <a href="<?= \yii\helpers\Url::to(['/pages', 'menuId' => $childMenu->id]) ?>"
+                                                                        data-menu-id="<?= $childMenu->id ?>"
+                                                                        class="<?= Yii::$app->request->get('pageId') === $childMenu->id ? 'active' : '' ?>">
+                                                                        <svg class="svg-menu">
+                                                                            <use
+                                                                                href="<?= Yii::getAlias('@web') ?>/images/icon-sprite.svg#<?= $childMenu->icon ?>">
+                                                                            </use>
+                                                                        </svg>
+                                                                        <?= Html::encode($childMenu->name) ?>
+                                                                    </a>
+                                                                </li>
+                                                            <?php endforeach; ?>
+                                                        <?php endif; ?>
+                                                    </ul>
+                                                <?php else: ?>
+                                                    <!-- Xử lý trường hợp mặc định cho menu không có con và không có page -->
+                                                    <a class="sidebar-link sidebar-title link-nav"
+                                                        href="<?= \yii\helpers\Url::to(['/pages', 'menuId' => $menu->id]) ?>"
+                                                        data-menu-id="<?= $menu->id ?>">
+                                                        <svg class="stroke-icon">
+                                                            <use
+                                                                href="<?= Yii::getAlias('@web') ?>/images/icon-sprite.svg#<?= $menu->icon ?>">
+                                                            </use>
+                                                        </svg>
+                                                        <span><?= Html::encode($menu->name) ?></span>
+                                                    </a>
+                                                <?php endif; ?>
+                                            </li>
                                         <?php endif; ?>
-                                    </ul>
-                                    <?php else: ?>
-                                    <!-- Xử lý trường hợp mặc định cho menu không có con và không có page -->
-                                    <a class="sidebar-link sidebar-title link-nav"
-                                        href="<?= \yii\helpers\Url::to(['/pages', 'menuId' => $menu->id]) ?>"
-                                        data-menu-id="<?= $menu->id ?>">
-                                        <svg class="stroke-icon">
-                                            <use
-                                                href="<?= Yii::getAlias('@web') ?>/images/icon-sprite.svg#<?= $menu->icon ?>">
-                                            </use>
-                                        </svg>
-                                        <span><?= Html::encode($menu->name) ?></span>
-                                    </a>
-                                    <?php endif; ?>
-                                </li>
-                                <?php endif; ?>
-                                <?php endforeach; ?>
+                                    <?php endforeach; ?>
                                 <?php endif; ?>
                             </ul>
                         </div>
@@ -268,22 +269,22 @@ $tabMenus = Menu::find()
     </div>
 
     <?php
-            $jsFiles = [
-                'js/bootstrap.bundle.min.js',
-                'js/simplebar.js',
-                'js/custom.js',
-                'js/sidebar-menu.js',
-                'js/bootstrap-notify.min.js',
-                'js/custom-notify.js',
-                'js/script.js',
-                'js/jquery-ui.js',
-                'js/sweet-alert.min.js',
-            ];
+    $jsFiles = [
+        'js/bootstrap.bundle.min.js',
+        'js/simplebar.js',
+        'js/custom.js',
+        'js/sidebar-menu.js',
+        'js/bootstrap-notify.min.js',
+        'js/custom-notify.js',
+        'js/script.js',
+        'js/jquery-ui.js',
+        'js/sweet-alert.min.js',
+    ];
 
-            foreach ($jsFiles as $js) {
-                $this->registerJsFile($js, ['depends' => [\yii\web\YiiAsset::class]]);
-            }
-        ?>
+    foreach ($jsFiles as $js) {
+        $this->registerJsFile($js, ['depends' => [\yii\web\YiiAsset::class]]);
+    }
+    ?>
     <?php $this->endBody() ?>
 </body>
 <!-- Toast -->
@@ -298,25 +299,25 @@ $tabMenus = Menu::find()
     </div>
 </div>
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    const errorMessage = <?= Json::encode($errorMessage) ?>;
+    document.addEventListener('DOMContentLoaded', function() {
+        const errorMessage = <?= Json::encode($errorMessage) ?>;
 
-    const successMessage = <?= Json::encode($successMessage) ?>;
-    if (successMessage) {
-        document.getElementById('toast-body').textContent = successMessage;
-        document.getElementById('toast-timestamp').textContent = new Date().toLocaleTimeString();
-        const toastElement = document.getElementById('liveToast');
-        const toast = new bootstrap.Toast(toastElement);
-        toast.show();
-    }
-    if (errorMessage) {
-        document.getElementById('toast-body').textContent = errorMessage;
-        document.getElementById('toast-timestamp').textContent = new Date().toLocaleTimeString();
-        const toastElement = document.getElementById('liveToast');
-        const toast = new bootstrap.Toast(toastElement);
-        toast.show();
-    }
-});
+        const successMessage = <?= Json::encode($successMessage) ?>;
+        if (successMessage) {
+            document.getElementById('toast-body').textContent = successMessage;
+            document.getElementById('toast-timestamp').textContent = new Date().toLocaleTimeString();
+            const toastElement = document.getElementById('liveToast');
+            const toast = new bootstrap.Toast(toastElement);
+            toast.show();
+        }
+        if (errorMessage) {
+            document.getElementById('toast-body').textContent = errorMessage;
+            document.getElementById('toast-timestamp').textContent = new Date().toLocaleTimeString();
+            const toastElement = document.getElementById('liveToast');
+            const toast = new bootstrap.Toast(toastElement);
+            toast.show();
+        }
+    });
 </script>
 
 
