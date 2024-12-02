@@ -59,6 +59,8 @@ class PagesController extends Controller
     {
         $menuId = Yii::$app->request->get('menuId');
         $searchTerm = Yii::$app->request->get('search', '');
+        $pageSize = Yii::$app->request->get('pageSize', 10);
+
         $menu = Menu::findOne($menuId);
         if (!$menu) {
             throw new NotFoundHttpException('Không tìm thấy dữ liệu phù hợp.');
@@ -77,14 +79,17 @@ class PagesController extends Controller
             $page = $pages[0];
             if ($page->type == 'table') {
                 $columns = Yii::$app->db->schema->getTableSchema($page->table_name)->columns;
-                //$column =['name1','name2']
                 $columnNames = array_keys($columns);
                 $query = (new Query())->from($page->table_name);
 
-                // Tìm kiếm nếu có
                 if (!empty($searchTerm)) {
                     $condition = [];
+
                     foreach ($columnNames as $columnName) {
+                        // Bỏ qua cột 'hidden_id' trong tìm kiếm
+                        if ($columnName === 'hidden_id') {
+                            continue;
+                        }
                         $columnNameQuoted = "\"$columnName\"";
                         $condition[] = "LOWER(unaccent(CAST($columnNameQuoted AS TEXT))) ILIKE LOWER(unaccent(:searchTerm))";
                     }
@@ -97,16 +102,15 @@ class PagesController extends Controller
                 $dataProvider = new ActiveDataProvider([
                     'query' => $query,
                     'pagination' => [
-                        'pageSize' => 10,
+                        'pageSize' => $pageSize,
                     ],
                     'sort' => [
                         'defaultOrder' => [
-                            'id' => SORT_DESC, // Mặc định sắp xếp giảm dần theo cột 'id'
+                            'hidden_id' => SORT_ASC,
                         ],
-                        'attributes' => $columnNames, // Đảm bảo các cột này có thể sắp xếp
+                        'attributes' => $columnNames,
                     ],
                 ]);
-
 
                 return $this->render('singlePageTable', [
                     'dataProvider' => $dataProvider,
@@ -465,7 +469,7 @@ class PagesController extends Controller
                 }
 
                 // Thực hiện xóa bản ghi
-                $result = $db->createCommand()->delete($escapedTableName, ['id' => $id])->execute();
+                $result = $db->createCommand()->delete($escapedTableName, ['hidden_id' => $id])->execute();
 
                 if ($result > 0) {
                     return $this->asJson(['success' => true, 'message' => 'Dữ liệu đã được xóa thành công.']);
@@ -511,7 +515,7 @@ class PagesController extends Controller
                 }
 
                 // Xóa các bản ghi đã chọn
-                $result = $db->createCommand()->delete($escapedTableName, ['id' => $ids])->execute();
+                $result = $db->createCommand()->delete($escapedTableName, ['hidden_id' => $ids])->execute();
 
                 if ($result > 0) {
                     return $this->asJson(['success' => true, 'message' => 'Dữ liệu đã được xóa thành công.']);
@@ -551,11 +555,11 @@ class PagesController extends Controller
             $expectedColumns = array_keys($columns);
 
             // Loại bỏ cột 'id' khỏi danh sách cột dự kiến
-            $expectedColumns = array_filter($expectedColumns, fn($column) => strtolower($column) !== 'id');
+            $expectedColumns = array_filter($expectedColumns, fn($column) => strtolower($column) !== 'hidden_id');
 
             // Lấy header từ tệp Excel và loại bỏ 'id' nếu tồn tại
             $excelHeaders = $this->getColumnHeadersFromExcel($filePath);
-            $excelHeaders = array_filter($excelHeaders, fn($header) => strtolower($header) !== 'id');
+            $excelHeaders = array_filter($excelHeaders, fn($header) => strtolower($header) !== 'hidden_id');
 
             // Kiểm tra tiêu đề cột
             if ($this->validateColumns($excelHeaders, $expectedColumns) === false) {
@@ -571,7 +575,7 @@ class PagesController extends Controller
             // Loại bỏ cột 'id' khỏi dữ liệu
             $data = array_map(function ($row) use ($excelHeaders) {
                 return array_filter($row, function ($key) use ($excelHeaders) {
-                    return strtolower($key) !== 'id';
+                    return strtolower($key) !== 'hidden_id';
                 }, ARRAY_FILTER_USE_KEY);
             }, $data);
 
@@ -711,10 +715,12 @@ class PagesController extends Controller
     }
     public function actionExportExcel($format, $tableName)
     {
+        // Lấy danh sách các cột của bảng, loại bỏ cột 'hidden_id'
         $columns = (new Query())
             ->select('column_name')
             ->from('information_schema.columns')
             ->where(['table_name' => $tableName])
+            ->andWhere(['<>', 'column_name', 'hidden_id'])  // Loại bỏ cột 'hidden_id'
             ->all();
 
         $columnNames = array_map(fn($column) => $column['column_name'], $columns);
@@ -722,12 +728,14 @@ class PagesController extends Controller
         $spreadsheet = new Spreadsheet();
         $sheet = $spreadsheet->getActiveSheet();
 
+        // Thiết lập tiêu đề cột trong sheet Excel, loại bỏ cột 'hidden_id'
         $columnIndex = 1;
         foreach ($columnNames as $column) {
             $sheet->setCellValueByColumnAndRow($columnIndex, 1, $column);
             $columnIndex++;
         }
 
+        // Định dạng tiêu đề cột
         $headerStyle = [
             'font' => ['bold' => true, 'size' => 12],
             'alignment' => [
@@ -740,42 +748,56 @@ class PagesController extends Controller
         ];
         $sheet->getStyle('A1:' . chr(64 + count($columnNames)) . '1')->applyFromArray($headerStyle);
 
-        $query = (new Query())->from($tableName);
+        // Sắp xếp kết quả theo cột đầu tiên
+        $query = (new Query())->from($tableName)
+            ->orderBy($columnNames[0]);  // Sắp xếp theo cột đầu tiên
+
         $batchSize = 1000;
         $rowIndex = 2;
 
+        // Xuất dữ liệu vào sheet
         foreach ($query->batch($batchSize) as $rows) {
             foreach ($rows as $row) {
                 $columnIndex = 1;
-                foreach ($row as $cell) {
-                    $sheet->setCellValueByColumnAndRow($columnIndex, $rowIndex, $cell);
+                foreach ($columnNames as $column) {
+                    // Loại bỏ dữ liệu của cột 'hidden_id'
+                    if (isset($row[$column])) {
+                        $sheet->setCellValueByColumnAndRow($columnIndex, $rowIndex, $row[$column]);
+                    } else {
+                        $sheet->setCellValueByColumnAndRow($columnIndex, $rowIndex, '');
+                    }
                     $columnIndex++;
                 }
                 $rowIndex++;
             }
         }
 
+        // Định dạng các ô trong bảng
         $sheet->getStyle('A1:' . chr(64 + count($columnNames)) . ($rowIndex - 1))->applyFromArray([
             'borders' => [
                 'allBorders' => ['borderStyle' => Border::BORDER_THIN, 'color' => ['rgb' => '000000']],
             ],
         ]);
 
+        // Thiết lập kích thước tự động cho các cột
         foreach (range('A', chr(64 + count($columnNames))) as $columnID) {
             $sheet->getColumnDimension($columnID)->setAutoSize(true);
         }
 
+        // Tạo thư mục upload nếu chưa tồn tại
         $uploadDir = Yii::getAlias('@webroot/uploads');
         if (!is_dir($uploadDir)) {
             mkdir($uploadDir, 0777, true);
         }
 
+        // Lưu file Excel vào thư mục uploads
         $fileName = $tableName . '.' . $format;
         $tempFilePath = $uploadDir . DIRECTORY_SEPARATOR . $fileName;
 
         $writer = new Xlsx($spreadsheet);
         $writer->save($tempFilePath);
 
+        // Trả về URL của file đã tạo
         $fileUrl = Yii::$app->urlManager->baseUrl . '/uploads/' . $fileName;
 
         return $this->asJson([
@@ -783,6 +805,7 @@ class PagesController extends Controller
             'file_url' => $fileUrl
         ]);
     }
+
 
 
     public function getExportData($tableName)
@@ -814,40 +837,28 @@ class PagesController extends Controller
     // Xuất Excel View Hiện tại
     public function actionExportExcelCurrent()
     {
-        // Nhận dữ liệu bảng từ client (dữ liệu đã lọc/sắp xếp)
-        $tableName = Yii::$app->request->post('tableName');
         $format = Yii::$app->request->post('format');
+        $tableName = Yii::$app->request->post('tableName');
+        $visibleColumns = Yii::$app->request->post('visibleColumns');
         $tableData = Yii::$app->request->post('tableData');
 
-
-        // Kiểm tra nếu không có dữ liệu, trả về lỗi
-        if (empty($tableData)) {
-            return $this->asJson(['success' => false, 'message' => 'Không có dữ liệu để xuất']);
+        if (empty($tableData) || empty($visibleColumns)) {
+            return $this->asJson(['success' => false, 'message' => 'Không có dữ liệu để xuất.']);
         }
-
-        // Lấy tên cột từ cơ sở dữ liệu (dùng lại query như trước để lấy cột)
-        $columns = (new Query())
-            ->select('column_name')
-            ->from('information_schema.columns')
-            ->where(['table_name' => $tableName])
-            ->all();
-
-        $columnNames = array_map(fn($column) => $column['column_name'], $columns);
-
-        // Tạo đối tượng Spreadsheet mới
+        // Tạo file Excel
         $spreadsheet = new Spreadsheet();
         $sheet = $spreadsheet->getActiveSheet();
 
-        // Điền tên cột vào header
+        // Đặt tiêu đề cột (các cột hiển thị)
         $columnIndex = 1;
-        foreach ($columnNames as $column) {
+        foreach ($visibleColumns as $column) {
             $sheet->setCellValueByColumnAndRow($columnIndex, 1, $column);
             $columnIndex++;
         }
 
-        // Định dạng header (cột tên)
-        $headerStyle = [
-            'font' => ['bold' => true, 'size' => 12],
+        // Áp dụng kiểu in đậm cho cột đầu tiên (dòng header)
+        $sheet->getStyle('A1:' . chr(64 + count($visibleColumns)) . '1')->applyFromArray([
+            'font' => ['bold' => true],  // Đặt font chữ in đậm cho header
             'alignment' => [
                 'horizontal' => Alignment::HORIZONTAL_CENTER,
                 'vertical' => Alignment::VERTICAL_CENTER,
@@ -855,46 +866,44 @@ class PagesController extends Controller
             'borders' => [
                 'allBorders' => ['borderStyle' => Border::BORDER_THIN, 'color' => ['rgb' => '000000']],
             ],
-        ];
-        $sheet->getStyle('A1:' . chr(64 + count($columnNames)) . '1')->applyFromArray($headerStyle);
+        ]);
 
-        // Điền dữ liệu từ bảng hiện tại (dữ liệu đã lọc/sắp xếp)
+        // Đặt dữ liệu vào bảng
         $rowIndex = 2;
         foreach ($tableData as $row) {
             $columnIndex = 1;
-            foreach ($row as $cell) {
-                $sheet->setCellValueByColumnAndRow($columnIndex, $rowIndex, $cell);
+            foreach ($visibleColumns as $column) {
+                // Đảm bảo chỉ xuất các cột đã chọn
+                $sheet->setCellValueByColumnAndRow($columnIndex, $rowIndex, isset($row[$column]) ? $row[$column] : '');
                 $columnIndex++;
             }
             $rowIndex++;
         }
 
-        // Áp dụng border cho toàn bộ bảng dữ liệu
-        $sheet->getStyle('A1:' . chr(64 + count($columnNames)) . ($rowIndex - 1))->applyFromArray([
+        // Áp dụng style cho các ô dữ liệu
+        $sheet->getStyle('A2:' . chr(64 + count($visibleColumns)) . ($rowIndex - 1))->applyFromArray([
             'borders' => [
                 'allBorders' => ['borderStyle' => Border::BORDER_THIN, 'color' => ['rgb' => '000000']],
             ],
         ]);
 
-        // Tự động điều chỉnh chiều rộng các cột
-        foreach (range('A', chr(64 + count($columnNames))) as $columnID) {
+        // Tự động điều chỉnh chiều rộng cột
+        foreach (range('A', chr(64 + count($visibleColumns))) as $columnID) {
             $sheet->getColumnDimension($columnID)->setAutoSize(true);
         }
 
-        // Đảm bảo thư mục uploads tồn tại
+        // Tạo file và trả về đường dẫn
         $uploadDir = Yii::getAlias('@webroot/uploads');
         if (!is_dir($uploadDir)) {
             mkdir($uploadDir, 0777, true);
         }
 
-        // Lưu file Excel vào thư mục uploads
         $fileName = $tableName . '.' . $format;
         $tempFilePath = $uploadDir . DIRECTORY_SEPARATOR . $fileName;
 
         $writer = new Xlsx($spreadsheet);
         $writer->save($tempFilePath);
 
-        // Tạo URL tải file
         $fileUrl = Yii::$app->urlManager->baseUrl . '/uploads/' . $fileName;
 
         return $this->asJson([
@@ -908,11 +917,11 @@ class PagesController extends Controller
     {
         // Lấy tên bảng từ request
         $tableName = Yii::$app->request->post('tableName');
-
+        Yii::error("tableName: " . $tableName);
         // Kiểm tra xem tên bảng có hợp lệ không
-        if (empty($tableName)) {
-            return $this->asJson(['success' => false, 'message' => 'Tên bảng không hợp lệ.']);
-        }
+        // if (empty($tableName)) {
+        //     return $this->asJson(['success' => false, 'message' => 'Tên bảng không hợp lệ.']);
+        // }
 
         // Truy vấn thông tin các cột từ cơ sở dữ liệu
         $columns = (new Query())
@@ -929,7 +938,7 @@ class PagesController extends Controller
         // Lấy tên các cột và loại bỏ cột 'id'
         $columnNames = array_filter(
             array_map(fn($column) => $column['column_name'], $columns),
-            fn($columnName) => strtolower($columnName) !== 'id' // Loại bỏ cột 'id'
+            fn($columnName) => strtolower($columnName) !== 'hidden_id' // Loại bỏ cột 'id'
         );
 
         if (empty($columnNames)) {

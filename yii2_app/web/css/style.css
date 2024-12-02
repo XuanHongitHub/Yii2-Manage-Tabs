@@ -45386,3 +45386,29 @@ footer p .footer-icon {
 .hidden-column {
   display: none;
 }
+
+/* Ẩn cột id */
+table th[data-column="hidden_id"],
+table td[data-column="hidden_id"] {
+  display: none !important;
+}
+
+.sortable-column a {
+  display: flex;
+  align-items: center;
+}
+
+.sortable-column a:after {
+  content: '\f0dc';
+  /* FontAwesome icon for unsorted */
+  font-family: FontAwesome;
+  margin-left: 5px;
+}
+
+.sortable-column a.asc:after {
+  content: "\f0dd";
+}
+
+.sortable-column a.desc:after {
+  content: "\f0de";
+}
