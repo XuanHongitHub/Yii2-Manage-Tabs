@@ -8,9 +8,7 @@ use app\assets\RichtextAsset;
 /** @var string $content */
 
 
-$menuId = $_GET['menuId'];
-$menuName = Menu::findOne($menuId)->name ?? 'Menu Page';
-$this->title = $menuName;
+$this->title = $menu->name;
 
 ?>
 <?php include Yii::getAlias('@app/views/layouts/_sidebar.php'); ?>
@@ -24,14 +22,14 @@ $this->title = $menuName;
                 <div class="card">
                     <div class="card-header card-no-border pb-0">
                         <h4>
-                            <?= $menuName?>
+                            <?= $menuName ?>
                         </h4>
                     </div>
                     <div class="card-body">
                         <div class="page-content">
                             <div class="page-pane fade show active" id="page-data-current">
                                 <div class="table-responsive" id="table-data-current">
-                                    <?= $content?>
+                                    <?= $content ?>
                                 </div>
                             </div>
                         </div>

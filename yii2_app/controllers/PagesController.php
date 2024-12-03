@@ -73,7 +73,7 @@ class PagesController extends Controller
             ->all();
 
         if (!$pages) {
-            throw new NotFoundHttpException('Không tìm thấy dữ liệu phù hợp.');
+            throw new NotFoundHttpException('Không có Page nào ở đây.');
         }
         if (count($pages) == 1) {
             $page = $pages[0];
@@ -86,7 +86,6 @@ class PagesController extends Controller
                     $condition = [];
 
                     foreach ($columnNames as $columnName) {
-                        // Bỏ qua cột 'hidden_id' trong tìm kiếm
                         if ($columnName === 'hidden_id') {
                             continue;
                         }
@@ -115,8 +114,7 @@ class PagesController extends Controller
                 return $this->render('singlePageTable', [
                     'dataProvider' => $dataProvider,
                     'columns' => $columnNames,
-                    'pagesize' => 10,
-                    'columnSchema' => $columns,
+                    'menu' => $menu,
                 ]);
             } else {
                 $filePath = Yii::getAlias('@runtime/richtext/' . $page->id . '.txt');
@@ -127,11 +125,13 @@ class PagesController extends Controller
                 return $this->render('singlePageRichText', [
                     'page' => $page,
                     'content' => $content,
+                    'menu' => $menu,
                 ]);
             }
         }
         return $this->render('multiPage', [
             'pages' => $pages,
+            'menu' => $menu,
         ]);
     }
 
@@ -139,81 +139,63 @@ class PagesController extends Controller
      * Load Page Data Action.
      *
      */
-    public function actionLoadPageData($pageId)
+    public function actionLoadPageData()
     {
         $pageId = Yii::$app->request->get('pageId');
-        $pageTab = Page::findOne($pageId);
-        $userId = Yii::$app->user->id;
+        $searchTerm = Yii::$app->request->get('search', '');
+        $pageSize = Yii::$app->request->get('pageSize', 10);
+        $page = Page::findOne($pageId);
 
-        if ($pageTab === null) {
+        if ($page === null) {
             return 'No data';
         }
 
-        if ($pageTab->type === 'table') {
-            $tableName = $pageTab->table_name;
-            if ($tableName) {
-                $columns = Yii::$app->db->schema->getTableSchema($tableName)->columns;
-                $columnNames = array_keys($columns);
+        if ($page->type === 'table') {
+            $columns = Yii::$app->db->schema->getTableSchema($page->table_name)->columns;
+            $columnNames = array_keys($columns);
+            $query = (new Query())->from($page->table_name);
 
-                $query = (new Query())->from($tableName);
+            if (!empty($searchTerm)) {
+                $condition = [];
 
-                // Lấy từ khóa tìm kiếm
-                $searchTerm = Yii::$app->request->get('search', '');
-                if (!empty($searchTerm)) {
-                    $condition = ['or'];
-                    foreach ($columnNames as $columnName) {
-                        $condition[] = ['ilike', $columnName, $searchTerm];
+                foreach ($columnNames as $columnName) {
+                    if ($columnName === 'hidden_id') {
+                        continue;
                     }
-                    $query->andWhere($condition);
+                    $columnNameQuoted = "\"$columnName\"";
+                    $condition[] = "LOWER(unaccent(CAST($columnNameQuoted AS TEXT))) ILIKE LOWER(unaccent(:searchTerm))";
                 }
 
-                // Sắp xếp
-                $sort = Yii::$app->request->get('column', 'id');
-                $sortDirection = Yii::$app->request->get('sortDirection', 'asc') === 'asc' ? SORT_ASC : SORT_DESC;
-                $query->orderBy([$sort => $sortDirection]);
-
-                // ActiveDataProvider
-                $dataProvider = new ActiveDataProvider([
-                    'query' => $query,
-                    'pagination' => [
-                        'pageSize' => intval(Yii::$app->request->get('pageSize', 10)),
-                    ],
-                ]);
-
-                // Thêm cột hành động
-                $columnNames[] = [
-                    'class' => 'yii\grid\ActionColumn',
-                    'header' => 'Thao tác',
-                    'template' => '{update} {delete}',
-                    'buttons' => [
-                        'update' => function ($url, $model, $key) use ($tableName) {
-                            return Html::button('<i class="fa-solid fa-pen-to-square"></i>', [
-                                'class' => 'btn btn-secondary btn-sm',
-                                'onclick' => "openEdit($key, '$tableName')",
-                            ]);
-                        },
-                        'delete' => function ($url, $model, $key) use ($tableName) {
-                            return Html::button('<i class="fa-regular fa-trash-can"></i>', [
-                                'class' => 'btn btn-danger btn-sm',
-                                'onclick' => "deleteRow($key, '$tableName')",
-                            ]);
-                        },
-                    ],
-                ];
-
-                // Render partial view to update PJAX container
-                return $this->renderPartial('_tableData', [
-                    'dataProvider' => $dataProvider,
-                    'columns' => $columnNames,
-                ]);
+                if (!empty($condition)) {
+                    $query->where(implode(' OR ', $condition), [':searchTerm' => '%' . $searchTerm . '%']);
+                }
             }
-        } elseif ($pageTab->type === 'richtext') {
+
+            $dataProvider = new ActiveDataProvider([
+                'query' => $query,
+                'pagination' => [
+                    'pageSize' => $pageSize,
+                ],
+                'sort' => [
+                    'defaultOrder' => [
+                        'hidden_id' => SORT_ASC,
+                    ],
+                    'attributes' => $columnNames,
+                ],
+            ]);
+
+            return $this->renderAjax('_tableData', [
+                'dataProvider' => $dataProvider,
+                'columns' => $columnNames,
+                'pageId' => $pageId,
+            ]);
+        } elseif ($page->type === 'richtext') {
             // Richtext Page
             $filePath = Yii::getAlias('@runtime/richtext/' . $pageId . '.txt');
             $content = file_exists($filePath) ? file_get_contents($filePath) : '';
 
-            return $this->renderPartial('_richtextData', [
-                'richtextTab' => $pageTab,
+            return $this->renderAjax('_richtextData', [
+                'richtextTab' => $page,
                 'content' => $content,
                 'filePath' => $filePath,
             ]);
@@ -268,10 +250,10 @@ class PagesController extends Controller
             $postData = Yii::$app->request->post();
 
             // Lấy giá trị của ID
-            $id = $postData['id'];
+            $hidden_id = $postData['hidden_id'];
 
             // Lấy các cột cần cập nhật
-            unset($postData['id']);  // Xoá 'id' khỏi mảng để chỉ còn lại các cột cần cập nhật
+            unset($postData['hidden_id']);  // Xoá 'hidden_id' khỏi mảng để chỉ còn lại các cột cần cập nhật
 
             // Xử lý dữ liệu, ví dụ cập nhật vào bảng `page_1`
             $tableName = $postData['tableName'];  // Lấy tên bảng từ dữ liệu gửi lên
@@ -300,7 +282,7 @@ class PagesController extends Controller
                 }
 
                 // Cập nhật dữ liệu vào bảng
-                $result = $db->createCommand()->update($escapedTableName, $validData, 'id = :id', [':id' => $id])->execute();
+                $result = $db->createCommand()->update($escapedTableName, $validData, 'hidden_id = :hidden_id', [':hidden_id' => $hidden_id])->execute();
 
                 if ($result) {
                     // Trả về thông báo thành công
@@ -385,12 +367,9 @@ class PagesController extends Controller
 
             // Lấy tổng số bản ghi để tính số trang
             $totalRecords = $db->createCommand("SELECT COUNT(*) FROM $escapedTableName")->queryScalar();
-            $pageSize = 10; // Đặt số lượng bản ghi trên mỗi trang
-            $totalPages = ceil($totalRecords / $pageSize);
 
             return $this->asJson([
                 'success' => true,
-                'totalPages' => $totalPages,
                 'message' => 'Thêm dữ liệu thành công.',
             ]);
         } catch (\Exception $e) {
@@ -446,9 +425,9 @@ class PagesController extends Controller
 
         if (Yii::$app->request->isPost) {
             $postData = Yii::$app->request->post();
-            $id = $postData['id'] ?? null; // Lấy ID từ dữ liệu gửi lên
+            $hidden_id = $postData['hidden_id'] ?? null; // Lấy ID từ dữ liệu gửi lên
 
-            if (!$id) {
+            if (!$hidden_id) {
                 return $this->asJson(['success' => false, 'message' => 'ID không hợp lệ.']);
             }
 
@@ -469,7 +448,7 @@ class PagesController extends Controller
                 }
 
                 // Thực hiện xóa bản ghi
-                $result = $db->createCommand()->delete($escapedTableName, ['hidden_id' => $id])->execute();
+                $result = $db->createCommand()->delete($escapedTableName, ['hidden_id' => $hidden_id])->execute();
 
                 if ($result > 0) {
                     return $this->asJson(['success' => true, 'message' => 'Dữ liệu đã được xóa thành công.']);
@@ -554,10 +533,10 @@ class PagesController extends Controller
             $columns = $tableSchema->columns;
             $expectedColumns = array_keys($columns);
 
-            // Loại bỏ cột 'id' khỏi danh sách cột dự kiến
+            // Loại bỏ cột 'hidden_id' khỏi danh sách cột dự kiến
             $expectedColumns = array_filter($expectedColumns, fn($column) => strtolower($column) !== 'hidden_id');
 
-            // Lấy header từ tệp Excel và loại bỏ 'id' nếu tồn tại
+            // Lấy header từ tệp Excel và loại bỏ 'hidden_id' nếu tồn tại
             $excelHeaders = $this->getColumnHeadersFromExcel($filePath);
             $excelHeaders = array_filter($excelHeaders, fn($header) => strtolower($header) !== 'hidden_id');
 
@@ -935,10 +914,10 @@ class PagesController extends Controller
             return $this->asJson(['success' => false, 'message' => 'Không có cột nào trong bảng.']);
         }
 
-        // Lấy tên các cột và loại bỏ cột 'id'
+        // Lấy tên các cột và loại bỏ cột 'hidden_id'
         $columnNames = array_filter(
             array_map(fn($column) => $column['column_name'], $columns),
-            fn($columnName) => strtolower($columnName) !== 'hidden_id' // Loại bỏ cột 'id'
+            fn($columnName) => strtolower($columnName) !== 'hidden_id' // Loại bỏ cột 'hidden_id'
         );
 
         if (empty($columnNames)) {

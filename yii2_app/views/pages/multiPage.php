@@ -1,14 +1,10 @@
 <?php
 
-use app\models\Menu;
 /** @var yii\web\View $this */
 /** @var app\models\Page[] $pages */
+/** @var app\models\Menu $menu */
 
-
-$menuId = $_GET['menuId'];
-$menuName = Menu::findOne($menuId)->name ?? 'Menu Page';
-$this->title = $menuName;
-
+$this->title = $menu->name;
 ?>
 
 <div class="card">
@@ -52,106 +48,16 @@ $(document).ready(function() {
     } else {
         console.log("No pages available to load data.");
     }
-    $(document).off('keydown', '#goToPageInput').on('keydown', '#goToPageInput',
-        function(e) {
-            if (e.key === 'Enter') {
-                e.preventDefault();
-                $('#goToPageButton').click();
-            }
-        });
-    $(document).off('click', '.pagination .paginate_button').on('click', '.pagination .paginate_button',
-        function(e) {
-            e.preventDefault();
-            var page = $(this).data('page');
-            var pageId = $('.nav-link.active').data('id');
-            var column = $(this).data('column');
-            var sortDirection = $(this).data('sort-direction');
-
-            var search = $('input[name="search"]').val();
-            var pageSize = $('#pageSize').val();
-
-            if (search && typeof search === 'string') {
-                search = search.trim();
-            }
-
-            loadData(pageId, page, search, pageSize, column, sortDirection);
-        });
-
-    $(document).off('click', '#goToPageButton').on('click', '#goToPageButton', function() {
-        var page = $('#goToPageInput').val();
-        var pageId = $('.nav-link.active').data('id');
-        var search = $('input[name="search"]').val();
-        var column = $(this).data('column');
-        var sortDirection = $(this).data('sort-direction');
-        var pageSize = $('#pageSize').val();
-
-        if (search && typeof search === 'string') {
-            search = search.trim();
-        }
-
-        if (page && !isNaN(page)) {
-            page = parseInt(page) - 1;
-            loadData(pageId, page, search, pageSize, column, sortDirection);
-        } else {
-            console.log('Invalid page number.');
-        }
-    });
-
-
-    $(document).off('click', '#lastPageButton').on('click', '#lastPageButton', function(e) {
-        e.preventDefault();
-
-        var page = $(this).data('page');
-        var pageId = $('.nav-link.active').data('id');
-        var search = $('input[name="search"]').val();
-        var pageSize = $('#pageSize').val();
-        var totalCount = $('#totalCount').val();
-        var column = $(this).data('column');
-        var sortDirection = $(this).data('sort-direction');
-        if (search && typeof search === 'string') {
-            search = search.trim();
-        }
-
-        lastPage = Math.ceil(totalCount / pageSize) - 1;
-
-        loadData(pageId, lastPage, search, pageSize, column, sortDirection);
-    });
-
-
-    $(document).off('change', '#pageSize').on('change', '#pageSize', function() {
-        var pageSize = $(this).val();
-        var column = $(this).data('column');
-        var sortDirection = $(this).data('sort-direction');
-        var pageId = $('.nav-link.active').data('id');
-        var search = $('input[name="search"]').val();
-
-        if (search && typeof search === 'string') {
-            search = search.trim();
-        }
-
-        if (pageSize && (pageSize === 'all' || !isNaN(pageSize))) {
-            loadData(pageId, 0, search, pageSize, column, sortDirection);
-        } else {
-            console.log('Invalid page size.');
-        }
-    });
-
 
 });
 
-function loadPageData(pageId, page, search, pageSize, column, sortDirection) {
-    localStorage.clear();
+function loadPageData(pageId) {
 
     $.ajax({
         url: "<?= \yii\helpers\Url::to(['pages/load-page-data']) ?>",
         type: "GET",
         data: {
             pageId: pageId,
-            page: page,
-            search: search,
-            pageSize: pageSize,
-            column,
-            sortDirection
         },
         success: function(data) {
             $('#table-data-current').html(data);

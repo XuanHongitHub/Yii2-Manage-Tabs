@@ -39,7 +39,7 @@ $pageId = $_GET['pageId'];
 </div>
 
 <script>
-    function loadPageData(pageId, page, search, pageSize) {
+    function loadPageData(pageId, page, search, perPage) {
         localStorage.clear();
 
         var loadingSpinner = $(`
@@ -56,7 +56,7 @@ $pageId = $_GET['pageId'];
                 pageId: pageId,
                 page: page,
                 search: search,
-                pageSize: pageSize,
+                perPage: perPage,
             },
             success: function(data) {
                 loadingSpinner.remove();

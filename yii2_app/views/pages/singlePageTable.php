@@ -8,9 +8,7 @@ use yii\widgets\ActiveForm;
 
 /** @var yii\web\View $this */
 
-$menuId = $_GET['menuId'];
-
-$this->title = $dataProvider->query->from[0];
+$this->title = $menu->name;
 ?>
 <!-- Modal Nhập Excel -->
 <div class="modal fade" id="importExelModal" tabindex="-1" aria-labelledby="importExelModalLabel" aria-hidden="true">
@@ -205,7 +203,7 @@ $this->title = $dataProvider->query->from[0];
                             <div class="search-bar mb-3">
                                 <?php
                                 // Thêm 'data-pjax' vào form để sử dụng PJAX và tránh reload trang
-                                echo Html::beginForm(['/pages', 'menuId' => $menuId], 'get', [
+                                echo Html::beginForm(['/pages', 'menuId' => $menu->id], 'get', [
                                     'data-pjax' => true,  // Dùng PJAX cho form này
                                     'class' => 'form-inline',
                                     'id' => 'search-form', // Thêm id để dễ dàng xử lý JS
@@ -340,7 +338,7 @@ $this->title = $dataProvider->query->from[0];
                                 <span class="me-2">Xem:</span>
                                 <?php
                                 $pageSizes = [10 => 10, 25 => 25, 50 => 50, 100 => 100, 200 => 200, 500 => 500, 1000 => 1000];
-                                echo Html::beginForm(['/pages', 'menuId' => $menuId], 'get', [
+                                echo Html::beginForm(['/pages', 'menuId' => $menu->id], 'get', [
                                     'data-pjax' => true,  // Dùng PJAX cho form này
                                     'class' => 'form-inline',
                                     'id' => 'pageSize-form', // Đảm bảo id cho form
@@ -545,7 +543,7 @@ $(document).ready(function() {
                         'content') // CSRF Token
                 },
                 data: {
-                    id: rowId, // Truyền ID dòng cần xóa
+                    hidden_id: rowId, // Truyền ID dòng cần xóa
                     tableName: '<?= $dataProvider->query->from[0] ?>',
                 },
                 success: function(response) {
@@ -630,7 +628,7 @@ $(document).ready(function() {
 function loadData() {
     var search = $('#search-form input[name="search"]').val();
     var pageSize = $('#pageSize-form select[name="pageSize"]').val();
-    var menuId = '<?= $menuId ?>';
+    var menuId = '<?= $menu->id ?>';
     var page = $('#goPage').val();
     $.pjax({
         url: "<?= \yii\helpers\Url::to(['pages/?']) ?>",

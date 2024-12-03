@@ -14,6 +14,7 @@ use app\models\ContactForm;
 use app\models\User;
 use app\models\Page;
 use app\components\BaseController;
+use app\models\Menu;
 use yii\db\Exception;
 
 class SiteController extends BaseController
@@ -78,21 +79,19 @@ class SiteController extends BaseController
      *
      * @return string
      */
-    public function actionIndex()
+    public function actionIndex(): Response
     {
-        $pages = Page::find()
-            ->andWhere(['deleted' => 0])
-            ->orderBy([
-                'position' => SORT_ASC,
-                'id' => SORT_DESC,
-            ])
-            ->all();
+        $menu = Menu::find()
+            ->where(['deleted' => 0])
+            ->andWhere(['status' => '0'])
+            ->andWhere(['parent_id' => NULL])
+            ->orderBy(['position' => SORT_ASC])
+            ->one();
 
-        // $tableTabs = TableTab::find()->all();
-
-        return $this->render('index', [
-            'pages' => $pages,
-        ]);
+        if ($menu) {
+            return $this->redirect(['/pages', 'menuId' => $menu->id]);
+        }
+        return $this->redirect(['site/index']);
     }
 
     /**
