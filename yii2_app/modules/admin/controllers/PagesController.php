@@ -2,6 +2,8 @@
 
 namespace app\modules\admin\controllers;
 
+use app\models\BaseModel;
+use yii\db\Query;
 use yii\web\Controller;
 use Yii;
 use app\models\User;
@@ -22,9 +24,16 @@ class PagesController extends BaseAdminController
         $pages = Page::find()
             ->orderBy([
                 'position' => SORT_ASC,
-                'id' => SORT_DESC,
+                Page::HIDDEN_ID_KEY => SORT_DESC,
             ])
             ->all();
+
+//        $model = BaseModel::withTable('table');
+//        $model->name = 'abc';
+//        $model->phone = '123';
+//        $model->age = '123';
+//        $model->save();
+//
 
         $menus = Menu::find()->all();
         return $this->render('index', [
@@ -109,7 +118,7 @@ class PagesController extends BaseAdminController
                         Yii::$app->session->setFlash('success', 'Tạo bảng thành công.');
                         $transaction->commit();
 
-                        return $this->redirect(['create', 'id' => $page->id]);
+                        return $this->redirect(['create', Page::HIDDEN_ID_KEY => $page->id]);
                     } else {
                         throw new \Exception('Không thể tạo page.');
                     }
@@ -193,7 +202,7 @@ class PagesController extends BaseAdminController
 
             $affectedRows = Page::updateAll(
                 ['deleted' => 1],
-                ['id' => $pageId]
+                [Page::HIDDEN_ID_KEY => $pageId]
             );
 
             if ($affectedRows > 0) {
@@ -222,7 +231,7 @@ class PagesController extends BaseAdminController
 
             $affectedRows = Page::updateAll(
                 ['deleted' => 0],
-                ['id' => $pageId]
+                [Page::HIDDEN_ID_KEY => $pageId]
             );
 
             if ($affectedRows > 0) {
@@ -248,7 +257,7 @@ class PagesController extends BaseAdminController
 
         $pageId = $postData['pageId'];
 
-        $page = Page::find()->where(['id' => $pageId])->one();
+        $page = Page::find()->where([Page::HIDDEN_ID_KEY => $pageId])->one();
 
         if (!$page) {
             Yii::$app->session->setFlash('error', 'Page không tồn tại.');
@@ -261,23 +270,21 @@ class PagesController extends BaseAdminController
                 Yii::$app->session->setFlash('error', 'Tên bảng không hợp lệ.');
                 return $this->asJson(['success' => false, 'message' => 'Tên bảng không hợp lệ.']);
             }
-            $sql = "DROP TABLE IF EXISTS `$tableName`";
+
+
+            $transaction = Yii::$app->db->beginTransaction();
 
             try {
-                Yii::$app->db->createCommand($sql)->execute();
+                Yii::$app->db->createCommand()->dropTable($tableName)->execute();
 
-                $tableTabTable = 'table_tab';
-                $deleteTabSql = "DELETE FROM `$tableTabTable` WHERE `pageId` = :pageId";
-                Yii::$app->db->createCommand($deleteTabSql)->bindValue(':pageId', $pageId)->execute();
-
-                $tabTable = 'page';
-                $deleteTabRecordSql = "DELETE FROM `$tabTable` WHERE `id` = :pageId";
-                Yii::$app->db->createCommand($deleteTabRecordSql)->bindValue(':pageId', $pageId)->execute();
+                $page->delete();
 
                 Yii::$app->session->setFlash('success', 'Bảng và dữ liệu đã được xóa thành công.');
+                $transaction->commit();
                 return $this->asJson(['success' => true, 'message' => 'Bảng và dữ liệu đã được xóa thành công.']);
             } catch (\Exception $e) {
                 Yii::$app->session->setFlash('error', $e->getMessage());
+                $transaction->rollBack();
                 return $this->asJson(['success' => false, 'message' => $e->getMessage()]);
             }
         } elseif ($page->type == 'richtext') {
@@ -287,9 +294,7 @@ class PagesController extends BaseAdminController
                 if (file_exists($filePath)) {
                     unlink($filePath);
                 }
-                $tabTable = 'page';
-                $deleteTabRecordSql = "DELETE FROM `$tabTable` WHERE `id` = :pageId";
-                Yii::$app->db->createCommand($deleteTabRecordSql)->bindValue(':pageId', $pageId)->execute();
+                $page->delete();
 
                 Yii::$app->session->setFlash('success', 'Dữ liệu richtext đã được xóa thành công.');
                 return $this->asJson(['success' => true, 'message' => 'Dữ liệu richtext đã được xóa thành công.']);
@@ -313,14 +318,14 @@ class PagesController extends BaseAdminController
 
         if ($pages) {
             foreach ($pages as $page) {
-                $model = Page::findOne($page['id']);
+                $model = Page::findOne($page[Page::HIDDEN_ID_KEY]);
                 if ($model) {
                     $model->position = $page['position'];
                     if (!$model->save()) {
-                        Yii::$app->session->setFlash('error', 'Không thể lưu page với ID: ' . $page['id']);
+                        Yii::$app->session->setFlash('error', 'Không thể lưu page với ID: ' . $page[Page::HIDDEN_ID_KEY]);
                         return [
                             'success' => false,
-                            'message' => 'Không thể lưu page với ID: ' . $page['id'],
+                            'message' => 'Không thể lưu page với ID: ' . $page[Page::HIDDEN_ID_KEY],
                         ];
                     }
                 }

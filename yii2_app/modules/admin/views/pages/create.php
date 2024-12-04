@@ -62,7 +62,7 @@ $this->title = 'Thêm mới Page';
                                 <tr class="default-row">
                                     <td>
                                         <input type="text" name="columns[]" class="form-control" id="column-name-0"
-                                            value="hidden_id" placeholder="Column Name" readonly>
+                                            value="<?= \app\models\Page::HIDDEN_ID_KEY ?>" placeholder="Column Name" readonly>
                                         <div class="text-danger column-error" id="column-name-error-0">
                                         </div>
                                     </td>

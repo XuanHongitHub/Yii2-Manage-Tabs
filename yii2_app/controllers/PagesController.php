@@ -2,6 +2,7 @@
 
 namespace app\controllers;
 
+use app\models\BaseModel;
 use Yii;
 use yii\web\Controller;
 use app\models\Page;
@@ -69,7 +70,7 @@ class PagesController extends Controller
         /** @var Page[] $pages */
         $pages = Page::find()
             ->where(['status' => 0, 'menu_id' => $menuId, 'deleted' => 0])
-            ->orderBy(['position' => SORT_ASC, 'id' => SORT_DESC])
+            ->orderBy(['position' => SORT_ASC, Page::HIDDEN_ID_KEY => SORT_DESC])
             ->all();
 
         if (!$pages) {
@@ -86,7 +87,7 @@ class PagesController extends Controller
                     $condition = [];
 
                     foreach ($columnNames as $columnName) {
-                        if ($columnName === 'hidden_id') {
+                        if ($columnName === Page::HIDDEN_ID_KEY) {
                             continue;
                         }
                         $columnNameQuoted = "\"$columnName\"";
@@ -105,7 +106,7 @@ class PagesController extends Controller
                     ],
                     'sort' => [
                         'defaultOrder' => [
-                            'hidden_id' => SORT_ASC,
+                            Page::HIDDEN_ID_KEY => SORT_ASC,
                         ],
                         'attributes' => $columnNames,
                     ],
@@ -159,7 +160,7 @@ class PagesController extends Controller
                 $condition = [];
 
                 foreach ($columnNames as $columnName) {
-                    if ($columnName === 'hidden_id') {
+                    if ($columnName === Page::HIDDEN_ID_KEY) {
                         continue;
                     }
                     $columnNameQuoted = "\"$columnName\"";
@@ -178,7 +179,7 @@ class PagesController extends Controller
                 ],
                 'sort' => [
                     'defaultOrder' => [
-                        'hidden_id' => SORT_ASC,
+                        Page::HIDDEN_ID_KEY => SORT_ASC,
                     ],
                     'attributes' => $columnNames,
                 ],
@@ -250,10 +251,10 @@ class PagesController extends Controller
             $postData = Yii::$app->request->post();
 
             // Lấy giá trị của ID
-            $hidden_id = $postData['hidden_id'];
+            $id = $postData[Page::HIDDEN_ID_KEY];
 
             // Lấy các cột cần cập nhật
-            unset($postData['hidden_id']);  // Xoá 'hidden_id' khỏi mảng để chỉ còn lại các cột cần cập nhật
+            unset($postData[Page::HIDDEN_ID_KEY]);  // Xoá 'id' khỏi mảng để chỉ còn lại các cột cần cập nhật
 
             // Xử lý dữ liệu, ví dụ cập nhật vào bảng `page_1`
             $tableName = $postData['tableName'];  // Lấy tên bảng từ dữ liệu gửi lên
@@ -282,7 +283,7 @@ class PagesController extends Controller
                 }
 
                 // Cập nhật dữ liệu vào bảng
-                $result = $db->createCommand()->update($escapedTableName, $validData, 'hidden_id = :hidden_id', [':hidden_id' => $hidden_id])->execute();
+                $result = $db->createCommand()->update($escapedTableName, $validData, 'id = :id', [':id' => $id])->execute();
 
                 if ($result) {
                     // Trả về thông báo thành công
@@ -328,77 +329,24 @@ class PagesController extends Controller
         // Xóa `tableName` ra khỏi dữ liệu cần chèn
         unset($data['tableName']);
 
-        if (empty($tableName) || empty($data)) {
+        $page = Page::find()->where(['table_name' => $tableName])->one();
+        if (empty($page)) {
             return $this->asJson(['success' => false, 'message' => 'Tên bảng hoặc dữ liệu không hợp lệ.']);
         }
 
-        try {
-            $db = Yii::$app->db;
-            $escapedTableName = $db->quoteTableName($tableName);
+        $model = BaseModel::withTable($tableName);
 
-            // Lấy thông tin schema và kiểm tra tồn tại bảng
-            $tableSchema = $db->getTableSchema($tableName);
-            if (!$tableSchema) {
-                throw new \Exception("Không tìm thấy thông tin bảng: $tableName");
-            }
+        $model->load(Yii::$app->request->post(), '');
 
-            // Kiểm tra và chỉ giữ lại các cột hợp lệ
-            $validData = [];
-            foreach ($data as $column => $value) {
-                if (array_key_exists($column, $tableSchema->columns)) {
-                    $validData[$column] = $value === '' ? null : $value;
-                }
-            }
-
-            if (empty($validData)) {
-                return $this->asJson(['success' => false, 'message' => 'Không có cột hợp lệ để thêm dữ liệu.']);
-            }
-
-            // Lấy thông tin khóa chính
-            $primaryKey = $tableSchema->primaryKey[0] ?? null;
-
-            // Nếu khóa chính là auto-increment, loại bỏ khỏi dữ liệu
-            if ($primaryKey && $tableSchema->columns[$primaryKey]->autoIncrement) {
-                unset($validData[$primaryKey]);
-            }
-
-            // Thực hiện chèn dữ liệu
-            $db->createCommand()->insert($escapedTableName, $validData)->execute();
-
-            // Lấy tổng số bản ghi để tính số trang
-            $totalRecords = $db->createCommand("SELECT COUNT(*) FROM $escapedTableName")->queryScalar();
-
+//        var_dump($model->attributes);
+        if ($model->save()) {
             return $this->asJson([
                 'success' => true,
                 'message' => 'Thêm dữ liệu thành công.',
             ]);
-        } catch (\Exception $e) {
-            // Xử lý lỗi duplicate key hoặc null value
-            if (
-                strpos($e->getMessage(), 'duplicate key value violates unique constraint') !== false ||
-                strpos($e->getMessage(), 'null value in column') !== false
-            ) {
-                try {
-                    // Đồng bộ sequence của khóa chính
-                    $sequenceName = $tableSchema->sequenceName;
-                    if ($primaryKey && $sequenceName) {
-                        $db->createCommand("
-                            SELECT setval('$sequenceName', (SELECT MAX($primaryKey) FROM $escapedTableName))
-                        ")->execute();
-                    }
-
-                    // Thử chèn lại dữ liệu
-                    $db->createCommand()->insert($escapedTableName, $validData)->execute();
-
-                    return $this->asJson(['success' => true, 'message' => 'Thêm dữ liệu thành công sau khi cập nhật sequence.']);
-                } catch (\Exception $seqException) {
-                    return $this->asJson(['success' => false, 'message' => 'Cập nhật sequence thất bại: ' . $seqException->getMessage()]);
-                }
-            }
-
-            // Trả về lỗi khác
-            return $this->asJson(['success' => false, 'message' => $e->getMessage()]);
         }
+        return $this->asJson(['success' => false, 'message' => $model->errors]);
+
     }
 
 
@@ -425,17 +373,21 @@ class PagesController extends Controller
 
         if (Yii::$app->request->isPost) {
             $postData = Yii::$app->request->post();
-            $hidden_id = $postData['hidden_id'] ?? null; // Lấy ID từ dữ liệu gửi lên
+            $id = $postData[Page::HIDDEN_ID_KEY] ?? null; // Lấy ID từ dữ liệu gửi lên
 
-            if (!$hidden_id) {
+            if (!$id) {
                 return $this->asJson(['success' => false, 'message' => 'ID không hợp lệ.']);
             }
+
+            
 
             // Lấy tên bảng và xử lý
             $tableName = $postData['tableName'] ?? null;  // Lấy tên bảng
             if (!$tableName) {
                 return $this->asJson(['success' => false, 'message' => 'Tên bảng không hợp lệ.']);
             }
+
+            $model = BaseModel::withTable($tableName);
 
             try {
                 $db = Yii::$app->db;
@@ -448,7 +400,7 @@ class PagesController extends Controller
                 }
 
                 // Thực hiện xóa bản ghi
-                $result = $db->createCommand()->delete($escapedTableName, ['hidden_id' => $hidden_id])->execute();
+                $result = $db->createCommand()->delete($escapedTableName, [Page::HIDDEN_ID_KEY => $id])->execute();
 
                 if ($result > 0) {
                     return $this->asJson(['success' => true, 'message' => 'Dữ liệu đã được xóa thành công.']);
@@ -494,7 +446,7 @@ class PagesController extends Controller
                 }
 
                 // Xóa các bản ghi đã chọn
-                $result = $db->createCommand()->delete($escapedTableName, ['hidden_id' => $ids])->execute();
+                $result = $db->createCommand()->delete($escapedTableName, [Page::HIDDEN_ID_KEY => $ids])->execute();
 
                 if ($result > 0) {
                     return $this->asJson(['success' => true, 'message' => 'Dữ liệu đã được xóa thành công.']);
@@ -533,12 +485,12 @@ class PagesController extends Controller
             $columns = $tableSchema->columns;
             $expectedColumns = array_keys($columns);
 
-            // Loại bỏ cột 'hidden_id' khỏi danh sách cột dự kiến
-            $expectedColumns = array_filter($expectedColumns, fn($column) => strtolower($column) !== 'hidden_id');
+            // Loại bỏ cột 'id' khỏi danh sách cột dự kiến
+            $expectedColumns = array_filter($expectedColumns, fn($column) => strtolower($column) !== Page::HIDDEN_ID_KEY);
 
-            // Lấy header từ tệp Excel và loại bỏ 'hidden_id' nếu tồn tại
+            // Lấy header từ tệp Excel và loại bỏ 'id' nếu tồn tại
             $excelHeaders = $this->getColumnHeadersFromExcel($filePath);
-            $excelHeaders = array_filter($excelHeaders, fn($header) => strtolower($header) !== 'hidden_id');
+            $excelHeaders = array_filter($excelHeaders, fn($header) => strtolower($header) !== Page::HIDDEN_ID_KEY);
 
             // Kiểm tra tiêu đề cột
             if ($this->validateColumns($excelHeaders, $expectedColumns) === false) {
@@ -554,7 +506,7 @@ class PagesController extends Controller
             // Loại bỏ cột 'id' khỏi dữ liệu
             $data = array_map(function ($row) use ($excelHeaders) {
                 return array_filter($row, function ($key) use ($excelHeaders) {
-                    return strtolower($key) !== 'hidden_id';
+                    return strtolower($key) !== Page::HIDDEN_ID_KEY;
                 }, ARRAY_FILTER_USE_KEY);
             }, $data);
 
@@ -694,12 +646,12 @@ class PagesController extends Controller
     }
     public function actionExportExcel($format, $tableName)
     {
-        // Lấy danh sách các cột của bảng, loại bỏ cột 'hidden_id'
+        // Lấy danh sách các cột của bảng, loại bỏ cột 'id'
         $columns = (new Query())
             ->select('column_name')
             ->from('information_schema.columns')
             ->where(['table_name' => $tableName])
-            ->andWhere(['<>', 'column_name', 'hidden_id'])  // Loại bỏ cột 'hidden_id'
+            ->andWhere(['<>', 'column_name', Page::HIDDEN_ID_KEY])  // Loại bỏ cột 'id'
             ->all();
 
         $columnNames = array_map(fn($column) => $column['column_name'], $columns);
@@ -707,7 +659,7 @@ class PagesController extends Controller
         $spreadsheet = new Spreadsheet();
         $sheet = $spreadsheet->getActiveSheet();
 
-        // Thiết lập tiêu đề cột trong sheet Excel, loại bỏ cột 'hidden_id'
+        // Thiết lập tiêu đề cột trong sheet Excel, loại bỏ cột 'id'
         $columnIndex = 1;
         foreach ($columnNames as $column) {
             $sheet->setCellValueByColumnAndRow($columnIndex, 1, $column);
@@ -739,7 +691,7 @@ class PagesController extends Controller
             foreach ($rows as $row) {
                 $columnIndex = 1;
                 foreach ($columnNames as $column) {
-                    // Loại bỏ dữ liệu của cột 'hidden_id'
+                    // Loại bỏ dữ liệu của cột 'id'
                     if (isset($row[$column])) {
                         $sheet->setCellValueByColumnAndRow($columnIndex, $rowIndex, $row[$column]);
                     } else {
@@ -914,10 +866,10 @@ class PagesController extends Controller
             return $this->asJson(['success' => false, 'message' => 'Không có cột nào trong bảng.']);
         }
 
-        // Lấy tên các cột và loại bỏ cột 'hidden_id'
+        // Lấy tên các cột và loại bỏ cột 'id'
         $columnNames = array_filter(
             array_map(fn($column) => $column['column_name'], $columns),
-            fn($columnName) => strtolower($columnName) !== 'hidden_id' // Loại bỏ cột 'hidden_id'
+            fn($columnName) => strtolower($columnName) !== Page::HIDDEN_ID_KEY // Loại bỏ cột 'id'
         );
 
         if (empty($columnNames)) {

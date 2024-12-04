@@ -243,11 +243,11 @@ $this->title = $menu->name;
                                 [
                                     [
                                         'class' => 'yii\grid\CheckboxColumn',
-                                        'name' => 'hidden_id',
+                                        'name' => 'id',
                                         'headerOptions' => ['style' => 'text-align:center; width: 3%;'],
                                         'contentOptions' => ['style' => 'text-align:center;'],
                                         'checkboxOptions' => function ($data, $key, $index, $column) {
-                                            return ['value' => $data['hidden_id'], 'data-hidden_id' => $data['hidden_id'], 'class' => 'checkbox-row'];
+                                            return ['value' => $data['id'], 'data-id' => $data['id'], 'class' => 'checkbox-row'];
                                         }
                                     ],
                                 ],
@@ -288,7 +288,7 @@ $this->title = $menu->name;
                                             'delete' => function ($url, $data, $key) {
                                                 return Html::a('<i class="fa-regular fa-trash-can"></i>', '#', [
                                                     'class' => 'btn btn-danger btn-sm btn-delete',
-                                                    'data-hidden_id' => $data['hidden_id'], // Dùng $data['hidden_id'] để lấy id thực tế
+                                                    'data-id' => $data['id'], // Dùng $data['id'] để lấy id thực tế
                                                 ]);
                                             },
                                         ],
@@ -529,7 +529,7 @@ $this->title = $menu->name;
         $(document).off('click', '.btn-delete').on('click', '.btn-delete', function(e) {
             e.preventDefault();
 
-            var rowId = $(this).data('hidden_id'); // Lấy ID của dòng cần xóa
+            var rowId = $(this).data('id'); // Lấy ID của dòng cần xóa
             var pageId = '<?= $pageId ?>';
             if (confirm('Bạn có chắc chắn muốn xóa dòng này?')) {
                 $.ajax({
@@ -540,7 +540,7 @@ $this->title = $menu->name;
                             'content') // CSRF Token
                     },
                     data: {
-                        hidden_id: rowId, // Truyền ID dòng cần xóa
+                        id: rowId, // Truyền ID dòng cần xóa
                         tableName: '<?= $dataProvider->query->from[0] ?>',
                     },
                     success: function(response) {
@@ -569,7 +569,7 @@ $this->title = $menu->name;
             // Lấy tất cả các ID của các dòng được chọn
             var selectedIds = [];
             $('.checkbox-row:checked').each(function() {
-                selectedIds.push($(this).data('hidden_id')); // Lấy id của dòng đã chọn
+                selectedIds.push($(this).data('id')); // Lấy id của dòng đã chọn
             });
 
             if (selectedIds.length === 0) {
