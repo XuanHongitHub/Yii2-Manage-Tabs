@@ -24,8 +24,6 @@ use Yii;
  */
 class Page extends \yii\db\ActiveRecord
 {
-
-    const HIDDEN_ID_KEY = "id";
     /**
      * {@inheritdoc}
      */

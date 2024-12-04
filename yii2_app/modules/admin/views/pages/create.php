@@ -2,9 +2,11 @@
 
 use yii\helpers\Html;
 use app\assets\Select2Asset;
+use app\models\Page;
+
+/** @var yii\web\View $this */
 
 Select2Asset::register($this);
-/** @var yii\web\View $this */
 $this->title = 'Thêm mới Page';
 
 ?>
@@ -62,7 +64,7 @@ $this->title = 'Thêm mới Page';
                                 <tr class="default-row">
                                     <td>
                                         <input type="text" name="columns[]" class="form-control" id="column-name-0"
-                                            value="<?= \app\models\Page::HIDDEN_ID_KEY ?>" placeholder="Column Name" readonly>
+                                            value="<?= BaseModel::HIDDEN_ID_KEY ?>" placeholder="Column Name" readonly>
                                         <div class="text-danger column-error" id="column-name-error-0">
                                         </div>
                                     </td>

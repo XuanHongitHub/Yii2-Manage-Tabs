@@ -4,11 +4,13 @@ namespace app\controllers;
 
 use app\models\BaseModel;
 use Yii;
+use yii\filters\VerbFilter;
 use yii\web\Controller;
 use app\models\Page;
 
 use app\models\Menu;
 use app\models\User;
+use Exception;
 use yii\filters\AccessControl;
 use yii\data\Pagination;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
@@ -48,6 +50,13 @@ class PagesController extends Controller
                     ],
                 ],
             ],
+            'verbs' => [
+                'class' => VerbFilter::className(),
+                'actions' => [
+                    'save-richtext' => ['post', 'put'],
+                    'delete-data' => ['post'],
+                ],
+            ],
         ];
     }
 
@@ -70,7 +79,7 @@ class PagesController extends Controller
         /** @var Page[] $pages */
         $pages = Page::find()
             ->where(['status' => 0, 'menu_id' => $menuId, 'deleted' => 0])
-            ->orderBy(['position' => SORT_ASC, Page::HIDDEN_ID_KEY => SORT_DESC])
+            ->orderBy(['position' => SORT_ASC, 'id' => SORT_DESC])
             ->all();
 
         if (!$pages) {
@@ -87,7 +96,7 @@ class PagesController extends Controller
                     $condition = [];
 
                     foreach ($columnNames as $columnName) {
-                        if ($columnName === Page::HIDDEN_ID_KEY) {
+                        if ($columnName === BaseModel::HIDDEN_ID_KEY) {
                             continue;
                         }
                         $columnNameQuoted = "\"$columnName\"";
@@ -106,7 +115,7 @@ class PagesController extends Controller
                     ],
                     'sort' => [
                         'defaultOrder' => [
-                            Page::HIDDEN_ID_KEY => SORT_ASC,
+                            BaseModel::HIDDEN_ID_KEY => SORT_ASC,
                         ],
                         'attributes' => $columnNames,
                     ],
@@ -116,17 +125,16 @@ class PagesController extends Controller
                     'dataProvider' => $dataProvider,
                     'columns' => $columnNames,
                     'menu' => $menu,
+                    'pageId' => $page->id,
                 ]);
-            } else {
-                $filePath = Yii::getAlias('@runtime/richtext/' . $page->id . '.txt');
-                if (!is_file($filePath)) {
-                    throw new NotFoundHttpException('file not found');
-                }
-                $content = file_get_contents($filePath);
+            } elseif ($page->type === 'richtext') {
+                $content = $page->content;
+
                 return $this->render('singlePageRichText', [
                     'page' => $page,
                     'content' => $content,
                     'menu' => $menu,
+                    'pageId' => $page->id,
                 ]);
             }
         }
@@ -160,7 +168,7 @@ class PagesController extends Controller
                 $condition = [];
 
                 foreach ($columnNames as $columnName) {
-                    if ($columnName === Page::HIDDEN_ID_KEY) {
+                    if ($columnName === BaseModel::HIDDEN_ID_KEY) {
                         continue;
                     }
                     $columnNameQuoted = "\"$columnName\"";
@@ -179,7 +187,7 @@ class PagesController extends Controller
                 ],
                 'sort' => [
                     'defaultOrder' => [
-                        Page::HIDDEN_ID_KEY => SORT_ASC,
+                        BaseModel::HIDDEN_ID_KEY => SORT_ASC,
                     ],
                     'attributes' => $columnNames,
                 ],
@@ -191,14 +199,12 @@ class PagesController extends Controller
                 'pageId' => $pageId,
             ]);
         } elseif ($page->type === 'richtext') {
-            // Richtext Page
-            $filePath = Yii::getAlias('@runtime/richtext/' . $pageId . '.txt');
-            $content = file_exists($filePath) ? file_get_contents($filePath) : '';
+            $content = $page->content;
 
             return $this->renderAjax('_richtextData', [
-                'richtextTab' => $page,
+                'page' => $page,
                 'content' => $content,
-                'filePath' => $filePath,
+                'pageId' => $page->id,
             ]);
         }
 
@@ -209,36 +215,30 @@ class PagesController extends Controller
      * Update RichtextData Action.
      *
      */
-    public function actionSaveRichtext()
+    public function actionSaveRichText()
     {
         if (Yii::$app->request->isPost) {
             $pageId = Yii::$app->request->post('pageId');
             $content = Yii::$app->request->post('content');
 
-            $filePath = Yii::getAlias('@runtime/richtext/' . $pageId . '.txt');
             try {
-                file_put_contents($filePath, $content);
+                $page = $this->loadPage($pageId);
+            } catch (Exception $e) {
+                return $this->asJson(['success' => false, 'message' => $e->getMessage()]);
+            }
+
+            $page->content = $content;
+
+            if ($page->save()) {
                 return json_encode(['status' => 'success', 'message' => 'Nội dung đã được cập nhật thành công.']);
-            } catch (\Exception $e) {
+            } else {
                 return json_encode(['status' => 'error', 'message' => 'Đã xảy ra lỗi khi cập nhật nội dung.']);
             }
         }
-        return json_encode(['status' => 'error', 'message ' => 'Đã xảy ra lỗi khi cập nhật nội dung.']);
-    }
-    /** 
-     * Download RichtextData Action.
-     *
-     */
-    // public function actionDownload($pageId)
-    // {
-    //     $filePath = Yii::getAlias('@runtime/richtext/' . $pageId . '.txt');
 
-    //     if (file_exists($filePath)) {
-    //         return Yii::$app->response->sendFile($filePath);
-    //     } else {
-    //         throw new NotFoundHttpException('Không tìm thấy tệp tin.');
-    //     }
-    // }
+        return json_encode(['status' => 'error', 'message' => 'Yêu cầu không hợp lệ.']);
+    }
+
     /** 
      * Update TableData Action.
      *
@@ -247,71 +247,45 @@ class PagesController extends Controller
     {
         Yii::$app->response->format = Response::FORMAT_JSON;
 
-        if (Yii::$app->request->isPost) {
-            $postData = Yii::$app->request->post();
-
-            // Lấy giá trị của ID
-            $id = $postData[Page::HIDDEN_ID_KEY];
-
-            // Lấy các cột cần cập nhật
-            unset($postData[Page::HIDDEN_ID_KEY]);  // Xoá 'id' khỏi mảng để chỉ còn lại các cột cần cập nhật
-
-            // Xử lý dữ liệu, ví dụ cập nhật vào bảng `page_1`
-            $tableName = $postData['tableName'];  // Lấy tên bảng từ dữ liệu gửi lên
-            unset($postData['tableName']);  // Xoá 'tableName' khỏi mảng
-
-            try {
-                $db = Yii::$app->db;
-                $escapedTableName = $db->quoteTableName($tableName);
-
-                // Kiểm tra xem bảng có tồn tại không
-                $tableSchema = $db->getTableSchema($tableName);
-                if (!$tableSchema) {
-                    throw new \Exception("Không tìm thấy thông tin bảng: $tableName");
-                }
-
-                // Kiểm tra và chỉ giữ lại các cột hợp lệ
-                $validData = [];
-                foreach ($postData as $column => $value) {
-                    if (array_key_exists($column, $tableSchema->columns)) {
-                        $validData[$column] = $value === '' ? null : $value;
-                    }
-                }
-
-                if (empty($validData)) {
-                    return $this->asJson(['success' => false, 'message' => 'Không có cột hợp lệ để cập nhật dữ liệu.']);
-                }
-
-                // Cập nhật dữ liệu vào bảng
-                $result = $db->createCommand()->update($escapedTableName, $validData, 'id = :id', [':id' => $id])->execute();
-
-                if ($result) {
-                    // Trả về thông báo thành công
-                    return $this->asJson([
-                        'success' => true,
-                        'message' => 'Cập nhật dữ liệu thành công.'
-                    ]);
-                } else {
-                    // Trả về thông báo lỗi nếu không có thay đổi
-                    return $this->asJson([
-                        'success' => false,
-                        'message' => 'Không có thay đổi nào để cập nhật.'
-                    ]);
-                }
-            } catch (\Exception $e) {
-                // Trả về lỗi khi có ngoại lệ
-                return $this->asJson([
-                    'success' => false,
-                    'message' => 'Có lỗi xảy ra: ' . $e->getMessage()
-                ]);
-            }
+        if (!Yii::$app->request->isPost) {
+            return $this->asJson(['success' => false, 'message' => 'Yêu cầu không hợp lệ.']);
         }
 
-        // Trả về lỗi nếu không phải là POST
-        return $this->asJson([
-            'success' => false,
-            'message' => 'Không có dữ liệu gửi đến.'
-        ]);
+        $pageId = Yii::$app->request->post('pageId');
+        $formData = Yii::$app->request->post('data');
+
+        if (!$pageId || !$formData) {
+            return $this->asJson(['success' => false, 'message' => 'Dữ liệu không hợp lệ.']);
+        }
+
+        parse_str($formData, $data);
+
+        $id = $data[BaseModel::HIDDEN_ID_KEY] ?? null; // Lấy ID từ dữ liệu
+        if (!$id) {
+            return $this->asJson(['success' => false, 'message' => 'ID không được cung cấp.']);
+        }
+
+        unset($data[BaseModel::HIDDEN_ID_KEY]); // Xóa ID để không ghi đè
+
+        try {
+            $page = $this->loadPage($pageId); // Load thông tin bảng
+            $tableName = $page->table_name;
+
+            $model = BaseModel::withTable($tableName)->findOne([BaseModel::HIDDEN_ID_KEY => $id]);
+            if (!$model) {
+                return $this->asJson(['success' => false, 'message' => 'Không tìm thấy bản ghi.']);
+            }
+
+            // Load và cập nhật dữ liệu vào model
+            $model->load($data, '');
+            if ($model->save()) {
+                return $this->asJson(['success' => true, 'message' => 'Cập nhật dữ liệu thành công.']);
+            } else {
+                return $this->asJson(['success' => false, 'message' => 'Lỗi khi lưu dữ liệu: ', 'errors' => $model->errors]);
+            }
+        } catch (\Exception $e) {
+            return $this->asJson(['success' => false, 'message' => 'Có lỗi xảy ra: ' . $e->getMessage()]);
+        }
     }
 
     /** 
@@ -322,47 +296,49 @@ class PagesController extends Controller
     {
         Yii::$app->response->format = Response::FORMAT_JSON;
 
-        // Nhận tên bảng và dữ liệu từ request
-        $tableName = Yii::$app->request->post('tableName');
-        $data = Yii::$app->request->post();
+        // Lấy pageId từ dữ liệu POST
+        $pageId = Yii::$app->request->post('pageId');
 
-        // Xóa `tableName` ra khỏi dữ liệu cần chèn
-        unset($data['tableName']);
-
-        $page = Page::find()->where(['table_name' => $tableName])->one();
-        if (empty($page)) {
-            return $this->asJson(['success' => false, 'message' => 'Tên bảng hoặc dữ liệu không hợp lệ.']);
+        try {
+            $page = $this->loadPage($pageId); // Lấy thông tin trang
+        } catch (Exception $e) {
+            return $this->asJson(['success' => false, 'message' => $e->getMessage()]);
         }
+
+        $tableName = $page->table_name;
 
         $model = BaseModel::withTable($tableName);
 
-        $model->load(Yii::$app->request->post(), '');
+        $formData = Yii::$app->request->post('data');
 
-//        var_dump($model->attributes);
+        parse_str($formData, $data);
+
+        $model->load(array_merge(Yii::$app->request->post(), $data), '');
+
+        Yii::error($model->attributes);
         if ($model->save()) {
-            return $this->asJson([
-                'success' => true,
-                'message' => 'Thêm dữ liệu thành công.',
-            ]);
+            return $this->asJson(['success' => true, 'message' => 'Thêm dữ liệu thành công.']);
+        } else {
+            return $this->asJson(['success' => false, 'message' => 'Lỗi khi thêm dữ liệu: ', 'errors' => $model->errors]);
         }
-        return $this->asJson(['success' => false, 'message' => $model->errors]);
-
     }
 
 
     /**
-     * Lấy tên sequence của bảng dựa trên thông tin schema PostgreSQL.
+     * Summary of loadPage
+     * @param mixed $pageId
+     * @throws \Exception
+     * @return Page
      */
-    protected function getSequenceName($tableName)
+    private function loadPage($pageId)
     {
-        $db = Yii::$app->db;
-        $tableSchema = $db->getTableSchema($tableName);
-        if (!$tableSchema || !$tableSchema->sequenceName) {
-            throw new \Exception("Không tìm thấy sequence cho bảng: $tableName");
+        $page = Page::findOne(['id' => $pageId]);
+        if (!$page) {
+            throw new \Exception('');
         }
-
-        return $tableSchema->sequenceName;
+        return $page;
     }
+
 
     /**
      * Xóa một bản ghi.
@@ -371,50 +347,24 @@ class PagesController extends Controller
     {
         Yii::$app->response->format = Response::FORMAT_JSON;
 
-        if (Yii::$app->request->isPost) {
-            $postData = Yii::$app->request->post();
-            $id = $postData[Page::HIDDEN_ID_KEY] ?? null; // Lấy ID từ dữ liệu gửi lên
+        $pageId = Yii::$app->request->post('pageId');
+        $data = Yii::$app->request->post();
+        $id = $data[BaseModel::HIDDEN_ID_KEY] ?? null;
 
-            if (!$id) {
-                return $this->asJson(['success' => false, 'message' => 'ID không hợp lệ.']);
-            }
-
-            
-
-            // Lấy tên bảng và xử lý
-            $tableName = $postData['tableName'] ?? null;  // Lấy tên bảng
-            if (!$tableName) {
-                return $this->asJson(['success' => false, 'message' => 'Tên bảng không hợp lệ.']);
-            }
-
-            $model = BaseModel::withTable($tableName);
-
-            try {
-                $db = Yii::$app->db;
-                $escapedTableName = $db->quoteTableName($tableName);
-
-                // Kiểm tra xem bảng có tồn tại không
-                $tableSchema = $db->getTableSchema($tableName);
-                if (!$tableSchema) {
-                    throw new \Exception("Không tìm thấy bảng: $tableName");
-                }
-
-                // Thực hiện xóa bản ghi
-                $result = $db->createCommand()->delete($escapedTableName, [Page::HIDDEN_ID_KEY => $id])->execute();
-
-                if ($result > 0) {
-                    return $this->asJson(['success' => true, 'message' => 'Dữ liệu đã được xóa thành công.']);
-                } else {
-                    return $this->asJson(['success' => false, 'message' => 'Không có bản ghi nào để xóa.']);
-                }
-            } catch (\Exception $e) {
-                return $this->asJson(['success' => false, 'message' => 'Có lỗi xảy ra: ' . $e->getMessage()]);
-            }
+        try {
+            $page = $this->loadPage($pageId);
+        } catch (Exception $e) {
+            return $this->asJson(['success' => false, 'message' => $e->getMessage()]);
         }
+        $tableName = $page->table_name;
 
-        return $this->asJson(['success' => false, 'message' => 'Yêu cầu không hợp lệ.']);
+        $model = BaseModel::withTable($tableName)->findOne([BaseModel::HIDDEN_ID_KEY => $id]);
+
+        if ($model && $model->delete()) {
+            return $this->asJson(['success' => true, 'message' => 'Dữ liệu đã được xóa thành công.']);
+        }
+        return $this->asJson(['success' => false, 'message' => 'Không có bản ghi nào để xóa.']);
     }
-
     /**
      * Xóa nhiều bản ghi.
      */
@@ -422,45 +372,32 @@ class PagesController extends Controller
     {
         Yii::$app->response->format = Response::FORMAT_JSON;
 
-        if (Yii::$app->request->isPost) {
-            $ids = Yii::$app->request->post('ids'); // Lấy danh sách ID cần xóa
+        $pageId = Yii::$app->request->post('pageId');
+        $ids = Yii::$app->request->post('ids');
 
-            if (empty($ids)) {
-                return $this->asJson(['success' => false, 'message' => 'Danh sách ID không hợp lệ.']);
-            }
-
-            // Lấy tên bảng và xử lý
-            $tableName = Yii::$app->request->post('tableName');
-            if (!$tableName) {
-                return $this->asJson(['success' => false, 'message' => 'Tên bảng không hợp lệ.']);
-            }
-
-            try {
-                $db = Yii::$app->db;
-                $escapedTableName = $db->quoteTableName($tableName);
-
-                // Kiểm tra xem bảng có tồn tại không
-                $tableSchema = $db->getTableSchema($tableName);
-                if (!$tableSchema) {
-                    throw new \Exception("Không tìm thấy bảng: $tableName");
-                }
-
-                // Xóa các bản ghi đã chọn
-                $result = $db->createCommand()->delete($escapedTableName, [Page::HIDDEN_ID_KEY => $ids])->execute();
-
-                if ($result > 0) {
-                    return $this->asJson(['success' => true, 'message' => 'Dữ liệu đã được xóa thành công.']);
-                } else {
-                    return $this->asJson(['success' => false, 'message' => 'Không có bản ghi nào để xóa.']);
-                }
-            } catch (\Exception $e) {
-                return $this->asJson(['success' => false, 'message' => 'Có lỗi xảy ra: ' . $e->getMessage()]);
-            }
+        if (empty($ids) || !$pageId) {
+            return $this->asJson(['success' => false, 'message' => 'Dữ liệu không hợp lệ.']);
         }
 
-        return $this->asJson(['success' => false, 'message' => 'Yêu cầu không hợp lệ.']);
-    }
+        try {
+            $page = $this->loadPage($pageId);
+            $tableName = $page->table_name;
 
+            $models = BaseModel::withTable($tableName)->findAll([BaseModel::HIDDEN_ID_KEY => $ids]);
+
+            if (!$models) {
+                return $this->asJson(['success' => false, 'message' => 'Không tìm thấy bản ghi nào để xóa.']);
+            }
+
+            foreach ($models as $model) {
+                $model->delete();
+            }
+
+            return $this->asJson(['success' => true, 'message' => 'Dữ liệu đã được xóa thành công.']);
+        } catch (\Throwable $e) {
+            return $this->asJson(['success' => false, 'message' => 'Có lỗi xảy ra: ' . $e->getMessage()]);
+        }
+    }
     /**
      * Import + Export Excel
      * 
@@ -486,11 +423,11 @@ class PagesController extends Controller
             $expectedColumns = array_keys($columns);
 
             // Loại bỏ cột 'id' khỏi danh sách cột dự kiến
-            $expectedColumns = array_filter($expectedColumns, fn($column) => strtolower($column) !== Page::HIDDEN_ID_KEY);
+            $expectedColumns = array_filter($expectedColumns, fn($column) => strtolower($column) !== BaseModel::HIDDEN_ID_KEY);
 
             // Lấy header từ tệp Excel và loại bỏ 'id' nếu tồn tại
             $excelHeaders = $this->getColumnHeadersFromExcel($filePath);
-            $excelHeaders = array_filter($excelHeaders, fn($header) => strtolower($header) !== Page::HIDDEN_ID_KEY);
+            $excelHeaders = array_filter($excelHeaders, fn($header) => strtolower($header) !== BaseModel::HIDDEN_ID_KEY);
 
             // Kiểm tra tiêu đề cột
             if ($this->validateColumns($excelHeaders, $expectedColumns) === false) {
@@ -506,7 +443,7 @@ class PagesController extends Controller
             // Loại bỏ cột 'id' khỏi dữ liệu
             $data = array_map(function ($row) use ($excelHeaders) {
                 return array_filter($row, function ($key) use ($excelHeaders) {
-                    return strtolower($key) !== Page::HIDDEN_ID_KEY;
+                    return strtolower($key) !== BaseModel::HIDDEN_ID_KEY;
                 }, ARRAY_FILTER_USE_KEY);
             }, $data);
 
@@ -594,9 +531,6 @@ class PagesController extends Controller
     // Validate columns
     private function validateColumns($excelHeaders, $expectedColumns)
     {
-        Yii::error("expectedColumns: " . print_r($expectedColumns, true), __METHOD__);
-        Yii::error("excelHeaders: " . print_r($excelHeaders, true), __METHOD__);
-
         if (count($excelHeaders) !== count($expectedColumns)) {
             return false;
         }
@@ -644,250 +578,119 @@ class PagesController extends Controller
 
         return $headers;
     }
-    public function actionExportExcel($format, $tableName)
+    public function actionExportExcel($pageId)
     {
-        // Lấy danh sách các cột của bảng, loại bỏ cột 'id'
+        $page = Page::findOne(['id' => $pageId]);
+        if (!$page) {
+            throw new NotFoundHttpException('Trang không tồn tại.');
+        }
+
+        $tableName = $page->table_name;
+
         $columns = (new Query())
             ->select('column_name')
             ->from('information_schema.columns')
             ->where(['table_name' => $tableName])
-            ->andWhere(['<>', 'column_name', Page::HIDDEN_ID_KEY])  // Loại bỏ cột 'id'
+            ->andWhere(['<>', 'column_name', BaseModel::HIDDEN_ID_KEY])
             ->all();
 
         $columnNames = array_map(fn($column) => $column['column_name'], $columns);
 
+        $query = BaseModel::withTable($tableName)->find();
+
+        if ($search = Yii::$app->request->get('search')) {
+            $condition = [];
+
+            foreach ($columnNames as $columnName) {
+                if ($columnName === BaseModel::HIDDEN_ID_KEY) {
+                    continue;
+                }
+                $columnNameQuoted = "\"$columnName\"";
+                $condition[] = "LOWER(unaccent(CAST($columnNameQuoted AS TEXT))) ILIKE LOWER(unaccent(:searchTerm))";
+            }
+
+            if (!empty($condition)) {
+                $query->where(implode(' OR ', $condition), [':searchTerm' => '%' . $search . '%']);
+            }
+        }
+
+        // if ($sort = Yii::$app->request->get('sort')) {
+        //     $direction = 'ASC';
+        //     if (strpos($sort, '-') === 0) {
+        //         $direction = 'DESC';
+        //         $sort = substr($sort, 1); 
+        //     }
+        //     $query->orderBy([$sort => $direction]);
+        // }
+
+        $data = $query->all();
+
         $spreadsheet = new Spreadsheet();
         $sheet = $spreadsheet->getActiveSheet();
 
-        // Thiết lập tiêu đề cột trong sheet Excel, loại bỏ cột 'id'
         $columnIndex = 1;
         foreach ($columnNames as $column) {
             $sheet->setCellValueByColumnAndRow($columnIndex, 1, $column);
             $columnIndex++;
         }
 
-        // Định dạng tiêu đề cột
-        $headerStyle = [
-            'font' => ['bold' => true, 'size' => 12],
-            'alignment' => [
-                'horizontal' => Alignment::HORIZONTAL_CENTER,
-                'vertical' => Alignment::VERTICAL_CENTER,
-            ],
-            'borders' => [
-                'allBorders' => ['borderStyle' => Border::BORDER_THIN, 'color' => ['rgb' => '000000']],
-            ],
-        ];
-        $sheet->getStyle('A1:' . chr(64 + count($columnNames)) . '1')->applyFromArray($headerStyle);
-
-        // Sắp xếp kết quả theo cột đầu tiên
-        $query = (new Query())->from($tableName)
-            ->orderBy($columnNames[0]);  // Sắp xếp theo cột đầu tiên
-
-        $batchSize = 1000;
         $rowIndex = 2;
-
-        // Xuất dữ liệu vào sheet
-        foreach ($query->batch($batchSize) as $rows) {
-            foreach ($rows as $row) {
-                $columnIndex = 1;
-                foreach ($columnNames as $column) {
-                    // Loại bỏ dữ liệu của cột 'id'
-                    if (isset($row[$column])) {
-                        $sheet->setCellValueByColumnAndRow($columnIndex, $rowIndex, $row[$column]);
-                    } else {
-                        $sheet->setCellValueByColumnAndRow($columnIndex, $rowIndex, '');
-                    }
-                    $columnIndex++;
-                }
-                $rowIndex++;
-            }
-        }
-
-        // Định dạng các ô trong bảng
-        $sheet->getStyle('A1:' . chr(64 + count($columnNames)) . ($rowIndex - 1))->applyFromArray([
-            'borders' => [
-                'allBorders' => ['borderStyle' => Border::BORDER_THIN, 'color' => ['rgb' => '000000']],
-            ],
-        ]);
-
-        // Thiết lập kích thước tự động cho các cột
-        foreach (range('A', chr(64 + count($columnNames))) as $columnID) {
-            $sheet->getColumnDimension($columnID)->setAutoSize(true);
-        }
-
-        // Tạo thư mục upload nếu chưa tồn tại
-        $uploadDir = Yii::getAlias('@webroot/uploads');
-        if (!is_dir($uploadDir)) {
-            mkdir($uploadDir, 0777, true);
-        }
-
-        // Lưu file Excel vào thư mục uploads
-        $fileName = $tableName . '.' . $format;
-        $tempFilePath = $uploadDir . DIRECTORY_SEPARATOR . $fileName;
-
-        $writer = new Xlsx($spreadsheet);
-        $writer->save($tempFilePath);
-
-        // Trả về URL của file đã tạo
-        $fileUrl = Yii::$app->urlManager->baseUrl . '/uploads/' . $fileName;
-
-        return $this->asJson([
-            'success' => true,
-            'file_url' => $fileUrl
-        ]);
-    }
-
-
-
-    public function getExportData($tableName)
-    {
-        $columns = Yii::$app->db->createCommand("DESCRIBE $tableName")->queryAll();
-        $columnNames = array_map(fn($column) => $column['Field'], $columns);
-
-        $data = [];
-        foreach (Yii::$app->db->createCommand("SELECT * FROM $tableName")->query()->batch(1000) as $rows) {
-            $data = array_merge($data, $rows);
-        }
-
-        return ['columns' => $columnNames, 'data' => $data];
-    }
-
-    public function actionDeleteExportFile()
-    {
-        $fileUrl = Yii::$app->request->post('file_url');
-        $filePath = Yii::getAlias('@webroot') . parse_url($fileUrl, PHP_URL_PATH);
-
-        if (file_exists($filePath)) {
-            unlink($filePath);
-            return $this->asJson(['success' => true]);
-        } else {
-            return $this->asJson(['success' => false, 'message' => 'Không tìm thấy tập tin']);
-        }
-    }
-
-    // Xuất Excel View Hiện tại
-    public function actionExportExcelCurrent()
-    {
-        $format = Yii::$app->request->post('format');
-        $tableName = Yii::$app->request->post('tableName');
-        $visibleColumns = Yii::$app->request->post('visibleColumns');
-        $tableData = Yii::$app->request->post('tableData');
-
-        if (empty($tableData) || empty($visibleColumns)) {
-            return $this->asJson(['success' => false, 'message' => 'Không có dữ liệu để xuất.']);
-        }
-        // Tạo file Excel
-        $spreadsheet = new Spreadsheet();
-        $sheet = $spreadsheet->getActiveSheet();
-
-        // Đặt tiêu đề cột (các cột hiển thị)
-        $columnIndex = 1;
-        foreach ($visibleColumns as $column) {
-            $sheet->setCellValueByColumnAndRow($columnIndex, 1, $column);
-            $columnIndex++;
-        }
-
-        // Áp dụng kiểu in đậm cho cột đầu tiên (dòng header)
-        $sheet->getStyle('A1:' . chr(64 + count($visibleColumns)) . '1')->applyFromArray([
-            'font' => ['bold' => true],  // Đặt font chữ in đậm cho header
-            'alignment' => [
-                'horizontal' => Alignment::HORIZONTAL_CENTER,
-                'vertical' => Alignment::VERTICAL_CENTER,
-            ],
-            'borders' => [
-                'allBorders' => ['borderStyle' => Border::BORDER_THIN, 'color' => ['rgb' => '000000']],
-            ],
-        ]);
-
-        // Đặt dữ liệu vào bảng
-        $rowIndex = 2;
-        foreach ($tableData as $row) {
+        foreach ($data as $row) {
             $columnIndex = 1;
-            foreach ($visibleColumns as $column) {
-                // Đảm bảo chỉ xuất các cột đã chọn
-                $sheet->setCellValueByColumnAndRow($columnIndex, $rowIndex, isset($row[$column]) ? $row[$column] : '');
+            foreach ($columnNames as $column) {
+                if (isset($row->$column)) {
+                    $sheet->setCellValueByColumnAndRow($columnIndex, $rowIndex, $row->$column);
+                }
                 $columnIndex++;
             }
             $rowIndex++;
         }
 
-        // Áp dụng style cho các ô dữ liệu
-        $sheet->getStyle('A2:' . chr(64 + count($visibleColumns)) . ($rowIndex - 1))->applyFromArray([
-            'borders' => [
-                'allBorders' => ['borderStyle' => Border::BORDER_THIN, 'color' => ['rgb' => '000000']],
-            ],
-        ]);
-
-        // Tự động điều chỉnh chiều rộng cột
-        foreach (range('A', chr(64 + count($visibleColumns))) as $columnID) {
-            $sheet->getColumnDimension($columnID)->setAutoSize(true);
-        }
-
-        // Tạo file và trả về đường dẫn
         $uploadDir = Yii::getAlias('@webroot/uploads');
         if (!is_dir($uploadDir)) {
             mkdir($uploadDir, 0777, true);
         }
 
-        $fileName = $tableName . '.' . $format;
+        $fileName = $tableName . '.xlsx';
         $tempFilePath = $uploadDir . DIRECTORY_SEPARATOR . $fileName;
 
         $writer = new Xlsx($spreadsheet);
         $writer->save($tempFilePath);
 
-        $fileUrl = Yii::$app->urlManager->baseUrl . '/uploads/' . $fileName;
-
-        return $this->asJson([
-            'success' => true,
-            'file_url' => $fileUrl
-        ]);
+        Yii::$app->response->sendFile($tempFilePath, $fileName)->on(Response::EVENT_AFTER_SEND, function ($event) {
+            unlink($event->data);
+        }, $tempFilePath);
     }
 
     // Xuất Template
-    public function actionExportExcelHeader()
+    public function actionExportExcelHeader($pageId)
     {
-        // Lấy tên bảng từ request
-        $tableName = Yii::$app->request->post('tableName');
-        Yii::error("tableName: " . $tableName);
-        // Kiểm tra xem tên bảng có hợp lệ không
-        // if (empty($tableName)) {
-        //     return $this->asJson(['success' => false, 'message' => 'Tên bảng không hợp lệ.']);
-        // }
 
-        // Truy vấn thông tin các cột từ cơ sở dữ liệu
-        $columns = (new Query())
-            ->select('column_name')
-            ->from('information_schema.columns')
-            ->where(['table_name' => $tableName])
-            ->all();
+        $page = Page::findOne(['id' => $pageId]);
+        if (!$page) {
+            // throw
+        }
 
-        // Kiểm tra nếu có cột
-        if (empty($columns)) {
+
+        $tableName = $page->table_name;
+        $columnNames = Yii::$app->db->getSchema()->getTableSchema($tableName)->getColumnNames();
+
+        if (empty($columnNames)) {
             return $this->asJson(['success' => false, 'message' => 'Không có cột nào trong bảng.']);
         }
 
-        // Lấy tên các cột và loại bỏ cột 'id'
-        $columnNames = array_filter(
-            array_map(fn($column) => $column['column_name'], $columns),
-            fn($columnName) => strtolower($columnName) !== Page::HIDDEN_ID_KEY // Loại bỏ cột 'id'
-        );
-
-        if (empty($columnNames)) {
-            return $this->asJson(['success' => false, 'message' => 'Không có cột nào để xuất sau khi loại bỏ cột "id".']);
-        }
-
-        // Tạo đối tượng Spreadsheet
         $spreadsheet = new Spreadsheet();
         $sheet = $spreadsheet->getActiveSheet();
 
-        // Ghi các header columns vào sheet
         $columnIndex = 1;
         foreach ($columnNames as $column) {
+            if ($column == BaseModel::HIDDEN_ID_KEY) {
+                continue;
+            }
             $sheet->setCellValueByColumnAndRow($columnIndex, 1, $column);
             $columnIndex++;
         }
 
-        // Định dạng header (tùy chỉnh)
         $headerStyle = [
             'font' => ['bold' => true, 'size' => 12],
             'alignment' => [
@@ -898,12 +701,7 @@ class PagesController extends Controller
                 'allBorders' => ['borderStyle' => Border::BORDER_THIN, 'color' => ['rgb' => '000000']],
             ],
         ];
-        $sheet->getStyle('A1:' . chr(64 + count($columnNames)) . '1')->applyFromArray($headerStyle);
-
-        // Cấu hình kích thước cột tự động
-        foreach (range('A', chr(64 + count($columnNames))) as $columnID) {
-            $sheet->getColumnDimension($columnID)->setAutoSize(true);
-        }
+        $sheet->getStyle('A1:' . chr(63 + $columnIndex) . '1')->applyFromArray($headerStyle);
 
         // Tạo file Excel và lưu
         $uploadDir = Yii::getAlias('@webroot/uploads');
@@ -917,12 +715,8 @@ class PagesController extends Controller
         $writer = new Xlsx($spreadsheet);
         $writer->save($tempFilePath);
 
-        // Trả về URL của file đã tạo
-        $fileUrl = Yii::$app->urlManager->baseUrl . '/uploads/' . $fileName;
-
-        return $this->asJson([
-            'success' => true,
-            'file_url' => $fileUrl
-        ]);
+        Yii::$app->response->sendFile($tempFilePath, $fileName)->on(Response::EVENT_AFTER_SEND, function ($event) {
+            unlink($event->data);
+        }, $tempFilePath);
     }
 }

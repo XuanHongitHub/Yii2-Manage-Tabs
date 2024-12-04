@@ -12,8 +12,9 @@ class RichtextAsset extends AssetBundle
         'css/rte_theme_default.css',
     ];
     public $js = [
-        'js/rte.js',
-        'https://richtexteditor.com/richtexteditor/plugins/all_plugins.js',
+        'js/components/frontend/richtextPage.js',
+        'js/libs/rte.js',
+        'js/libs/rte_all_plugins.js',
     ];
     public $depends = [
         'yii\web\JqueryAsset',

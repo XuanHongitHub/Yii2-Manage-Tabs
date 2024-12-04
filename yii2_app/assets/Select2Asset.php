@@ -12,8 +12,8 @@ class Select2Asset extends AssetBundle
         'css/select2.min.css',
     ];
     public $js = [
-        'js/jquery.min.js',
-        'js/select2.min.js',
+        'js/libs/jquery.min.js',
+        'js/libs/select2.min.js',
     ];
     public $depends = [
         'yii\web\JqueryAsset',

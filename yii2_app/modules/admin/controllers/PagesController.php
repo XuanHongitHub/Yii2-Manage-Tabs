@@ -24,16 +24,16 @@ class PagesController extends BaseAdminController
         $pages = Page::find()
             ->orderBy([
                 'position' => SORT_ASC,
-                Page::HIDDEN_ID_KEY => SORT_DESC,
+                BaseModel::HIDDEN_ID_KEY => SORT_DESC,
             ])
             ->all();
 
-//        $model = BaseModel::withTable('table');
-//        $model->name = 'abc';
-//        $model->phone = '123';
-//        $model->age = '123';
-//        $model->save();
-//
+        //        $model = BaseModel::withTable('table');
+        //        $model->name = 'abc';
+        //        $model->phone = '123';
+        //        $model->age = '123';
+        //        $model->save();
+        //
 
         $menus = Menu::find()->all();
         return $this->render('index', [
@@ -118,7 +118,7 @@ class PagesController extends BaseAdminController
                         Yii::$app->session->setFlash('success', 'Tạo bảng thành công.');
                         $transaction->commit();
 
-                        return $this->redirect(['create', Page::HIDDEN_ID_KEY => $page->id]);
+                        return $this->redirect(['create', BaseModel::HIDDEN_ID_KEY => $page->id]);
                     } else {
                         throw new \Exception('Không thể tạo page.');
                     }
@@ -135,15 +135,10 @@ class PagesController extends BaseAdminController
                     return $this->redirect(['create']);
                 }
 
+                $page->content = '';
+
                 if ($page->save()) {
-                    $filePath = Yii::getAlias('@runtime/richtext/' . $page->id . '.txt');
-                    try {
-                        file_put_contents($filePath, '');
-                        Yii::$app->session->setFlash('success', 'Tạo page thành công!');
-                    } catch (\Exception $e) {
-                        Yii::error('Không thể tạo file: ' . $e->getMessage());
-                        Yii::$app->session->setFlash('error', 'Đã xảy ra lỗi khi lưu file.');
-                    }
+                    Yii::$app->session->setFlash('success', 'Tạo page thành công!');
                     return $this->redirect(['create']);
                 } else {
                     Yii::$app->session->setFlash('error', 'Đã xảy ra lỗi khi tạo page. Vui lòng thử lại.');
@@ -151,9 +146,7 @@ class PagesController extends BaseAdminController
                 }
             }
         }
-        return $this->render('create', [
-            'tableTabs' => [],
-        ]);
+        return $this->render('create');
     }
 
     public function actionCheckNameExistence()
@@ -202,7 +195,7 @@ class PagesController extends BaseAdminController
 
             $affectedRows = Page::updateAll(
                 ['deleted' => 1],
-                [Page::HIDDEN_ID_KEY => $pageId]
+                [BaseModel::HIDDEN_ID_KEY => $pageId]
             );
 
             if ($affectedRows > 0) {
@@ -231,7 +224,7 @@ class PagesController extends BaseAdminController
 
             $affectedRows = Page::updateAll(
                 ['deleted' => 0],
-                [Page::HIDDEN_ID_KEY => $pageId]
+                [BaseModel::HIDDEN_ID_KEY => $pageId]
             );
 
             if ($affectedRows > 0) {
@@ -257,7 +250,7 @@ class PagesController extends BaseAdminController
 
         $pageId = $postData['pageId'];
 
-        $page = Page::find()->where([Page::HIDDEN_ID_KEY => $pageId])->one();
+        $page = Page::find()->where([BaseModel::HIDDEN_ID_KEY => $pageId])->one();
 
         if (!$page) {
             Yii::$app->session->setFlash('error', 'Page không tồn tại.');
@@ -318,14 +311,14 @@ class PagesController extends BaseAdminController
 
         if ($pages) {
             foreach ($pages as $page) {
-                $model = Page::findOne($page[Page::HIDDEN_ID_KEY]);
+                $model = Page::findOne($page[BaseModel::HIDDEN_ID_KEY]);
                 if ($model) {
                     $model->position = $page['position'];
                     if (!$model->save()) {
-                        Yii::$app->session->setFlash('error', 'Không thể lưu page với ID: ' . $page[Page::HIDDEN_ID_KEY]);
+                        Yii::$app->session->setFlash('error', 'Không thể lưu page với ID: ' . $page[BaseModel::HIDDEN_ID_KEY]);
                         return [
                             'success' => false,
-                            'message' => 'Không thể lưu page với ID: ' . $page[Page::HIDDEN_ID_KEY],
+                            'message' => 'Không thể lưu page với ID: ' . $page[BaseModel::HIDDEN_ID_KEY],
                         ];
                     }
                 }
