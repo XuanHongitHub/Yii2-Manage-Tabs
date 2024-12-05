@@ -1,12 +1,15 @@
 <?php
 
+use app\assets\AppAsset;
 use yii\helpers\Html;
 use app\assets\Select2Asset;
 
-Select2Asset::register($this);
 /** @var yii\web\View $this */
+Select2Asset::register($this);
+
 $this->title = 'Danh Sách Menu';
 
+$this->registerJsFile('js/components/admin/indexMenu.js', ['depends' => AppAsset::class]);
 ?>
 <?php include Yii::getAlias('@app/views/layouts/_icon.php'); ?>
 <div class="card">
@@ -519,6 +522,6 @@ var delete_soft_url = "<?= \yii\helpers\Url::to(['menus/delete-menu']) ?>";
 var get_sub_menu_url = "<?= \yii\helpers\Url::to(['menus/get-submenu']) ?>";
 var save_sub_menu_url = "<?= \yii\helpers\Url::to(['menus/save-sub-menu']) ?>";
 var save_sub_page_url = "<?= \yii\helpers\Url::to(['menus/save-sub-page']) ?>";
-var path_icon_url = '<use href="<?= Yii::getAlias('@web') ?>/images/icon-sprite.svg#' + icon + '"></use>';
+var yiiWebAlias = "<?= Yii::getAlias('@web') ?>";
 var update_menu_url = "<?= \yii\helpers\Url::to(['update-menu']) ?>";
 </script>

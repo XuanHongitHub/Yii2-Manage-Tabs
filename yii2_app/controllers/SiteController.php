@@ -91,7 +91,7 @@ class SiteController extends BaseController
         if ($menu) {
             return $this->redirect(['/pages', 'menuId' => $menu->id]);
         }
-        return $this->redirect(['site/index']);
+        return $this->redirect(['admin/pages']);
     }
 
     /**

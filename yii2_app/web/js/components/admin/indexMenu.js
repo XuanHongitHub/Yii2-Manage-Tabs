@@ -1,5 +1,5 @@
 $(document).ready(function () {
-    $('.toggle-all').on('click', function () {
+    $(document).off('click', '.toggle-all').on('click', '.toggle-all', function () {
         const toggleIcon = $(this).find('i');
         const isExpanded = toggleIcon.hasClass('fa-circle-minus');
 
@@ -18,7 +18,7 @@ $(document).ready(function () {
         }
     });
 
-    $('.toggle-icon').on('click', function () {
+    $(document).off('click', '.toggle-icon').on('click', '.toggle-icon', function () {
         const toggleIcon = $(this).find('i');
         const parentRow = $(this).closest('tr');
         const parentId = parentRow.data('parent-id');
@@ -48,8 +48,7 @@ $(document).ready(function () {
     });
 
 
-
-    $(document).on('click', 'th.sortable', function () {
+    $(document).off('click', 'th.sortable').on('click', 'th.sortable', function () {
         var columnIndex = $(this).index();
         var parentId = $(this).closest('table').attr('data-parent-id');
         var rows = $(`tr.child-row[data-parent-id="${parentId}"]`).get();
@@ -420,35 +419,36 @@ $(document).ready(function () {
         placeholder: 'Chọn',
         allowClear: true
     });
-    $(document).on('click', '#submenu', function () {
-        var menuId = $(this).data('menu-id');
-        var menuName = $(this).data('menu-name');
+    $(document).off('click', '#submenu').on('click', '#submenu', function () {
+        var button = $(this); 
+        var menuId = button.data('menu-id');
+        var menuName = button.data('menu-name');
+    
+        button.prop('disabled', true);
+    
         $('#saveSubMenuChanges').attr('data-menu-id', menuId);
         $('#submenu-pages').empty();
         $('#submenu-menus').empty();
         $('#subMenuModalLabel').text('Menu cho ' + menuName);
-
+    
         $.ajax({
             url: get_sub_menu_url,
             type: 'GET',
-            data: {
-                menu_id: menuId
-            },
+            data: { menu_id: menuId },
             success: function (response) {
-                console.log("🚀 ~ response:", response);
                 if (response.success) {
                     response.childMenus.forEach(menu => {
                         $('#submenu-menus').append(
                             `<option value="${menu.id}" selected>${menu.name}</option>`
                         );
                     });
-
+    
                     response.potentialMenus.forEach(menu => {
                         $('#submenu-menus').append(
                             `<option value="${menu.id}">${menu.name}</option>`
                         );
                     });
-
+    
                     $('#subMenuModal').modal('show');
                 } else {
                     alert(response.message || 'Không thể tải dữ liệu.');
@@ -457,11 +457,14 @@ $(document).ready(function () {
             error: function (xhr, status, error) {
                 console.log('Lỗi AJAX:', error);
                 alert('Có lỗi xảy ra khi tải dữ liệu.');
+            },
+            complete: function () {
+                button.prop('disabled', false);
             }
         });
     });
-
-    $(document).on('click', '#saveSubMenuChanges', function () {
+    
+    $(document).off('click', '#saveSubMenuChanges').on('click', '#saveSubMenuChanges', function () {
         var menuId = $(this).attr('data-menu-id');
         var selectedPages = $('#submenu-pages').val();
         var selectedMenus = $('#submenu-menus').val();
@@ -507,23 +510,28 @@ $(document).ready(function () {
     });
 });
 
-$(document).on('click', '.edit-subpage-btn', function () {
-    var menuId = $(this).data('menu-id');
-    var menuName = $(this).data('menu-name');
+$(document).off('click', '.edit-subpage-btn').on('click', '.edit-subpage-btn', function () {
+    var button = $(this); 
+    var menuId = button.data('menu-id');
+    var menuName = button.data('menu-name');
+
+    button.prop('disabled', true);
 
     $('#editSubPageModalLabel').text('Page cho ' + menuName);
-    $('#sub-pages').empty();
     $('#sub-pages').empty();
     $('#sortable-subpages').empty();
     $('#saveSubPageChanges').attr('data-menu-id', menuId);
 
+    $('#sortable-subpages').append(
+        '<li class="list-group-item text-muted">-- Đang tải dữ liệu... --</li>'
+    );
+
     $.ajax({
         url: get_sub_menu_url,
         type: 'GET',
-        data: {
-            menu_id: menuId
-        },
+        data: { menu_id: menuId },
         success: function (response) {
+            $('#sortable-subpages').empty();
             if (response.success) {
                 response.childPages.forEach(page => {
                     $('#sub-pages').append(
@@ -536,6 +544,7 @@ $(document).on('click', '.edit-subpage-btn', function () {
                         `<option value="${page.id}">${page.name}</option>`
                     );
                 });
+
                 if (response.childPages.length > 0) {
                     response.childPages.forEach(page => {
                         $('#sortable-subpages').append(`
@@ -546,29 +555,11 @@ $(document).on('click', '.edit-subpage-btn', function () {
                     });
                 } else {
                     $('#sortable-subpages').append(
-                        '<li class="list-group-item text-muted">-- Không có Page nào --</li>');
+                        '<li class="list-group-item text-muted">-- Không có Page nào --</li>'
+                    );
                 }
 
-                $('#sub-pages').on('change', function () {
-                    var selectedPages = $(this).select2('data');
-                    var selectedPageIds = selectedPages.map(page => page.id);
-                    var selectedPageNames = selectedPages.map(page => page.text);
-
-                    $('#sortable-subpages').empty();
-
-                    selectedPages.forEach(page => {
-                        if (selectedPageIds.includes(page.id.toString())) {
-                            $('#sortable-subpages').append(`
-                <li class="list-group-item" data-id="${page.id}">
-                    ${page.text}  <!-- Sử dụng page.text để hiển thị tên -->
-                </li>
-            `);
-                        }
-                    });
-                });
-
-
-                $("#sortable-subpages").sortable();
+                $('#sortable-subpages').sortable();
                 $('#editSubPageModal').modal('show');
             } else {
                 alert(response.message || 'Không thể tải dữ liệu.');
@@ -577,11 +568,14 @@ $(document).on('click', '.edit-subpage-btn', function () {
         error: function (xhr, status, error) {
             console.log('Lỗi AJAX:', error);
             alert('Có lỗi xảy ra khi tải dữ liệu.');
+        },
+        complete: function () {
+            button.prop('disabled', false);
         }
     });
 });
 
-$(document).on('click', '#saveSubPageChanges', function () {
+$(document).off('click', '#saveSubPageChanges').on('click', '#saveSubPageChanges', function () {
     var menuId = $(this).attr('data-menu-id');
     var sortedData = [];
 
@@ -634,7 +628,7 @@ $(document).on('click', '#saveSubPageChanges', function () {
 });
 
 $(document).ready(function () {
-    $(document).on('click', '.edit-btn', function () {
+    $(document).off('click', '.edit-btn').on('click', '.edit-btn', function () {
         var menuId = $(this).data('page-menu-id');
         var menuName = $(this).data('menu-name');
         var menuType = $(this).data('menu-type');
@@ -647,13 +641,11 @@ $(document).ready(function () {
         $('#menustatus').val(status);
         $('#tabMenuPosition').val(position);
         $('#editMenuForm').data('menu-id', menuId);
-
-        $('#selected-icon').html(path_icon_url);
+        $('#selected-icon').html('<use href="' + yiiWebAlias + '/images/icon-sprite.svg#' + icon + '"></use>');        
         $('#selected-icon-label').text(icon);
     });
 
-    // Lưu thay đổi menu
-    $(document).on('click', '#saveTabMenuChanges', function () {
+    $(document).off('click', '#saveTabMenuChanges').on('click', '#saveTabMenuChanges', function () {
         var form = $('#editMenuForm');
         var menuId = form.data('menu-id');
         var menuName = $('#tabmenuName').val();

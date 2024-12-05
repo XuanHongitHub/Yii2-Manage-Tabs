@@ -479,7 +479,7 @@ class PagesController extends Controller
                     $rowData = [];
                     foreach ($columnMap as $excelColumn => $tableColumnIndex) {
                         if (isset($row[$tableColumnIndex])) {
-                            $rowData[$excelColumn] = (string)$row[$tableColumnIndex]; // Chuyển đổi thành chuỗi
+                            $rowData[$excelColumn] = (string) $row[$tableColumnIndex]; // Chuyển đổi thành chuỗi
                         }
                     }
 

@@ -228,7 +228,7 @@ $(document).ready(function () {
 
 
 // Import Excel Button Click
-$(document).off('click', 'import-data-btn').on('click', '#import-data-btn', function () {
+$(document).off('click', '#import-data-btn').on('click', '#import-data-btn', function () {
     $('#importExelModal').modal('show');
 });
 

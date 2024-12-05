@@ -1,16 +1,20 @@
 <?php
 
+use app\assets\AppAsset;
+use yii\bootstrap5\ActiveForm;
+use yii\data\ActiveDataProvider;
 use yii\helpers\Html;
-use app\models\Menu;
+use yii\grid\GridView;
+use yii\helpers\Url;
+use yii\widgets\Pjax;
 use app\assets\Select2Asset;
 
 /** @var yii\web\View $this */
 
 Select2Asset::register($this);
+$this->registerJsFile('js/components/admin/indexPage.js', ['depends' => AppAsset::class]);
 
 $this->title = 'Danh sách Page';
-
-$this->registerCssFile('@web/css/datatables.css', ['depends' => [\yii\web\YiiAsset::class]]);
 
 ?>
 
@@ -26,89 +30,131 @@ $this->registerCssFile('@web/css/datatables.css', ['depends' => [\yii\web\YiiAss
                     data-bs-target="#hideModal">
                     <i class="fas fa-eye me-1"></i> Hiện/Ẩn
                 </a>
-                <a class="btn btn-outline-primary me-2 mb-2" href="#" data-bs-toggle="modal"
-                    data-bs-target="#sortModal">
-                    <i class="fas fa-sort-amount-down me-1"></i> Sắp Xếp
-                </a>
                 <a class="btn btn-danger me-2 mb-2" href="#" data-bs-toggle="modal" data-bs-target="#trashBinModal">
                     <i class="fas fa-trash me-1"></i> Thùng Rác
                 </a>
-                <a class="btn btn-success mb-2" href="<?= \yii\helpers\Url::to(['pages/create']) ?>">
+                <a class="btn btn-success mb-2" href="<?= Url::to(['pages/create']) ?>">
                     <i class="fas fa-plus me-1"></i> Thêm Page
                 </a>
             </div>
-
         </div>
-
     </div>
 
     <div class="card-body">
+        <?php Pjax::begin(['id' => 'page-gridview-pjax', 'enablePushState' => false]); ?>
 
-        <div class="table-responsive">
-            <table class="display border table-bordered dataTable no-footer">
-                <thead>
-                    <tr>
-                        <th>Tên</th>
-                        <th class="text-center">Loại</th>
-                        <th>Menu Cha</th>
-                        <th class="text-center">Trạng thái</th>
-                        <th style="width: 12%">Thao tác</th>
-                    </tr>
-                </thead>
-                <tbody id="columnsContainer">
-                    <?php foreach ($pages as $page): ?>
-                    <?php if ($page->deleted != 1): ?>
-                    <tr>
-                        <td><?= Html::encode($page->name) ?></td>
-                        <td class="text-center">
-                            <?php if ($page->type == 'table'): ?>
-                            <span class="badge badge-light-primary">Table</span>
-                            <?php else: ?>
-                            <span class="badge badge-light-danger">Richtext</span>
-                            <?php endif; ?>
-                        </td>
-                        <td class="text-center">
-                            <?= $page && $page->menu_id ? Menu::findOne($page->menu_id)->name : ''; ?>
-                        </td>
+        <div class="d-flex">
+            <div class="search-bar ms-auto">
+                <?php
+                $form = ActiveForm::begin([
+                    'method' => 'get',
+                    'action' => Yii::$app->request->url,
+                    'options' => ['data-pjax' => true, 'class' => 'form-inline'],
+                ]);
+                ?>
 
-                        <td class="text-center">
-                            <?= $page->status == 1 ?
-                                        '<span class="badge badge-warning">Ẩn</span>' : '<span class="badge badge-success">Hiện</span>'
-                                    ?>
-                        </td>
-                        <td class="text-center text-nowrap">
-                            <button class="btn btn-primary btn-sm edit-btn me-1" data-bs-toggle="modal"
-                                data-bs-target="#editModal" data-page-id="<?= htmlspecialchars($page->id) ?>"
-                                data-page-name="<?= htmlspecialchars($page->name) ?>"
-                                data-page-type="<?= htmlspecialchars($page->type) ?>"
-                                data-menu-id="<?= htmlspecialchars($page->menu_id) ?>"
-                                data-status="<?= htmlspecialchars($page->status) ?>"
-                                data-position="<?= htmlspecialchars($page->position) ?>">
-                                <i class="fa-solid fa-pen-to-square"></i>
-                            </button>
-                            <button href="#" data-bs-toggle="modal" data-bs-target="#deleteModal"
-                                class="btn btn-danger btn-sm delete-btn"
-                                data-page-id="<?= htmlspecialchars($page->id) ?>">
-                                <i class="fa-regular fa-trash-can"></i>
-                            </button>
-                        </td>
-                    </tr>
-                    <?php endif; ?>
+                <div class="form-inline search-tab mb-2 me-2">
+                    <div class="form-group d-flex align-items-center mb-0">
+                        <i class="fa fa-search"></i>
+                        <?= $form->field($searchModel, 'name', [
+                            'template' => "{input}",
+                            'inputOptions' => [
+                                'class' => 'form-control-plaintext mb-0',
+                                'placeholder' => 'Tìm kiếm...',
+                            ],
+                            'options' => ['class' => 'mb-0'],
+                        ])->label(false) ?>
+                    </div>
+                </div>
 
-                    <?php endforeach; ?>
-                </tbody>
-            </table>
+                <?= Html::submitButton('Tìm', ['class' => 'btn btn-primary mb-2']) ?>
+
+                <?php ActiveForm::end(); ?>
+            </div>
         </div>
+
+        <?= GridView::widget([
+                'dataProvider' => new ActiveDataProvider([
+                    'query' => $dataProvider->query->andWhere(['deleted' => 0]), 
+                ]),            
+                'columns' => [
+                [
+                    'attribute' => 'name',
+                    'label' => 'Tên Page',
+                ],
+                [
+                    'attribute' => 'type',
+                    'label' => 'Loại',
+                    'format' => 'raw',
+                    'value' => function ($data) {
+            return $data->type == 'table' ?
+                '<span class="badge badge-light-primary">Table</span>' :
+                '<span class="badge badge-light-danger">Richtext</span>';
+        },
+                ],
+                [
+                    'attribute' => 'status',
+                    'label' => 'Hiện',
+                    'format' => 'raw',
+                    'value' => function ($data) {
+            return $data->status == 1 ?
+                '<span class="badge badge-warning">Ẩn</span>' :
+                '<span class="badge badge-success">Hiện</span>';
+        },
+                    'headerOptions' => ['class' => 'text-center'],
+                    'contentOptions' => ['class' => 'text-center'],
+                ],
+                [
+                    'class' => 'yii\grid\ActionColumn',
+                    'header' => 'Hành động',
+                    'template' => '{edit} {delete}',
+                    'buttons' => [
+                        'edit' => function ($url, $model, $key) {
+            return Html::button('<i class="fa-solid fa-pen-to-square"></i>', [
+                'class' => 'btn btn-primary btn-sm edit-btn',
+                'data-bs-toggle' => 'modal',
+                'data-bs-target' => '#editModal',
+                'data-page-id' => $model->id,
+                'data-page-name' => $model->name,
+                'data-page-type' => $model->type,
+                'data-menu-id' => $model->menu_id,
+                'data-status' => $model->status,
+            ]);
+        },
+                        'delete' => function ($url, $model, $key) {
+            return Html::button('<i class="fa-regular fa-trash-can"></i>', [
+                'class' => 'btn btn-danger btn-sm delete-btn',
+                'data-bs-toggle' => 'modal',
+                'data-bs-target' => '#deleteModal',
+                'data-page-id' => $model->id,
+            ]);
+        },
+                    ],
+                    'headerOptions' => ['style' => 'width: 10%; text-align: center;'],
+                    'contentOptions' => ['style' => 'text-align:center; white-space: nowrap;'],
+
+                ],
+            ],
+            'pager' => [
+                'class' => yii\widgets\LinkPager::class,
+            ],
+            'summary' => '<span class="text-muted pt-3">Hiển thị <b>{begin}-{end}</b> trên tổng số <b>{totalCount}</b> dòng.</span>',
+            'layout' => "{items}\n{summary}\n{pager}",
+        ]) ?>
+
+        <?php Pjax::end(); ?>
+
 
     </div>
 </div>
+
 <!-- Modal sửa -->
 <div class="modal fade" id="editModal" tabindex="-1" aria-labelledby="editModalLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h4 class="modal-title" id="editModalLabel">Sửa Page</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                <h4 class="modal-title" id="editModalLabel">Sửa Page</h4>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
                 <form id="editTabForm">
@@ -124,13 +170,9 @@ $this->registerCssFile('@web/css/datatables.css', ['depends' => [\yii\web\YiiAss
                     <div class="mb-3">
                         <label for="editMenu" class="form-label">Menu</label>
                         <select class="form-select" id="editMenu" name="menu_id">
-                            <option class="txt-primary" value="" <?= $page->menu_id === null ? 'selected' : '' ?>>--
-                                Không --</option>
-
+                            <option class="txt-primary" value="">-- Không --</option>
                             <?php foreach ($menus as $menu): ?>
-                            <option value="<?= $menu->id ?>" <?= $menu->id == $page->menu_id ? 'selected' : '' ?>>
-                                <?= Html::encode($menu->name) ?>
-                            </option>
+                            <option value="<?= $menu->id ?>"><?= Html::encode($menu->name) ?></option>
                             <?php endforeach; ?>
                         </select>
                     </div>
@@ -138,14 +180,9 @@ $this->registerCssFile('@web/css/datatables.css', ['depends' => [\yii\web\YiiAss
                     <div class="mb-3">
                         <label for="editStatus" class="form-label">Trạng thái</label>
                         <select class="form-select" id="editStatus" name="status">
-                            <option value="0" <?= $page->status == 0 ? 'selected' : '' ?>>Hiển thị</option>
-                            <option value="1" <?= $page->status == 1 ? 'selected' : '' ?>>Ẩn</option>
+                            <option value="0">Hiển thị</option>
+                            <option value="1">Ẩn</option>
                         </select>
-                    </div>
-                    <div class="mb-3">
-                        <label for="editPosition" class="form-label">Vị trí</label>
-                        <input type="number" class="form-control" id="editPosition" name="position"
-                            value="<?= $page->position ?>">
                     </div>
                 </form>
             </div>
@@ -156,56 +193,6 @@ $this->registerCssFile('@web/css/datatables.css', ['depends' => [\yii\web\YiiAss
         </div>
     </div>
 </div>
-
-<script>
-$(document).ready(function() {
-    // Khi nhấn vào nút sửa
-    $('.edit-btn').on('click', function() {
-        var pageId = $(this).data('page-id');
-        var tableName = $(this).data('page-name');
-        var pageType = $(this).data('page-type');
-        var menuId = $(this).data('menu-id');
-        var status = $(this).data('status');
-        var position = $(this).data('position');
-
-        $('#edittableName').val(tableName);
-        $('#editTabType').val(pageType);
-        $('#editMenu').val(menuId);
-        $('#editStatus').val(status);
-        $('#editPosition').val(position);
-        $('#editTabForm').data('page-id', pageId);
-    });
-
-    $('#saveTabChanges').on('click', function() {
-        var form = $('#editTabForm');
-        var pageId = form.data('page-id');
-        var menuId = $('#editMenu').val();
-        var status = $('#editStatus').val();
-        var position = $('#editPosition').val();
-
-        $.ajax({
-            url: '<?= \yii\helpers\Url::to(['pages/update-page']) ?>',
-            type: 'POST',
-            headers: {
-                'X-CSRF-Token': $('meta[name="csrf-token"]').attr('content')
-            },
-            data: {
-                pageId: pageId,
-                menuId: menuId,
-                status: status,
-                position: position
-            },
-            success: function(response) {
-                $('#editModal').modal('hide');
-                location.reload();
-            },
-            error: function() {
-                alert('Có lỗi xảy ra, vui lòng thử lại.');
-            }
-        });
-    });
-});
-</script>
 
 <!-- Modal Thùng Rác -->
 <div class="modal fade" id="trashBinModal" tabindex="-1" aria-labelledby="trashBinModalLabel" aria-hidden="true">
@@ -227,7 +214,7 @@ $(document).ready(function() {
                     </thead>
                     <tbody id="trash-bin-list">
                         <?php $hasDeletedTabs = false; ?>
-                        <?php foreach ($pages as $page): ?>
+                        <?php foreach ($dataProvider->models as $page): ?>
                         <?php if ($page->deleted == 1): ?>
                         <?php $hasDeletedTabs = true; ?>
                         <tr>
@@ -240,11 +227,11 @@ $(document).ready(function() {
                                 <?php endif; ?>
                             </td>
                             <td class="text-nowrap">
-                                <button type="button" class="btn btn-warning restore-page-btn" id="confirm-restore-btn"
+                                <button type="button" class="btn btn-warning restore-page-btn"
                                     data-page-id="<?= htmlspecialchars($page->id) ?>">
                                     <i class="fa-solid fa-rotate-left"></i>
                                 </button>
-                                <button type="button" class="btn btn-danger delete-page-btn" id="delete-permanently-btn"
+                                <button type="button" class="btn btn-danger delete-page-btn"
                                     data-page-name="<?= htmlspecialchars($page->name) ?>"
                                     data-page-id="<?= htmlspecialchars($page->id) ?>">
                                     <i class="fa-regular fa-trash-can"></i>
@@ -289,12 +276,10 @@ $(document).ready(function() {
                         </tr>
                     </thead>
                     <tbody id="hide-index">
-                        <?php foreach ($pages as $page): ?>
+                        <?php foreach ($dataProvider->models as $page): ?>
                         <?php if ($page->deleted == 0): ?>
                         <tr>
-                            <td class="py-0">
-                                <?= htmlspecialchars($page->name) ?>
-                            </td>
+                            <td class="py-0"><?= htmlspecialchars($page->name) ?></td>
                             <td class="text-center py-0">
                                 <?php if ($page->type == 'table'): ?>
                                 <span class="badge badge-light-primary">Table</span>
@@ -302,7 +287,7 @@ $(document).ready(function() {
                                 <span class="badge badge-light-danger">Richtext</span>
                                 <?php endif; ?>
                             </td>
-                            <td class="py-0" class="text-center">
+                            <td class="py-0 text-center">
                                 <label class="switch mb-0 mt-1">
                                     <input class="form-check-input toggle-hide-btn" type="checkbox"
                                         data-page-id="<?= htmlspecialchars($page->id) ?>"
@@ -319,40 +304,6 @@ $(document).ready(function() {
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
                 <button type="button" class="btn btn-primary" id="confirm-hide-btn">Lưu</button>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Modal Sắp Xếp -->
-<div class="modal fade" id="sortModal" tabindex="-1" aria-labelledby="sortModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h4 class="modal-title" id="sortModalLabel">Sắp Xếp</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cancel"></button>
-            </div>
-            <div class="modal-body">
-                <p>Kéo và thả để sắp xếp các page.</p>
-                <div class="form-check form-switch mb-3">
-                    <input class="form-check-input" type="checkbox" id="toggleStatusTabs" checked>
-                    <label class="form-check-label" for="toggleStatusTabs">Hiển thị page đã ẩn</label>
-                </div>
-                <ul class="list-group" id="sortable-pages">
-                    <?php foreach ($pages as $index => $page): ?>
-                    <?php if ($page->deleted != 1): ?>
-                    <li class="list-group-item d-flex justify-content-between align-items-center page-item"
-                        data-page-id="<?= $page->id ?>" data-status="<?= $page->status ?>">
-                        <span><?= htmlspecialchars($page->name) ?></span>
-                        <span class="badge bg-secondary"><?= $index + 1 ?></span>
-                    </li>
-                    <?php endif; ?>
-                    <?php endforeach; ?>
-                </ul>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
-                <button type="button" class="btn btn-primary" id="confirm-sort-btn">Lưu</button>
             </div>
         </div>
     </div>
@@ -382,261 +333,13 @@ $(document).ready(function() {
 </div>
 
 <script>
-$(document).ready(function() {
-    $('.dataTable').DataTable({
-        order: [],
-        columnDefs: [{
-            orderable: false,
-            targets: -1
-        }],
-        "lengthChange": false,
-        "autoWidth": false,
-        "responsive": true,
-        "paging": true,
-        "searching": true,
-        "ordering": true,
-        "language": {
-            "sEmptyTable": "Không có dữ liệu",
-            "sInfo": "Đang hiển thị _START_ đến _END_ trong tổng số _TOTAL_ mục",
-            "sInfoEmpty": "Đang hiển thị 0 đến 0 trong tổng số 0 mục",
-            "sInfoFiltered": "(Được lọc từ _MAX_ mục)",
-            "sInfoPostFix": "",
-            "sLengthMenu": "Hiển thị _MENU_ mục",
-            "sLoadingRecords": "Đang tải...",
-            "sProcessing": "Đang xử lý...",
-            "sSearch": "Tìm kiếm:",
-            "sZeroRecords": "Không tìm thấy kết quả nào",
-            "oPaginate": {
-                "sFirst": "Đầu tiên",
-                "sLast": "Cuối cùng",
-                "sNext": "Tiếp theo",
-                "sPrevious": "Trước"
-            },
-            "oAria": {
-                "sSortAscending": ": Sắp xếp cột tăng dần",
-                "sSortDescending": ": Sắp xếp cột giảm dần"
-            }
-        }
-    });
-});
-
-$(document).ready(function() {
-    $('#confirm-hide-btn').click(function() {
-        let hideStatus = {};
-
-        $('.toggle-hide-btn').each(function() {
-            const pageId = $(this).data('page-id');
-            const isChecked = $(this).is(':checked');
-            hideStatus[pageId] = isChecked ? 0 : 3;
-        });
-
-        if (confirm("Xác nhận thao tác?")) {
-
-            $.ajax({
-                url: '<?= \yii\helpers\Url::to(['pages/update-hide-status']) ?>',
-                method: 'POST',
-                headers: {
-                    'X-CSRF-Token': $('meta[name="csrf-token"]').attr('content')
-                },
-                data: {
-                    hideStatus: hideStatus
-                },
-                success: function(response) {
-                    if (response.success) {
-                        location.reload();
-                    } else {
-                        alert(response.message || "Có lỗi xảy ra khi lưu thay đổi.");
-                    }
-                },
-                error: function() {
-                    alert("Có lỗi xảy ra khi lưu thay đổi.");
-                }
-            });
-        }
-    });
-    $("#sortable-pages").sortable();
-
-    // Lọc danh sách page khi bật/tắt switch
-    $('#toggleStatusTabs').on('change', function() {
-        const showAll = $(this).is(':checked');
-
-        $('.page-item').each(function() {
-            const isStatus = $(this).data('status') == 1;
-            if (isStatus) {
-                $(this).toggleClass('hidden-page', !showAll);
-            }
-        });
-    });
-
-    $("#confirm-sort-btn").click(function() {
-        var sortedData = [];
-        $("#sortable-pages li").each(function(index) {
-            var pageId = $(this).data("page-id");
-            sortedData.push({
-                id: pageId,
-                position: index + 1
-            });
-        });
-        if (confirm("Xác nhận sắp xếp?")) {
-
-            $.ajax({
-                url: '<?= \yii\helpers\Url::to(['pages/update-sort-order']) ?>',
-                method: 'POST',
-                headers: {
-                    'X-CSRF-Token': $('meta[name="csrf-token"]').attr('content')
-                },
-                data: {
-                    pages: sortedData
-                },
-                success: function(response) {
-                    if (response.success) {
-                        location.reload();
-                        $('#sortModal').modal('hide');
-                    } else {
-                        alert(response.message || "Lỗi.");
-                    }
-                },
-                error: function() {
-                    alert("Lỗi.");
-                }
-            });
-        }
-    });
-    $(document).on('click', '#confirm-restore-btn', function() {
-        const pageId = $(this).data('page-id');
-
-        if (confirm("Bạn có chắc chắn muốn khôi phục page này không?")) {
-            $.ajax({
-                url: '<?= \yii\helpers\Url::to(['pages/restore-page']) ?>',
-                method: 'POST',
-                headers: {
-                    'X-CSRF-Token': $('meta[name="csrf-token"]').attr('content')
-                },
-                data: {
-                    pageId: pageId,
-                },
-                success: function(response) {
-                    if (response.success) {
-                        location.reload();
-                        $('#trashBinModal').modal('hide');
-                    } else {
-                        alert(response.message || "Khôi phục thất bại.");
-                    }
-                },
-                error: function() {
-                    alert("Có lỗi xảy ra khi khôi phục.");
-                }
-            });
-        }
-    });
-
-    $(document).on('click', '#delete-permanently-btn', function() {
-        const pageId = $(this).data('page-id');
-        const pageName = $(this).data('page-name');
-
-        if (confirm("Bạn có chắc chắn muốn xóa hoàn toàn page này không?")) {
-            $.ajax({
-                url: '<?= \yii\helpers\Url::to(['pages/delete-permanently-page']) ?>',
-                method: 'POST',
-                headers: {
-                    'X-CSRF-Token': $('meta[name="csrf-token"]').attr('content')
-                },
-                data: {
-                    pageId: pageId,
-                    pageName: pageName,
-                },
-                success: function(response) {
-                    if (response.success) {
-                        location.reload();
-                    } else {
-                        alert(response.message || "Xóa thất bại.");
-                    }
-                },
-                error: function() {
-                    alert("Có lỗi xảy ra khi xóa page.");
-                }
-            });
-        }
-    });
-
-    $('#confirm-delete-btn').on('click', function() {
-        const pageId = $(this).data('page-id');
-
-        $.ajax({
-            url: '<?= \yii\helpers\Url::to(['pages/delete-page']) ?>',
-            method: 'POST',
-            headers: {
-                'X-CSRF-Token': $('meta[name="csrf-token"]').attr('content')
-            },
-            data: {
-                pageId: pageId,
-            },
-            success: function(response) {
-                if (response.success) {
-                    location.reload();
-                    $('#deleteModal').modal('hide');
-                } else {
-                    alert(response.message || "Xóa page thất bại.");
-                }
-            },
-            error: function() {
-                alert("Có lỗi xảy ra khi xóa page.");
-            }
-        });
-    });
-
-    $('#confirm-delete-permanently-btn').on('click', function() {
-        const pageId = $(this).data('page-id');
-
-        if (confirm("Bạn có chắc chắn muốn xóa hoàn toàn không?")) {
-            $.ajax({
-                url: '<?= \yii\helpers\Url::to(['pages/delete-permanently-page']) ?>',
-                method: 'POST',
-                headers: {
-                    'X-CSRF-Token': $('meta[name="csrf-token"]').attr('content')
-                },
-                data: {
-                    pageId: pageId,
-                },
-                success: function(response) {
-                    if (response.success) {
-                        location.reload();
-                        $('#deleteModal').modal('hide');
-                    } else {
-                        alert(response.message || "Xóa page thất bại.");
-                    }
-                },
-                error: function() {
-                    alert("Có lỗi xảy ra khi xóa page.");
-                }
-            });
-        }
-    });
-});
-
-document.addEventListener("DOMContentLoaded", function() {
-    const deleteButtons = document.querySelectorAll(".delete-btn");
-    const confirmDeleteBtn = document.getElementById("confirm-delete-btn");
-    const confirmDeletePermanentlyBtn = document.getElementById("confirm-delete-permanently-btn");
-
-    deleteButtons.forEach(button => {
-        button.addEventListener("click", function() {
-            const pageId = this.getAttribute("data-page-id");
-            confirmDeleteBtn.setAttribute("data-page-id", pageId);
-            confirmDeletePermanentlyBtn.setAttribute("data-page-id", pageId);
-        });
-    });
-});
+var save_sort_url = "<?= Url::to(['pages/save-sort']) ?>";
+var update_status_url = "<?= Url::to(['pages/update-hide-status']) ?>";
+var update_sortOrder_url = "<?= Url::to(['pages/update-sort-order']) ?>";
+var restore_page_url = "<?= Url::to(['pages/restore-page']) ?>";
+var delete_permanently_url = "<?= Url::to(['pages/delete-permanently-page']) ?>";
+var delete_soft_url = "<?= Url::to(['pages/delete-page']) ?>";
+var save_sub_page_url = "<?= Url::to(['pages/save-sub-page']) ?>";
+var yiiWebAlias = "<?= Yii::getAlias('@web') ?>";
+var update_page_url = "<?= Url::to(['pages/update-page']) ?>";
 </script>
-
-<?php
-$jsFiles = [
-    'js/libs/jquery.dataTables.min.js',
-    'js/libs/datatable.custom.js',
-    'js/libs/datatable.custom1.js',
-];
-
-foreach ($jsFiles as $js) {
-    $this->registerJsFile($js, ['depends' => [\yii\web\YiiAsset::class]]);
-}
-?>

@@ -3,6 +3,7 @@
 namespace app\modules\admin\controllers;
 
 use app\models\BaseModel;
+use app\models\PageSearch;
 use yii\db\Query;
 use yii\web\Controller;
 use Yii;
@@ -18,22 +19,31 @@ use yii\filters\AccessControl;
 
 class PagesController extends BaseAdminController
 {
-
     public function actionIndex()
     {
-        $pages = Page::find()
-            ->orderBy([
-                'position' => SORT_ASC,
-                'id' => SORT_DESC,
-            ])
-            ->all();
+        $searchModel = new PageSearch();
+        $dataProvider = $searchModel->search(Yii::$app->request->queryParams);
+
+        $dataProvider->query->orderBy(['id' => SORT_ASC]);
 
         $menus = Menu::find()->all();
+
+        if (Yii::$app->request->isPjax) {
+            return $this->renderAjax('index', [
+                'dataProvider' => $dataProvider,
+                'menus' => $menus,
+                'searchModel' => $searchModel,
+            ]);
+        }
+
         return $this->render('index', [
-            'pages' => $pages,
+            'dataProvider' => $dataProvider,
             'menus' => $menus,
+            'searchModel' => $searchModel,
         ]);
     }
+
+
     public function actionCreate()
     {
         $pages = Page::find()
@@ -217,7 +227,7 @@ class PagesController extends BaseAdminController
 
             $affectedRows = Page::updateAll(
                 ['deleted' => 0],
-                [BaseModel::HIDDEN_ID_KEY => $pageId]
+                ['id' => $pageId]
             );
 
             if ($affectedRows > 0) {
@@ -243,7 +253,7 @@ class PagesController extends BaseAdminController
 
         $pageId = $postData['pageId'];
 
-        $page = Page::find()->where([BaseModel::HIDDEN_ID_KEY => $pageId])->one();
+        $page = Page::find()->where(['id'])->one();
 
         if (!$page) {
             Yii::$app->session->setFlash('error', 'Page không tồn tại.');
@@ -304,14 +314,14 @@ class PagesController extends BaseAdminController
 
         if ($pages) {
             foreach ($pages as $page) {
-                $model = Page::findOne($page[BaseModel::HIDDEN_ID_KEY]);
+                $model = Page::findOne($page['id']);
                 if ($model) {
                     $model->position = $page['position'];
                     if (!$model->save()) {
-                        Yii::$app->session->setFlash('error', 'Không thể lưu page với ID: ' . $page[BaseModel::HIDDEN_ID_KEY]);
+                        Yii::$app->session->setFlash('error', 'Không thể lưu page với ID: ' . $page['id']);
                         return [
                             'success' => false,
-                            'message' => 'Không thể lưu page với ID: ' . $page[BaseModel::HIDDEN_ID_KEY],
+                            'message' => 'Không thể lưu page với ID: ' . $page['id'],
                         ];
                     }
                 }
