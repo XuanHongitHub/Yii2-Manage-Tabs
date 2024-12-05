@@ -40,18 +40,7 @@ $tabMenus = Menu::find()
     <?php
     $this->head();
     $this->registerAssetBundle(JqueryAsset::class, View::POS_HEAD);
-    $cssFile = [
-        'css/font-awesome.min.css',
-        'css/font-awesome.css',
-        'css/font.css',
-        'css/scrollbar.css',
-        'css/bootstrap.css',
-        'css/style.css',
-        'css/responsive.css',
-    ];
-    foreach ($cssFile as $css) {
-        $this->registerCssFile($css, ['depends' => [\yii\web\YiiAsset::class]]);
-    }
+
     ?>
 
 </head>
@@ -268,23 +257,6 @@ $tabMenus = Menu::find()
         </div>
     </div>
 
-    <?php
-    $jsFiles = [
-        'js/libs/bootstrap.bundle.min.js',
-        'js/libs/simplebar.js',
-        'js/libs/custom.js',
-        'js/libs/sidebar-menu.js',
-        'js/libs/bootstrap-notify.min.js',
-        'js/libs/custom-notify.js',
-        'js/libs/script.js',
-        'js/libs/jquery-ui.js',
-        'js/libs/sweet-alert.min.js',
-    ];
-
-    foreach ($jsFiles as $js) {
-        $this->registerJsFile($js, ['depends' => [\yii\web\YiiAsset::class]]);
-    }
-    ?>
     <?php $this->endBody() ?>
 </body>
 <!-- Toast -->

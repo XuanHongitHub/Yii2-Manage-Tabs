@@ -32,20 +32,6 @@ $successMessage = Yii::$app->session->getFlash('success');
 
     <?php
     $this->registerAssetBundle(JqueryAsset::class, View::POS_HEAD);
-    $cssFile = [
-        'css/font.css',
-        'css/font-awesome.min.css',
-        'css/font-awesome.css',
-        'css/scrollbar.css',
-        'css/bootstrap.css',
-        'css/style.css',
-        'css/responsive.css',
-
-    ];
-    foreach ($cssFile as $css) {
-        $this->registerCssFile($css, ['depends' => [\yii\web\YiiAsset::class]]);
-    }
-
     ?>
 
 </head>
@@ -273,59 +259,26 @@ $successMessage = Yii::$app->session->getFlash('success');
             </footer>
         </div>
     </div>
-    <!-- Toast -->
-    <div class="toast-container position-fixed top-0 end-0 p-3 toast-index toast-rtl">
-        <div class="toast fade" id="liveToast" role="alert" aria-live="assertive" aria-atomic="true">
-            <div class="toast-header">
-                <strong class="me-auto">Thông báo</strong>
-                <small id="toast-timestamp"></small>
-                <button class="btn-close" type="button" data-bs-dismiss="toast" aria-label="Close"></button>
-            </div>
-            <div class="toast-body" id="toast-body">Thông Báo</div>
-        </div>
-    </div>
-    <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const errorMessage = <?= Json::encode($errorMessage) ?>;
 
-        const successMessage = <?= Json::encode($successMessage) ?>;
-        if (successMessage) {
-            document.getElementById('toast-body').textContent = successMessage;
-            document.getElementById('toast-timestamp').textContent = new Date().toLocaleTimeString();
-            const toastElement = document.getElementById('liveToast');
-            const toast = new bootstrap.Toast(toastElement);
-            toast.show();
-        }
-        if (errorMessage) {
-            document.getElementById('toast-body').textContent = errorMessage;
-            document.getElementById('toast-timestamp').textContent = new Date().toLocaleTimeString();
-            const toastElement = document.getElementById('liveToast');
-            const toast = new bootstrap.Toast(toastElement);
-            toast.show();
-        }
-    });
-    </script>
-    <?php
-    $jsFiles = [
-        'js/libs/bootstrap.bundle.min.js',
-        'js/libs/simplebar.js',
-        'js/libs/custom.js',
-        'js/libs/sidebar-menu.js',
-        'js/libs/bootstrap-notify.min.js',
-        'js/libs/custom-notify.js',
-        'js/libs/script.js',
-        'js/libs/jquery-ui.js',
-        'js/libs/sweet-alert.min.js',
-    ];
-
-    foreach ($jsFiles as $js) {
-        $this->registerJsFile($js, ['depends' => [\yii\web\YiiAsset::class]]);
-    }
-    ?>
     <?php $this->endBody() ?>
-
 </body>
 
+<!-- Toast -->
+<div class="toast-container position-fixed top-0 end-0 p-3 toast-index toast-rtl">
+    <div class="toast fade" id="liveToast" role="alert" aria-live="assertive" aria-atomic="true">
+        <div class="toast-header">
+            <strong class="me-auto">Thông báo</strong>
+            <small id="toast-timestamp"></small>
+            <button class="btn-close" type="button" data-bs-dismiss="toast" aria-label="Close"></button>
+        </div>
+        <div class="toast-body" id="toast-body">Thông Báo</div>
+    </div>
+</div>
+
+<script>
+var successMessage = <?= json_encode($successMessage) ?>;
+var errorMessage = <?= json_encode($errorMessage) ?>;
+</script>
 
 </html>
 <?php $this->endPage() ?>

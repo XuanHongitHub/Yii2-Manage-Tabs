@@ -24,16 +24,9 @@ class PagesController extends BaseAdminController
         $pages = Page::find()
             ->orderBy([
                 'position' => SORT_ASC,
-                BaseModel::HIDDEN_ID_KEY => SORT_DESC,
+                'id' => SORT_DESC,
             ])
             ->all();
-
-        //        $model = BaseModel::withTable('table');
-        //        $model->name = 'abc';
-        //        $model->phone = '123';
-        //        $model->age = '123';
-        //        $model->save();
-        //
 
         $menus = Menu::find()->all();
         return $this->render('index', [
@@ -195,7 +188,7 @@ class PagesController extends BaseAdminController
 
             $affectedRows = Page::updateAll(
                 ['deleted' => 1],
-                [BaseModel::HIDDEN_ID_KEY => $pageId]
+                ['id' => $pageId]
             );
 
             if ($affectedRows > 0) {

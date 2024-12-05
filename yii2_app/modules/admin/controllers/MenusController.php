@@ -42,8 +42,8 @@ class MenusController extends BaseAdminController
                 'manager_menu.id',
                 (new Query())
                     ->select('menu_id')
-                    ->from('manager_page') // Giả sử bảng lưu các trang là `manager_page`
-                    ->where('manager_page.menu_id = manager_menu.id') // Lọc ra các menu đã có manager_page liên kết
+                    ->from('manager_page')
+                    ->where('manager_page.menu_id = manager_menu.id')
             ])
             ->all();
 
@@ -60,24 +60,19 @@ class MenusController extends BaseAdminController
             $transaction = Yii::$app->db->beginTransaction();
 
             try {
-                $model = new Menu(); // Tạo mới một đối tượng Menu
+                $model = new Menu();
 
-                // Gán các giá trị vào model
-                $model->name = $data['name']; // Gán tên menu
-                $model->parent_id = $data['parentId'] ?? null; // Gán parent_id, cho phép null
-                $model->icon = $data['icon'] ?? null; // Gán icon, cho phép null
+                $model->name = $data['name'];
+                $model->parent_id = $data['parentId'] ?? null;
+                $model->icon = $data['icon'] ?? null;
 
-                // Lưu vào cơ sở dữ liệu
                 if (!$model->save()) {
                     throw new \Exception('Không thể lưu menu.', 1);
                 }
-
-                // Commit transaction nếu thành công
                 $transaction->commit();
 
                 return $this->asJson(['success' => true, 'message' => 'Thành công.']);
             } catch (\Exception $e) {
-                // Rollback nếu có lỗi
                 $transaction->rollBack();
                 return $this->asJson(['success' => false, 'message' => $e->getMessage()]);
             }
@@ -106,18 +101,16 @@ class MenusController extends BaseAdminController
                     throw new \Exception('Không thể lưu menu.', 1);
                 }
 
-                // Liên kết Pages với Menu
                 $selectedPages = $data['selectedPages'] ?? [];
                 if (!empty($selectedPages)) {
-                    Page::updateAll(['menu_id' => null], ['menu_id' => $model->id]); // Xóa liên kết cũ
-                    Page::updateAll(['menu_id' => $model->id], ['id' => $selectedPages]); // Thêm liên kết mới
+                    Page::updateAll(['menu_id' => null], ['menu_id' => $model->id]);
+                    Page::updateAll(['menu_id' => $model->id], ['id' => $selectedPages]);
                 }
 
-                // Liên kết Menu con với Menu cha
                 $selectedMenus = $data['selectedMenus'] ?? [];
                 if (!empty($selectedMenus)) {
-                    Menu::updateAll(['parent_id' => null], ['parent_id' => $model->id]); // Xóa liên kết cũ
-                    Menu::updateAll(['parent_id' => $model->id], ['id' => $selectedMenus]); // Thêm liên kết mới
+                    Menu::updateAll(['parent_id' => null], ['parent_id' => $model->id]);
+                    Menu::updateAll(['parent_id' => $model->id], ['id' => $selectedMenus]);
                 }
 
                 $transaction->commit();
@@ -253,9 +246,7 @@ class MenusController extends BaseAdminController
                 $sortedData = $data['sortedData'] ?? [];
                 Yii::error("selectedPages: " . print_r($selectedPages, true));
 
-                // Cập nhật các page con
                 if (!empty($selectedPages)) {
-                    // Xóa liên kết cũ
                     Page::updateAll(['menu_id' => null], ['menu_id' => $data['menuId']]);
                     Page::updateAll(
                         ['menu_id' => $menuModel->id],

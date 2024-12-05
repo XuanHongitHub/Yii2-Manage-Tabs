@@ -70,13 +70,13 @@ $this->registerJsFile('js/components/frontend/_tablePage.js', ['depends' => AppA
     </div>
 </div>
 
-<!-- Báo lỗi Nhập -->
+<!-- Model Báo lỗi Import -->
 <div class="modal fade" id="importStatusModal" tabindex="-1" aria-labelledby="importStatusModalLabel"
     aria-hidden="true">
     <div class="modal-dialog modal-dialog-scrollable modal-lg">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="importStatusModalLabel">Trạng Thái Nhập</h5>
+                <h5 class="modal-title" id="importStatusModalLabel">Báo lỗi Import</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
             </div>
             <pre class="modal-body text-wrap" id="importStatusMessage">
@@ -177,17 +177,11 @@ $this->registerJsFile('js/components/frontend/_tablePage.js', ['depends' => AppA
                                     data-bs-toggle="modal" data-bs-target="#importExelModal">
                                     <i class="fa-solid fa-download"></i> Nhập Excel
                                 </button>
-                                <?= var_dump(Yii::$app->request->get('sort')); ?>
-                                <?= var_dump(Yii::$app->request->get('search')); ?>
 
-                                <a class="btn btn-warning mb-2 me-auto" href="<?= Url::to([
-                                                                                    'pages/export-excel',
-                                                                                    'pageId' => $pageId,
-                                                                                    'sort' => Yii::$app->request->get('sort'),
-                                                                                    'page' => Yii::$app->request->get('page')
-                                                                                ]) ?>">
+                                <!-- Nút Xuất Excel -->
+                                <button class="btn btn-warning mb-2 me-auto" id="export-excel-btn">
                                     <i class="fa-solid fa-download"></i> Xuất Dữ Liệu
-                                </a>
+                                </button>
 
                             </div>
 

@@ -45412,3 +45412,8 @@ table td[data-column="hidden_id"] {
 .sortable-column a.desc:after {
   content: "\f0de";
 }
+
+#view-content {
+  all: unset !important;
+  font-family: inherit !important;
+}

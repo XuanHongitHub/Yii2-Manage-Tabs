@@ -7,12 +7,9 @@ use Yii;
 use yii\filters\VerbFilter;
 use yii\web\Controller;
 use app\models\Page;
-
 use app\models\Menu;
-use app\models\User;
 use Exception;
 use yii\filters\AccessControl;
-use yii\data\Pagination;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use PhpOffice\PhpSpreadsheet\Style\Border;
@@ -21,12 +18,7 @@ use PhpOffice\PhpSpreadsheet\IOFactory;
 use yii\db\Schema;
 use yii\web\NotFoundHttpException;
 use yii\db\Query;
-use yii\grid\GridView;
 use yii\data\ActiveDataProvider;
-use yii\data\Sort;
-use yii\data\SqlDataProvider;
-use yii\helpers\ArrayHelper;
-use yii\helpers\Html;
 use yii\web\Response;
 
 class PagesController extends Controller
@@ -83,7 +75,7 @@ class PagesController extends Controller
             ->all();
 
         if (!$pages) {
-            throw new NotFoundHttpException('Không có Page nào ở đây.');
+            throw new NotFoundHttpException('Không có Page nào. Vui lòng thêm Page!');
         }
         if (count($pages) == 1) {
             $page = $pages[0];
@@ -315,7 +307,6 @@ class PagesController extends Controller
 
         $model->load(array_merge(Yii::$app->request->post(), $data), '');
 
-        Yii::error($model->attributes);
         if ($model->save()) {
             return $this->asJson(['success' => true, 'message' => 'Thêm dữ liệu thành công.']);
         } else {
@@ -404,10 +395,27 @@ class PagesController extends Controller
      */
     public function actionImportExcel()
     {
-        $file = $_FILES['import-excel-file'];
-        $tableName = Yii::$app->request->post('tableName');
+        $file = $_FILES['import-excel-file'] ?? null;
+        $pageId = Yii::$app->request->post('pageId');
 
-        if ($file['error'] === UPLOAD_ERR_OK) {
+        if (!$file || $file['error'] !== UPLOAD_ERR_OK || !$pageId) {
+            return $this->asJson([
+                'success' => false,
+                'message' => 'Thiếu dữ liệu cần thiết hoặc lỗi tệp.',
+            ]);
+        }
+
+        $page = Page::findOne($pageId);
+        if (!$page) {
+            return $this->asJson([
+                'success' => false,
+                'message' => 'Không tìm thấy pageId.',
+            ]);
+        }
+
+        $tableName = $page->table_name;
+
+        try {
             $filePath = $file['tmp_name'];
             $data = iterator_to_array($this->parseExcel($filePath));
 
@@ -418,132 +426,93 @@ class PagesController extends Controller
                 ]);
             }
 
+            $model = BaseModel::withTable($tableName);
             $tableSchema = Yii::$app->db->schema->getTableSchema($tableName);
-            $columns = $tableSchema->columns;
-            $expectedColumns = array_keys($columns);
 
-            // Loại bỏ cột 'id' khỏi danh sách cột dự kiến
-            $expectedColumns = array_filter($expectedColumns, fn($column) => strtolower($column) !== BaseModel::HIDDEN_ID_KEY);
-
-            // Lấy header từ tệp Excel và loại bỏ 'id' nếu tồn tại
-            $excelHeaders = $this->getColumnHeadersFromExcel($filePath);
-            $excelHeaders = array_filter($excelHeaders, fn($header) => strtolower($header) !== BaseModel::HIDDEN_ID_KEY);
-
-            // Kiểm tra tiêu đề cột
-            if ($this->validateColumns($excelHeaders, $expectedColumns) === false) {
+            if (!$tableSchema) {
                 return $this->asJson([
                     'success' => false,
-                    'message' => 'Các tiêu đề cột trong tệp Excel không khớp với các cột trong cơ sở dữ liệu.',
+                    'message' => 'Không tìm thấy bảng trong cơ sở dữ liệu.',
                 ]);
             }
 
-            // Loại bỏ hàng đầu tiên (header) để chỉ lấy dữ liệu
-            $data = array_slice($data, 1);
-
-            // Loại bỏ cột 'id' khỏi dữ liệu
-            $data = array_map(function ($row) use ($excelHeaders) {
-                return array_filter($row, function ($key) use ($excelHeaders) {
-                    return strtolower($key) !== BaseModel::HIDDEN_ID_KEY;
-                }, ARRAY_FILTER_USE_KEY);
-            }, $data);
-
-            // Transaction
             $transaction = Yii::$app->db->beginTransaction();
+
             try {
-                // Xóa toàn bộ dữ liệu trong bảng
                 Yii::$app->db->createCommand()->delete($tableName)->execute();
 
-                // Chèn dữ liệu mới
-                $chunkSize = 1000;
-                $rowIndex = 0;
-                $totalRows = count($data);
+                $headers = array_shift($data);
 
-                while ($rowIndex < $totalRows) {
-                    $rowsToInsert = array_slice($data, $rowIndex, $chunkSize);
-                    $rowIndex += count($rowsToInsert);
+                if (empty($headers)) {
+                    $transaction->rollBack();
+                    return $this->asJson([
+                        'success' => false,
+                        'message' => 'Không tìm thấy tiêu đề cột trong file Excel.',
+                    ]);
+                }
 
-                    if (empty($rowsToInsert)) {
-                        break;
+                $invalidColumns = array_diff($headers, array_keys($tableSchema->columns), [BaseModel::HIDDEN_ID_KEY]);
+
+                if (!empty($invalidColumns)) {
+                    $errorMessage = "\nCác tiêu đề cột trong tệp Excel không khớp với các cột cơ sở dữ liệu. Vui lòng xem lại các chi tiết sau:\n\n";
+
+                    $errorMessage .= "Các cột trong tệp Excel:\n" . "<div class='d-flex gap-3'>" . implode("", array_map(function ($header) {
+                        return "<div class='p-2 text-danger'>" . htmlspecialchars($header) . "</div>";
+                    }, $headers)) . "</div>\n\n";
+
+                    $errorMessage .= "Các cột dự kiến ​​trong bảng:\n" . "<div class='d-flex gap-3'>" . implode("", array_map(function ($column) {
+                        return "<div class='p-2 text-success'>" . htmlspecialchars($column) . "</div>";
+                    }, array_diff(array_keys($tableSchema->columns), [BaseModel::HIDDEN_ID_KEY]))) . "</div>\n\n";
+
+                    $transaction->rollBack();
+                    return $this->asJson([
+                        'success' => false,
+                        'message' => $errorMessage,
+                    ]);
+                }
+
+
+                $columnMap = array_flip($headers);
+
+                $errors = [];
+                foreach ($data as $rowIndex => $row) {
+                    $rowData = [];
+                    foreach ($columnMap as $excelColumn => $tableColumnIndex) {
+                        if (isset($row[$tableColumnIndex])) {
+                            $rowData[$excelColumn] = (string)$row[$tableColumnIndex]; // Chuyển đổi thành chuỗi
+                        }
                     }
 
-                    // Chuẩn bị dữ liệu cho câu lệnh INSERT
-                    $sql = sprintf(
-                        'INSERT INTO "%s" ("%s") VALUES %s',
-                        $tableName,
-                        implode('", "', $excelHeaders),
-                        implode(', ', array_map(function ($row) {
-                            return '(' . implode(', ', array_map(function ($value) {
-                                return is_null($value) ? 'NULL' : Yii::$app->db->quoteValue($value);
-                            }, $row)) . ')';
-                        }, $rowsToInsert))
-                    );
-                    Yii::$app->db->createCommand($sql)->execute();
+                    $modelInstance = clone $model;
+                    $modelInstance->setAttributes($rowData, false);
+
+                    if (!$modelInstance->save()) {
+                        $rowNumber = $rowIndex + 2;
+                        $errors[] = "Lỗi tại dòng {$rowNumber}: " . json_encode($modelInstance->getErrors(), JSON_UNESCAPED_UNICODE);
+                    }
+                }
+
+                if (!empty($errors)) {
+                    $transaction->rollBack();
+                    return $this->asJson([
+                        'success' => false,
+                        'message' => implode("\n", $errors),
+                    ]);
                 }
 
                 $transaction->commit();
-                return $this->asJson(['success' => true]);
+                return $this->asJson(['success' => true, 'message' => 'Nhập dữ liệu thành công.']);
             } catch (\Exception $e) {
                 $transaction->rollBack();
-                return $this->asJson([
-                    'success' => false,
-                    'message' => 'Đã xảy ra lỗi trong quá trình nhập: ' . $e->getMessage(),
-                ]);
+                return $this->asJson(['success' => false, 'message' => $e->getMessage()]);
             }
-        }
-
-        return $this->asJson(['success' => false, 'message' => 'Không thể tải tệp Excel lên']);
-    }
-
-
-    // Validate Data Import
-    private function isValidColumnType($value, $columnSchema)
-    {
-        if (is_null($value)) {
-            return true; // Cho phép giá trị NULL
-        }
-
-        switch ($columnSchema->type) {
-            case Schema::TYPE_INTEGER:
-                return filter_var($value, FILTER_VALIDATE_INT) !== false;
-
-            case Schema::TYPE_FLOAT:
-            case Schema::TYPE_DOUBLE:
-            case Schema::TYPE_DECIMAL:
-                return is_numeric($value);
-
-            case Schema::TYPE_BOOLEAN:
-                return in_array($value, [0, 1, '0', '1', true, false], true);
-
-            case Schema::TYPE_STRING:
-            case Schema::TYPE_TEXT:
-                return is_scalar($value);
-
-            case Schema::TYPE_DATE:
-                return strtotime($value) !== false && date('Y-m-d', strtotime($value)) === $value;
-
-            case Schema::TYPE_DATETIME:
-                return strtotime($value) !== false && date('Y-m-d H:i:s', strtotime($value)) === $value;
-
-            default:
-                return true;
+        } catch (\Exception $e) {
+            return $this->asJson([
+                'success' => false,
+                'message' => 'Đã xảy ra lỗi: ' . $e->getMessage(),
+            ]);
         }
     }
-    // Validate columns
-    private function validateColumns($excelHeaders, $expectedColumns)
-    {
-        if (count($excelHeaders) !== count($expectedColumns)) {
-            return false;
-        }
-
-        foreach ($excelHeaders as $header) {
-            if (!in_array($header, $expectedColumns)) {
-                return false;
-            }
-        }
-
-        return true;
-    }
-
     private function parseExcel($filePath)
     {
         $spreadsheet = IOFactory::load($filePath);
@@ -593,14 +562,12 @@ class PagesController extends Controller
             ->where(['table_name' => $tableName])
             ->andWhere(['<>', 'column_name', BaseModel::HIDDEN_ID_KEY])
             ->all();
-
         $columnNames = array_map(fn($column) => $column['column_name'], $columns);
 
         $query = BaseModel::withTable($tableName)->find();
 
         if ($search = Yii::$app->request->get('search')) {
             $condition = [];
-
             foreach ($columnNames as $columnName) {
                 if ($columnName === BaseModel::HIDDEN_ID_KEY) {
                     continue;
@@ -608,20 +575,24 @@ class PagesController extends Controller
                 $columnNameQuoted = "\"$columnName\"";
                 $condition[] = "LOWER(unaccent(CAST($columnNameQuoted AS TEXT))) ILIKE LOWER(unaccent(:searchTerm))";
             }
-
             if (!empty($condition)) {
                 $query->where(implode(' OR ', $condition), [':searchTerm' => '%' . $search . '%']);
             }
         }
 
-        // if ($sort = Yii::$app->request->get('sort')) {
-        //     $direction = 'ASC';
-        //     if (strpos($sort, '-') === 0) {
-        //         $direction = 'DESC';
-        //         $sort = substr($sort, 1); 
-        //     }
-        //     $query->orderBy([$sort => $direction]);
-        // }
+        if ($sort = Yii::$app->request->get('sort')) {
+            $direction = 'DESC';
+
+            if (substr($sort, 0, 1) === '-') {
+                $direction = 'ASC';
+                $sort = ltrim($sort, '-');
+            }
+
+            $quotedSortColumn = "\"$sort\"";
+
+            $query->orderBy(new \yii\db\Expression("$quotedSortColumn $direction"));
+        }
+
 
         $data = $query->all();
 
@@ -631,8 +602,21 @@ class PagesController extends Controller
         $columnIndex = 1;
         foreach ($columnNames as $column) {
             $sheet->setCellValueByColumnAndRow($columnIndex, 1, $column);
+            $sheet->getColumnDimensionByColumn($columnIndex)->setAutoSize(true);
             $columnIndex++;
         }
+
+        $headerStyle = [
+            'font' => ['bold' => true, 'size' => 12],
+            'alignment' => [
+                'horizontal' => Alignment::HORIZONTAL_CENTER,
+                'vertical' => Alignment::VERTICAL_CENTER,
+            ],
+            'borders' => [
+                'allBorders' => ['borderStyle' => Border::BORDER_THIN, 'color' => ['rgb' => '000000']],
+            ],
+        ];
+        $sheet->getStyle('A1:' . chr(64 + count($columnNames)) . '1')->applyFromArray($headerStyle);
 
         $rowIndex = 2;
         foreach ($data as $row) {
@@ -646,21 +630,31 @@ class PagesController extends Controller
             $rowIndex++;
         }
 
-        $uploadDir = Yii::getAlias('@webroot/uploads');
+        $sheet->getStyle('A1:' . chr(64 + count($columnNames)) . ($rowIndex - 1))->applyFromArray([
+            'borders' => [
+                'allBorders' => ['borderStyle' => Border::BORDER_THIN, 'color' => ['rgb' => '000000']],
+            ],
+        ]);
+
+        foreach (range('A', chr(64 + count($columnNames))) as $columnID) {
+            $sheet->getColumnDimension($columnID)->setAutoSize(true);
+        }
+
+        $uploadDir = Yii::getAlias('@runtime/cache');
         if (!is_dir($uploadDir)) {
             mkdir($uploadDir, 0777, true);
         }
-
         $fileName = $tableName . '.xlsx';
         $tempFilePath = $uploadDir . DIRECTORY_SEPARATOR . $fileName;
 
         $writer = new Xlsx($spreadsheet);
         $writer->save($tempFilePath);
 
-        Yii::$app->response->sendFile($tempFilePath, $fileName)->on(Response::EVENT_AFTER_SEND, function ($event) {
+        return Yii::$app->response->sendFile($tempFilePath, $fileName)->on(Response::EVENT_AFTER_SEND, function ($event) {
             unlink($event->data);
         }, $tempFilePath);
     }
+
 
     // Xuất Template
     public function actionExportExcelHeader($pageId)
@@ -668,9 +662,8 @@ class PagesController extends Controller
 
         $page = Page::findOne(['id' => $pageId]);
         if (!$page) {
-            // throw
+            throw new NotFoundHttpException('Trang không tồn tại.');
         }
-
 
         $tableName = $page->table_name;
         $columnNames = Yii::$app->db->getSchema()->getTableSchema($tableName)->getColumnNames();
@@ -704,7 +697,7 @@ class PagesController extends Controller
         $sheet->getStyle('A1:' . chr(63 + $columnIndex) . '1')->applyFromArray($headerStyle);
 
         // Tạo file Excel và lưu
-        $uploadDir = Yii::getAlias('@webroot/uploads');
+        $uploadDir = Yii::getAlias('@runtime/cache');
         if (!is_dir($uploadDir)) {
             mkdir($uploadDir, 0777, true);
         }

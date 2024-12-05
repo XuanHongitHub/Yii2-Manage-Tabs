@@ -52,18 +52,19 @@ $this->title = $menu->name;
     </div>
 </div>
 
-<!-- Modal Xác Nhận Nhập-->
-<div class="modal fade" id="confirmModal" tabindex="-1" aria-labelledby="confirmModalLabel" aria-hidden="true">
+<!-- Model Báo lỗi Import -->
+<div class="modal fade" id="importStatusModal" tabindex="-1" aria-labelledby="importStatusModalLabel"
+    aria-hidden="true">
     <div class="modal-dialog modal-dialog-scrollable modal-lg">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="confirmModalLabel">Vấn Đề</h5>
+                <h5 class="modal-title" id="importStatusModalLabel">Báo lỗi Import</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
             </div>
-            <div class="modal-body" id="confirmMessage">Bạn có chắc chắn muốn tiếp tục?</div>
+            <pre class="modal-body text-wrap" id="importStatusMessage">
+            </pre>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
-                <button type="button" class="btn btn-primary" id="confirmYesBtn">Tiếp tục</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
             </div>
         </div>
     </div>
@@ -98,15 +99,15 @@ $this->title = $menu->name;
             <div class="modal-body">
                 <form id="edit-form">
                     <?php foreach ($columns as $index => $column): ?>
-                    <?php if ($index === 0): ?>
-                    <input type="hidden" name="<?= $column ?>" id="edit-<?= $column ?>">
-                    <?php else: ?>
-                    <div class="form-group">
-                        <label for="edit-<?= $column ?>"><?= ucfirst($column) ?></label>
-                        <input type="text" class="form-control" name="<?= $column ?>" id="edit-<?= $column ?>"
-                            placeholder="Nhập <?= ucfirst($column) ?>">
-                    </div>
-                    <?php endif; ?>
+                        <?php if ($index === 0): ?>
+                            <input type="hidden" name="<?= $column ?>" id="edit-<?= $column ?>">
+                        <?php else: ?>
+                            <div class="form-group">
+                                <label for="edit-<?= $column ?>"><?= ucfirst($column) ?></label>
+                                <input type="text" class="form-control" name="<?= $column ?>" id="edit-<?= $column ?>"
+                                    placeholder="Nhập <?= ucfirst($column) ?>">
+                            </div>
+                        <?php endif; ?>
                     <?php endforeach; ?>
                 </form>
             </div>
@@ -129,15 +130,15 @@ $this->title = $menu->name;
             <div class="modal-body">
                 <form id="add-data-form">
                     <?php foreach ($columns as $index => $column): ?>
-                    <?php if ($index === 0): ?>
-                    <input type="hidden" name="<?= $column ?>" id="<?= $column ?>">
-                    <?php else: ?>
-                    <div class="form-group">
-                        <label for="<?= $column ?>"><?= ucfirst($column) ?></label>
-                        <input type="text" class="form-control" name="<?= $column ?>" id="<?= $column ?>"
-                            placeholder="Nhập <?= $column ?>">
-                    </div>
-                    <?php endif; ?>
+                        <?php if ($index === 0): ?>
+                            <input type="hidden" name="<?= $column ?>" id="<?= $column ?>">
+                        <?php else: ?>
+                            <div class="form-group">
+                                <label for="<?= $column ?>"><?= ucfirst($column) ?></label>
+                                <input type="text" class="form-control" name="<?= $column ?>" id="<?= $column ?>"
+                                    placeholder="Nhập <?= $column ?>">
+                            </div>
+                        <?php endif; ?>
                     <?php endforeach; ?>
                 </form>
             </div>
@@ -245,7 +246,7 @@ $this->title = $menu->name;
                                             'data-column' => $column,
                                         ],
                                         'value' => function ($data, $index, $widget) use ($column) {
-                                            return isset($data[$column]) && !empty($data[$column]) ? $data[$column] : ''; // Trả về giá trị hoặc trống
+                                            return isset($data[$column]) && !empty($data[$column]) ? $data[$column] : '';
                                         },
                                         'enableSorting' => true,
 
@@ -269,7 +270,7 @@ $this->title = $menu->name;
                                             'delete' => function ($url, $data, $key) {
                                                 return Html::a('<i class="fa-regular fa-trash-can"></i>', '#', [
                                                     'class' => 'btn btn-danger btn-m btn-delete',
-                                                    'data-hidden_id' => $data[BaseModel::HIDDEN_ID_KEY], // Dùng $data[BaseModel::HIDDEN_ID_KEY] để lấy id thực tế
+                                                    'data-hidden_id' => $data[BaseModel::HIDDEN_ID_KEY],
                                                 ]);
                                             },
                                         ],
@@ -349,16 +350,16 @@ $this->title = $menu->name;
                                     <table class="table table-borderless" id="columns-visibility">
                                         <?php $index = 0; ?>
                                         <?php foreach ($columns as $column): ?>
-                                        <tr class="border" <?= $index === 0 ? 'style="display:none;"' : '' ?>>
-                                            <td class="d-flex justify-content-between align-items-center">
-                                                <span><?= htmlspecialchars($column) ?></span>
-                                                <input class="form-check-input column-checkbox" type="checkbox"
-                                                    id="checkbox-<?= htmlspecialchars($column) ?>"
-                                                    data-column="<?= htmlspecialchars($column) ?>"
-                                                    <?= $index === 0 ? 'disabled' : 'checked' ?>>
-                                            </td>
-                                        </tr>
-                                        <?php $index++; ?>
+                                            <tr class="border" <?= $index === 0 ? 'style="display:none;"' : '' ?>>
+                                                <td class="d-flex justify-content-between align-items-center">
+                                                    <span><?= htmlspecialchars($column) ?></span>
+                                                    <input class="form-check-input column-checkbox" type="checkbox"
+                                                        id="checkbox-<?= htmlspecialchars($column) ?>"
+                                                        data-column="<?= htmlspecialchars($column) ?>"
+                                                        <?= $index === 0 ? 'disabled' : 'checked' ?>>
+                                                </td>
+                                            </tr>
+                                            <?php $index++; ?>
                                         <?php endforeach; ?>
                                     </table>
                                 </ul>
@@ -373,12 +374,12 @@ $this->title = $menu->name;
 </div>
 
 <script>
-var add_data_url = "<?= Url::to(['pages/add-data']) ?>";
-var update_data_url = "<?= Url::to(['pages/update-data']) ?>";
-var delete_data_url = "<?= Url::to(['pages/delete-data']) ?>";
-var pageId = "<?= $pageId ?>";
-var tableName = "<?= $dataProvider->query->from[0] ?>";
-var delete_all_data_url = "<?= Url::to(['pages/delete-selected-data']) ?>";
-var import_url = "<?= Url::to(['pages/import-excel']) ?>";
-var export_url = "<?= Url::to(['pages/export-excel']) ?>";
+    var add_data_url = "<?= Url::to(['pages/add-data']) ?>";
+    var update_data_url = "<?= Url::to(['pages/update-data']) ?>";
+    var delete_data_url = "<?= Url::to(['pages/delete-data']) ?>";
+    var pageId = "<?= $pageId ?>";
+    var tableName = "<?= $dataProvider->query->from[0] ?>";
+    var delete_all_data_url = "<?= Url::to(['pages/delete-selected-data']) ?>";
+    var import_url = "<?= Url::to(['pages/import-excel']) ?>";
+    var export_url = "<?= Url::to(['pages/export-excel']) ?>";
 </script>

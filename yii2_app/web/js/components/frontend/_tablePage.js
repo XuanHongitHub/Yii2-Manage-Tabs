@@ -30,7 +30,6 @@ $(document).ready(function () {
     });
 
     $(document).off('pjax:send').on('pjax:send', function () {
-        console.log('Pjax sending...');
         var loadingSpinner = $(`
             <div class="spinner-fixed">
                 <i class="fa fa-spin fa-spinner me-2"></i>
@@ -40,7 +39,6 @@ $(document).ready(function () {
     });
 
     $(document).off('pjax:complete').on('pjax:complete', function () {
-        console.log('Pjax completed');
         $('.spinner-fixed').remove();
         applyColumnVisibility();
     });
@@ -235,8 +233,7 @@ $(document).off('click', 'import-data-btn').on('click', '#import-data-btn', func
 });
 
 // Handle Import Excel Form Submission
-$(document).off('submit', '#importExcelForm').on('submit', '#importExcelForm', function (
-    event) {
+$(document).off('submit', '#importExcelForm').on('submit', '#importExcelForm', function (event) {
 
     event.preventDefault();
     var formData = new FormData(this);
@@ -272,117 +269,51 @@ $(document).off('submit', '#importExcelForm').on('submit', '#importExcelForm', f
 
                 $('#importExcelForm')[0].reset();
                 $('#importExelModal').modal('hide');
-            } else if (response.duplicate) {
-                $('#confirmMessage').html(
-                    `Ghi đè các mục hiện có trong cột <strong>[Khóa chính]</strong>. Bạn có muốn tiếp tục nhập không?<br><br>
-                    ${response.message}`
-                );
-
-                $('#confirmModal').modal('show');
-
-                $('#confirmYesBtn').off('click').on('click',
-                    function () {
-                        var newLoadingSpinner = $(` 
-                        <div class="loading-overlay">
-                            <div class="loading-content">
-                                <div class="spinner-border text-primary" role="status">
-                                    <span class="sr-only">Loading...</span>
-                                </div>
-                                <span class="ml-2">Đang nhập dữ liệu, vui lòng đợi...</span>                    
-                            </div>
-                        </div>
-                    `);
-                        $('body').append(newLoadingSpinner);
-
-                        formData.append('removeId', true);
-
-                        $.ajax({
-                            url: import_url,
-                            type: 'POST',
-                            headers: {
-                                'X-CSRF-Token': $(
-                                    'meta[name="csrf-token"]'
-                                ).attr(
-                                    'content')
-                            },
-                            data: formData,
-                            processData: false,
-                            contentType: false,
-                            success: function (response) {
-                                newLoadingSpinner
-                                    .remove();
-
-                                if (response.success) {
-                                    loadData(pageId);
-
-                                    showToast(
-                                        'Tệp Excel được nhập và ghi đè [PK]s thành công!'
-                                    );
-
-                                    // $('#importExcelForm')[0].reset();
-                                    $('#importExelModal')
-                                        .modal('hide');
-
-                                } else {
-                                    newLoadingSpinner
-                                        .remove();
-                                    showModal('Error',
-                                        'Không thể nhập tệp Excel: \n' +
-                                        response
-                                            .message);
-                                }
-                            }
-                        });
-                        $('#importStatusModal').modal('hide');
-                        $('#confirmModal').modal('hide');
-                    });
             } else {
                 loadingSpinner.remove();
-                showModal('Error', 'Không thể nhập tệp Excel: ' +
-                    response.message);
+                showModal('Lỗi', '' + response.message);
             }
         },
         error: function (xhr, status, error) {
             loadingSpinner.remove();
-            showModal('Error', 'Có lỗi xảy ra khi nhập tệp Excel:');
+            showModal('Lỗi', 'Có lỗi xảy ra khi nhập tệp Excel: ' + error);
         }
     });
 });
 
-// Hàm hiển thị modal với thông điệp
-function showModal(title, message) {
-    $('#importStatusModalLabel').text(title);
+let lastAjaxUrl = '';
 
-    $('#importStatusMessage').html(message.replace(/\n/g, '<br>'));
-
-    $('#importStatusModal').modal('show');
-
-    $('#importExelModal').modal('hide');
-}
-
+$(document).ajaxSend(function (event, jqXHR, settings) {
+    lastAjaxUrl = settings.url;
+});
 $(document).on('click', '#export-excel-btn', function () {
+    var loadingSpinner = $(`
+        <div class="loading-overlay">
+            <div class="loading-content">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="sr-only">Loading...</span>
+                </div>
+                <span class="ml-2">Đang xuất dữ liệu, vui lòng đợi...</span>                    
+            </div>
+        </div>
+    `);
+    $('body').append(loadingSpinner);
 
     var search = '';
     var sort = $('th.sortable-column a.desc, th.sortable-column a.asc').data('sort');
 
-    $.ajax({
-        url: export_url,
-        type: 'GET',
-        data: {
-            pageId: pageId,
-            sort: sort,
-            search: search,
-        },
-        success: function (response) {
-            console.log("🚀 ~ pjaxUrl:", pjaxUrl);
-            console.log("🚀 ~ search:", search);
-            console.log("🚀 ~ sort:", sort);
-        },
-        error: function (xhr, status, error) {
-            alert('Có lỗi xảy ra trong quá trình xuất dữ liệu.');
-        }
-    });
+    if (lastAjaxUrl.includes('search=')) {
+        const urlParams = new URLSearchParams(lastAjaxUrl.split('?')[1]);
+        search = urlParams.get('search');
+    }
+
+    const exportUrl = export_url + '?pageId=' + pageId + '&sort=' + sort + '&search=' + search;
+
+    window.location.href = exportUrl;
+    loadingSpinner.remove();
+
 });
+
 
 
 

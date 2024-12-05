@@ -11,27 +11,27 @@ use yii\helpers\Url;
 
 RichtextAsset::register($this);
 
-$this->registerJsFile('js/components/frontend/richtextPage.js', ['depends' => AppAsset::class]);
-$this->registerJsFile('js/libs/rte.js', ['depends' => AppAsset::class]);
-$this->registerJsFile('js/libs/rte_all_plugins.js', ['depends' => AppAsset::class]);
+
 ?>
-<div class="form-group my-1" id="view-content">
-    <!-- Hiển thị nội dung ban đầu -->
-    <div id="content-display"><?= $content ?></div>
-</div>
 
-<!-- Form chỉnh sửa nội dung (ẩn khi không chỉnh sửa) -->
-<div class="form-group my-1" id="edit-content" style="display:none;">
-    <textarea id="richtext-editor"><?= Html::encode($content) ?></textarea>
-</div>
+<div class="page-content">
+    <div class="d-flex flex-wrap justify-content-end align-items-center me-3 my-1">
+        <button class="btn btn-secondary me-2" id="cancel-edit-button" style="display:none;">Hủy</button>
+        <button class="btn btn-warning" id="edit-button">
+            <i class="fa fa-edit me-1"></i> Sửa
+        </button>
+        <button class="btn btn-success" id="save-button" style="display:none;">
+            <i class="fa fa-save me-1"></i> Lưu
+        </button>
+    </div>
+    <div class="form-group my-1" id="view-content">
+        <div id="content-display"><?= $content ?></div>
+    </div>
 
-<div class="d-flex justify-content-end my-2">
-    <button type="button" class="btn btn-secondary me-2" id="cancel-edit-button" style="display: none;">
-        <i class="fa fa-times me-1"></i> Hủy
-    </button>
-    <button type="button" class="btn btn-warning me-4" id="save-button" data-page-id="<?= $pageId ?>">
-        <i class="fa fa-edit me-1"></i> Sửa
-    </button>
+    <!-- Form chỉnh sửa nội dung (ẩn khi không chỉnh sửa) -->
+    <div class="form-group my-1" id="edit-content" style="display:none;">
+        <textarea id="richtext-editor"><?= Html::encode($content) ?></textarea>
+    </div>
 </div>
 
 <!-- Modal xác nhận -->

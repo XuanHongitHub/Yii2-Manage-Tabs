@@ -224,3 +224,12 @@ function showToast(message) {
   toast.show();
 }
 
+function showModal(title, message) {
+  $('#importStatusModalLabel').text(title);
+
+  $('#importStatusMessage').html(message.replace(/\n/g, '<br>'));
+
+  $('#importStatusModal').modal('show');
+
+  $('#importExelModal').modal('hide');
+}

@@ -3,13 +3,14 @@
 use yii\helpers\Html;
 use app\models\Menu;
 use app\assets\Select2Asset;
-Select2Asset::register($this);
+
 /** @var yii\web\View $this */
-$tableCreationData = Yii::$app->session->getFlash('tableCreationData', []);
+
+Select2Asset::register($this);
 
 $this->title = 'Danh sách Page';
 
-$this->registerCssFile('@web/css/datatables.css', ['depends' => [\yii\web\JqueryAsset::class]]);
+$this->registerCssFile('@web/css/datatables.css', ['depends' => [\yii\web\YiiAsset::class]]);
 
 ?>
 
@@ -72,8 +73,8 @@ $this->registerCssFile('@web/css/datatables.css', ['depends' => [\yii\web\Jquery
 
                         <td class="text-center">
                             <?= $page->status == 1 ?
-                                                        '<span class="badge badge-warning">Ẩn</span>' : '<span class="badge badge-success">Hiện</span>'
-                                                    ?>
+                                        '<span class="badge badge-warning">Ẩn</span>' : '<span class="badge badge-success">Hiện</span>'
+                                    ?>
                         </td>
                         <td class="text-center text-nowrap">
                             <button class="btn btn-primary btn-sm edit-btn me-1" data-bs-toggle="modal"
@@ -629,17 +630,13 @@ document.addEventListener("DOMContentLoaded", function() {
 </script>
 
 <?php
-    $jsFiles = [
-   
-        'js/jquery.dataTables.min.js',
-        'js/datatable.custom.js',
-        'js/datatable.custom1.js',
+$jsFiles = [
+    'js/libs/jquery.dataTables.min.js',
+    'js/libs/datatable.custom.js',
+    'js/libs/datatable.custom1.js',
+];
 
-        'js/jquery-ui.js',
-
-    ];
-
-    foreach ($jsFiles as $js) {
-        $this->registerJsFile($js, ['depends' => [\yii\web\YiiAsset::class]]);
-    }
+foreach ($jsFiles as $js) {
+    $this->registerJsFile($js, ['depends' => [\yii\web\YiiAsset::class]]);
+}
 ?>
