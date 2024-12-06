@@ -20,6 +20,7 @@ $this->registerMetaTag(['name' => 'keywords', 'content' => $this->params['meta_k
 $this->registerLinkTag(['rel' => 'icon', 'type' => 'image/x-icon', 'href' => Yii::getAlias('@web/favicon.ico')]);
 $errorMessage = Yii::$app->session->getFlash('error');
 $successMessage = Yii::$app->session->getFlash('success');
+$isAdmin = Yii::$app->user->identity->isUserAdmin();
 ?>
 <?php $this->beginPage() ?>
 <!DOCTYPE html>

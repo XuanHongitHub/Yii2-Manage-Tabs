@@ -23,7 +23,7 @@ $this->registerMetaTag(['name' => 'keywords', 'content' => $this->params['meta_k
 $this->registerLinkTag(['rel' => 'icon', 'type' => 'image/x-icon', 'href' => Yii::getAlias('@web/favicon.ico')]);
 $successMessage = Yii::$app->session->getFlash('success');
 $errorMessage = Yii::$app->session->getFlash('error');
-$isAdmin = User::isUserAdmin(Yii::$app->user->identity->username);
+$isAdmin = Yii::$app->user->identity->isUserAdmin();
 
 $tabMenus = Menu::find()
     ->where(['deleted' => 0])
