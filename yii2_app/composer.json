@@ -20,7 +20,8 @@
         "yiisoft/yii2-symfonymailer": "~2.0.3",
         "bower-asset/jquery": "^3.7",
         "bower-asset/font-awesome": "^6.7",
-        "phpoffice/phpspreadsheet": "^1.12"
+        "phpoffice/phpspreadsheet": "^1.12",
+        "mihaildev/yii2-elfinder": "^1.4"
     },
     "require-dev": {
         "yiisoft/yii2-debug": "~2.1.0",
