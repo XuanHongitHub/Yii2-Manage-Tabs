@@ -144,89 +144,46 @@ $successMessage = Yii::$app->session->getFlash('success');
                     <nav class="sidebar-main">
                         <div class="left-arrow" id="left-arrow"><i data-feather="arrow-left"></i></div>
                         <div id="sidebar-menu">
-                            <ul class="sidebar-links" id="simple-bar">
-                                <li class="back-btn"><a href="<?= \yii\helpers\Url::to(['/']) ?>"><img class="img-fluid"
-                                            src="<?= Yii::getAlias('@web') ?>/images/logo-icon.png" alt=""></a>
-                                    <div class="mobile-back text-end"><span>Back</span><i class="fa fa-angle-right ps-2"
-                                            aria-hidden="true"></i></div>
-                                </li>
+                            <li class="back-btn"><a href="<?= \yii\helpers\Url::to(['/']) ?>"><img class="img-fluid"
+                                                                                                   src="<?= Yii::getAlias('@web') ?>/images/logo-icon.png" alt=""></a>
+                                <div class="mobile-back text-end"><span>Back</span><i class="fa fa-angle-right ps-2"
+                                                                                      aria-hidden="true"></i></div>
+                            </li>
+                            <?php echo  \yii\widgets\Menu::widget([
+                                'items' => [
+                                    [
+                                            'label' => '',
+                                        'url' => ['/']
+                                    ],
+                                    [
+                                        'label' => '<i class="fa-solid fa-social"></i> Quan ly page',
+                                        'url' => '#',
+                                        'items' => [
+                                            ['label' => '<i class="fa-solid fa-magnifying-glass"></i> Danh sach', 'url' => ['pages/index'],'template' => '<a href="{url}">{label}</a>'],
+                                            ['label' => '<i class="fa-solid fa-magnifying-glass"></i> them moi', 'url' => ['pages/create'],'template' => '<a href="{url}">{label}</a>'],
+                                        ],
+                                    ],
+                                    [
+                                        'label' => '<i class="fa-solid fa-magnifying-glass"></i> Quan ly menu',
+                                        'url' => '#',
+                                        'items' => [
+                                            ['label' => 'Danh sach', 'url' => ['menus/index'],'template' => '<a href="{url}">{label}</a>'],
+                                            ['label' => 'them moi', 'url' => ['menus/create'],'template' => '<a href="{url}">{label}</a>'],
+                                        ],
+                                    ],
+                                    ['label' => 'File Manager', 'url' => ['files/index'],'template' => '<a class="sidebar-link sidebar-title link-nav" href="{url}"><span>{label}</span></a>'],
+                                    ['label' => 'Người dùng', 'url' => ['users/index'],'template' => '<a class="sidebar-link sidebar-title link-nav" href="{url}"><span>{label}</span></a>', 'visible' => $isAdmin],
+                                ],
+                                'encodeLabels' => false,
+                                'options'=>['class'=>'sidebar-links','id'=>'simple-bar'],
+                                'itemOptions' => ['class'=>'sidebar-list'],
+                                'submenuTemplate' => "\n<ul class='sidebar-submenu'>\n{items}\n</ul>\n",
+                                'linkTemplate' => '<a class="sidebar-link sidebar-title" href="{url}"><span>{label}</span><div class="according-menu"><i class="fa fa-angle-right"></i></div></a>',
 
-                                <li class="sidebar-main-title pt-4">
-                                    <div>
-                                        <h6 class="lan-1">Cài đặt </h6>
-                                    </div>
-                                </li>
+                            ]);?>
 
-                                <li class="sidebar-list"><a class="sidebar-link sidebar-title" href="#">
-                                        <svg class="stroke-icon">
-                                            <use
-                                                href="<?= Yii::getAlias('@web') ?>/images/icon-sprite.svg#stroke-social">
-                                            </use>
-                                        </svg>
-                                        <svg class="fill-icon">
-                                            <use href="<?= Yii::getAlias('@web') ?>/images/icon-sprite.svg#fill-social">
-                                            </use>
-                                        </svg><span>Quản Lý Page</span>
-                                        <div class="according-menu"><i class="fa fa-angle-right"></i></div>
-                                    </a>
-                                    <ul class="sidebar-submenu" style="display: none;">
-                                        <li><a href="<?= \yii\helpers\Url::to(['pages/index']) ?>">
-                                                <svg class="svg-menu">
-                                                    <use
-                                                        href="<?= Yii::getAlias('@web') ?>/images/icon-sprite.svg#right-3">
-                                                    </use>
-                                                </svg>Danh sách</a></li>
-                                        <li><a href="<?= \yii\helpers\Url::to(['pages/create']) ?>">
-                                                <svg class="svg-menu">
-                                                    <use
-                                                        href="<?= Yii::getAlias('@web') ?>/images/icon-sprite.svg#right-3">
-                                                    </use>
-                                                </svg>Thêm mới</a></li>
-                                    </ul>
-                                </li>
-                                <li class="sidebar-list"><a class="sidebar-link sidebar-title" href="#">
-                                        <svg class="stroke-icon">
-                                            <use
-                                                href="<?= Yii::getAlias('@web') ?>/images/icon-sprite.svg#stroke-icons">
-                                            </use>
-                                        </svg>
-                                        <svg class="fill-icon">
-                                            <use href="<?= Yii::getAlias('@web') ?>/images/icon-sprite.svg#fill-icons">
-                                            </use>
-                                        </svg><span>Quản Lý Menu</span>
-                                        <div class="according-menu"><i class="fa fa-angle-right"></i></div>
-                                    </a>
-                                    <ul class="sidebar-submenu" style="display: none;">
-                                        <li><a href="<?= \yii\helpers\Url::to(['menus/index']) ?>">
-                                                <svg class="svg-menu">
-                                                    <use
-                                                        href="<?= Yii::getAlias('@web') ?>/images/icon-sprite.svg#right-3">
-                                                    </use>
-                                                </svg>Danh sách</a></li>
-                                        <li><a href="<?= \yii\helpers\Url::to(['menus/create']) ?>">
-                                                <svg class="svg-menu">
-                                                    <use
-                                                        href="<?= Yii::getAlias('@web') ?>/images/icon-sprite.svg#right-3">
-                                                    </use>
-                                                </svg>Thêm mới</a></li>
-                                    </ul>
-                                </li>
 
-                                <?php if ($isAdmin): ?>
-                                <li class="sidebar-list"><a class="sidebar-link sidebar-title link-nav"
-                                        href="<?= \yii\helpers\Url::to(['users/index']) ?>">
-                                        <svg class="stroke-icon">
-                                            <use href="<?= Yii::getAlias('@web') ?>/images/icon-sprite.svg#stroke-user">
-                                            </use>
-                                        </svg>
-                                        <svg class="fill-icon">
-                                            <use href="<?= Yii::getAlias('@web') ?>/images/icon-sprite.svg#fill-user">
-                                            </use>
-                                        </svg><span>Người dùng</span>
-                                    </a>
-                                </li>
-                                <?php endif; ?>
-                            </ul>
+
                         </div>
                         <div class="right-arrow" id="right-arrow"><i data-feather="arrow-right"></i></div>
                     </nav>
@@ -238,6 +195,7 @@ $successMessage = Yii::$app->session->getFlash('success');
                 <div class="container-fluid pt-2">
                     <div class="row">
                         <div class="col-sm-12">
+
                             <?= $content ?>
                         </div>
                     </div>
