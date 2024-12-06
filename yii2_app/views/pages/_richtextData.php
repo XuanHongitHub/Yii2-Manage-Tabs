@@ -28,7 +28,6 @@ RichtextAsset::register($this);
         <div id="content-display"><?= $content ?></div>
     </div>
 
-    <!-- Form chỉnh sửa nội dung (ẩn khi không chỉnh sửa) -->
     <div class="form-group my-1" id="edit-content" style="display:none;">
         <textarea id="richtext-editor"><?= Html::encode($content) ?></textarea>
     </div>
@@ -55,6 +54,6 @@ RichtextAsset::register($this);
 </div>
 
 <script>
-    var pageId = <?= $page->id ?>;
-    var save_richtext_url = "<?= Url::to(['pages/save-rich-text']) ?>";
+var pageId = <?= $page->id ?>;
+var save_richtext_url = "<?= Url::to(['pages/save-rich-text']) ?>";
 </script>

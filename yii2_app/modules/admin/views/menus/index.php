@@ -31,7 +31,7 @@ $this->registerJsFile('js/components/admin/indexMenu.js', ['depends' => AppAsset
                 <a class="btn btn-danger me-2 mb-2" href="#" data-bs-toggle="modal" data-bs-target="#trashBinModal">
                     <i class="fas fa-trash me-1"></i> Thùng Rác
                 </a>
-                <a class="btn btn-success mb-2" href="<?= \yii\helpers\Url::to(['pages/create']) ?>">
+                <a class="btn btn-success mb-2" href="<?= \yii\helpers\Url::to(['menus/create']) ?>">
                     <i class="fas fa-plus me-1"></i> Thêm Menu
                 </a>
             </div>
@@ -284,12 +284,6 @@ $this->registerJsFile('js/components/admin/indexMenu.js', ['depends' => AppAsset
                             <option value="1">Ẩn</option>
                         </select>
                     </div>
-
-                    <!-- Vị trí -->
-                    <div class="mb-3">
-                        <label for="tabMenuPosition" class="form-label">Vị trí</label>
-                        <input type="number" class="form-control" id="tabMenuPosition" name="position" required>
-                    </div>
                 </form>
             </div>
             <div class="modal-footer">
@@ -325,7 +319,7 @@ $this->registerJsFile('js/components/admin/indexMenu.js', ['depends' => AppAsset
     </div>
 </div>
 
-<!-- Sub Page -->
+<!-- Modal SubPage -->
 <div class="modal fade" id="editSubPageModal" tabindex="-1" aria-labelledby="editSubPageModalLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -341,7 +335,6 @@ $this->registerJsFile('js/components/admin/indexMenu.js', ['depends' => AppAsset
                 <div class="mt-3">
                     <label>Sắp xếp:</label>
                     <ul id="sortable-subpages" class="list-group">
-                        <!-- Các sub-page sẽ được thêm vào đây -->
                     </ul>
                 </div>
             </div>

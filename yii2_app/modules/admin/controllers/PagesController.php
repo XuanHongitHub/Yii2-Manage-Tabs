@@ -12,8 +12,9 @@ use yii\web\Response;
 use app\models\Page;
 use app\models\Menu;
 use app\modules\admin\components\BaseAdminController;
+use yii\data\ActiveDataProvider;
 use yii\web\NotFoundHttpException;
-use yii\web\Exception;
+use Exception;
 use yii\filters\AccessControl;
 
 
@@ -24,13 +25,28 @@ class PagesController extends BaseAdminController
         $searchModel = new PageSearch();
         $dataProvider = $searchModel->search(Yii::$app->request->queryParams);
 
+        $dataProvider->pagination = [
+            'pageSize' => 10,
+        ];
+
         $dataProvider->query->orderBy(['id' => SORT_ASC]);
+
+        $trashQuery = clone $dataProvider->query;
+        $trashQuery->andWhere(['deleted' => 1]);
+
+        $trashDataProvider = new ActiveDataProvider([
+            'query' => $trashQuery,
+            'pagination' => [
+                'pageSize' => 10,
+            ],
+        ]);
 
         $menus = Menu::find()->all();
 
         if (Yii::$app->request->isPjax) {
             return $this->renderAjax('index', [
                 'dataProvider' => $dataProvider,
+                'trashDataProvider' => $trashDataProvider,
                 'menus' => $menus,
                 'searchModel' => $searchModel,
             ]);
@@ -38,6 +54,7 @@ class PagesController extends BaseAdminController
 
         return $this->render('index', [
             'dataProvider' => $dataProvider,
+            'trashDataProvider' => $trashDataProvider,
             'menus' => $menus,
             'searchModel' => $searchModel,
         ]);
@@ -70,6 +87,25 @@ class PagesController extends BaseAdminController
             $page->table_name = $tableName;
             $page->created_at = date('Y-m-d H:i:s');
             $page->updated_at = date('Y-m-d H:i:s');
+
+            // Kiểm tra tính hợp lệ của pageName và tableName
+            $existingPage = Page::find()->where(['name' => $pageName, 'user_id' => $userId])->exists();
+            if ($existingPage) {
+                $page->addError('name', 'Tên trang đã tồn tại. Vui lòng chọn tên khác.');
+            }
+
+            $existingTable = Yii::$app->db->createCommand("SELECT EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = :tableName)")
+                ->bindValue(':tableName', $tableName)
+                ->queryScalar();
+            if ($existingTable) {
+                $page->addError('table_name', 'Tên bảng đã tồn tại. Vui lòng chọn tên khác.');
+            }
+
+            // Nếu có lỗi validate thì không tiếp tục và trả về form với lỗi
+            if ($page->hasErrors()) {
+                Yii::$app->session->setFlash('error', 'Đã xảy ra lỗi: ' . implode(', ', $page->errors));
+                return $this->render('create', ['page' => $page]);
+            }
 
             if ($pageType === 'table') {
                 $columns = Yii::$app->request->post('columns', []);
@@ -131,7 +167,6 @@ class PagesController extends BaseAdminController
                     return $this->redirect(['create']);
                 }
             } elseif ($pageType === 'richtext') {
-
                 $existingTab = Page::findOne(['name' => $tableName, 'type' => 'richtext', 'user_id' => $userId]);
                 if ($existingTab) {
                     Yii::$app->session->setFlash('error', 'Tên page đã tồn tại. Vui lòng chọn tên khác.');
@@ -151,6 +186,7 @@ class PagesController extends BaseAdminController
         }
         return $this->render('create');
     }
+
 
     public function actionCheckNameExistence()
     {
@@ -251,9 +287,7 @@ class PagesController extends BaseAdminController
     {
         $postData = Yii::$app->request->post();
 
-        $pageId = $postData['pageId'];
-
-        $page = Page::find()->where(['id'])->one();
+        $page = Page::find()->where(['id' => $postData['pageId']])->one();
 
         if (!$page) {
             Yii::$app->session->setFlash('error', 'Page không tồn tại.');
@@ -285,11 +319,6 @@ class PagesController extends BaseAdminController
             }
         } elseif ($page->type == 'richtext') {
             try {
-                $filePath = Yii::getAlias('@runtime/richtext/' . $pageId . '.txt');
-
-                if (file_exists($filePath)) {
-                    unlink($filePath);
-                }
                 $page->delete();
 
                 Yii::$app->session->setFlash('success', 'Dữ liệu richtext đã được xóa thành công.');
@@ -382,5 +411,47 @@ class PagesController extends BaseAdminController
 
         Yii::$app->session->setFlash('error', 'Không tìm thấy page.');
         return json_encode(['status' => 'error']);
+    }
+    /** 
+     * Edit RichtextData Action.
+     *
+     */
+    public function actionEdit($id)
+    {
+        $page = Page::findOne(['id' => $id]);
+        if (!$page) {
+            throw new NotFoundHttpException('Page không tồn tại.');
+        }
+
+        return $this->render('edit', [
+            'page' => $page,
+            'content' => $page->content,
+        ]);
+    }
+    /** 
+     * Update RichtextData Action.
+     *
+     */
+    public function actionSaveRichText()
+    {
+        if (Yii::$app->request->isPost) {
+            $id = Yii::$app->request->post('id');
+            $content = Yii::$app->request->post('content');
+
+            $page = Page::findOne(['id' => $id]);
+
+            if (!$page) {
+                throw new NotFoundHttpException('Page không tồn tại.');
+            }
+            $page->content = $content;
+
+            if ($page->save()) {
+                return json_encode(['status' => 'success', 'message' => 'Nội dung đã được cập nhật thành công.']);
+            } else {
+                return json_encode(['status' => 'error', 'message' => 'Đã xảy ra lỗi khi cập nhật nội dung.']);
+            }
+        }
+
+        return json_encode(['status' => 'error', 'message' => 'Yêu cầu không hợp lệ.']);
     }
 }

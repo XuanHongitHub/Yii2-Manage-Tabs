@@ -41,7 +41,11 @@ $this->title = 'Danh sách Page';
     </div>
 
     <div class="card-body">
-        <?php Pjax::begin(['id' => 'page-gridview-pjax', 'enablePushState' => false]); ?>
+        <?php Pjax::begin([
+            'id' => 'page-gridview-pjax',
+            'enablePushState' => false,  // Tắt pushState để không thay đổi URL
+            'enableReplaceState' => false // Tắt replaceState để không thay đổi URL
+        ]); ?>
 
         <div class="d-flex">
             <div class="search-bar ms-auto">
@@ -74,10 +78,13 @@ $this->title = 'Danh sách Page';
         </div>
 
         <?= GridView::widget([
-                'dataProvider' => new ActiveDataProvider([
-                    'query' => $dataProvider->query->andWhere(['deleted' => 0]), 
-                ]),            
-                'columns' => [
+            'dataProvider' => new ActiveDataProvider([
+                'query' => $dataProvider->query->andWhere(['deleted' => 0]),
+                'pagination' => [
+                    'pageSize' => 10,
+                ],
+            ]),
+            'columns' => [
                 [
                     'attribute' => 'name',
                     'label' => 'Tên Page',
@@ -87,20 +94,20 @@ $this->title = 'Danh sách Page';
                     'label' => 'Loại',
                     'format' => 'raw',
                     'value' => function ($data) {
-            return $data->type == 'table' ?
-                '<span class="badge badge-light-primary">Table</span>' :
-                '<span class="badge badge-light-danger">Richtext</span>';
-        },
+                        return $data->type == 'table' ?
+                            '<span class="badge badge-light-primary">Table</span>' :
+                            '<span class="badge badge-light-danger">Richtext</span>';
+                    },
                 ],
                 [
                     'attribute' => 'status',
                     'label' => 'Hiện',
                     'format' => 'raw',
                     'value' => function ($data) {
-            return $data->status == 1 ?
-                '<span class="badge badge-warning">Ẩn</span>' :
-                '<span class="badge badge-success">Hiện</span>';
-        },
+                        return $data->status == 1 ?
+                            '<span class="badge badge-warning">Ẩn</span>' :
+                            '<span class="badge badge-success">Hiện</span>';
+                    },
                     'headerOptions' => ['class' => 'text-center'],
                     'contentOptions' => ['class' => 'text-center'],
                 ],
@@ -110,33 +117,47 @@ $this->title = 'Danh sách Page';
                     'template' => '{edit} {delete}',
                     'buttons' => [
                         'edit' => function ($url, $model, $key) {
-            return Html::button('<i class="fa-solid fa-pen-to-square"></i>', [
-                'class' => 'btn btn-primary btn-sm edit-btn',
-                'data-bs-toggle' => 'modal',
-                'data-bs-target' => '#editModal',
-                'data-page-id' => $model->id,
-                'data-page-name' => $model->name,
-                'data-page-type' => $model->type,
-                'data-menu-id' => $model->menu_id,
-                'data-status' => $model->status,
-            ]);
-        },
+                            if ($model->type === 'richtext') {
+                                $url = Url::to(['pages/edit', 'id' => $model->id]);
+                                return Html::a('<i class="fa-solid fa-pen-to-square"></i>', $url, [
+                                    'class' => 'btn btn-primary btn-sm edit-btn',
+                                    'title' => 'Chỉnh sửa trang',
+                                ]);
+                            } else {
+                                return Html::button('<i class="fa-solid fa-pen-to-square"></i>', [
+                                    'class' => 'btn btn-primary btn-sm edit-btn disabled',
+                                    'data-page-id' => $model->id,
+                                    'title' => 'Chỉnh sửa trang',
+                                ]);
+                            }
+                        },
                         'delete' => function ($url, $model, $key) {
-            return Html::button('<i class="fa-regular fa-trash-can"></i>', [
-                'class' => 'btn btn-danger btn-sm delete-btn',
-                'data-bs-toggle' => 'modal',
-                'data-bs-target' => '#deleteModal',
-                'data-page-id' => $model->id,
-            ]);
-        },
+                            return Html::button('<i class="fa-regular fa-trash-can"></i>', [
+                                'class' => 'btn btn-danger btn-sm delete-btn',
+                                'data-bs-toggle' => 'modal',
+                                'data-bs-target' => '#deleteModal',
+                                'data-page-id' => $model->id,
+                                'title' => 'Xóa trang',
+                            ]);
+                        },
                     ],
                     'headerOptions' => ['style' => 'width: 10%; text-align: center;'],
                     'contentOptions' => ['style' => 'text-align:center; white-space: nowrap;'],
-
                 ],
             ],
             'pager' => [
-                'class' => yii\widgets\LinkPager::class,
+                'class' => 'yii\widgets\LinkPager',
+                'options' => ['class' => 'pagination justify-content-end align-items-center'],
+                'linkContainerOptions' => ['tag' => 'span'],
+                'linkOptions' => [
+                    'class' => 'paginate_button',
+                ],
+                'activePageCssClass' => 'current',
+                'disabledPageCssClass' => 'disabled',
+                'disabledListItemSubTagOptions' => ['tag' => 'span', 'class' => 'paginate_button'],
+                'prevPageLabel' => 'Trước',
+                'nextPageLabel' => 'Tiếp',
+                'maxButtonCount' => 5,
             ],
             'summary' => '<span class="text-muted pt-3">Hiển thị <b>{begin}-{end}</b> trên tổng số <b>{totalCount}</b> dòng.</span>',
             'layout' => "{items}\n{summary}\n{pager}",
@@ -144,8 +165,9 @@ $this->title = 'Danh sách Page';
 
         <?php Pjax::end(); ?>
 
-
     </div>
+
+
 </div>
 
 <!-- Modal sửa -->
@@ -158,31 +180,9 @@ $this->title = 'Danh sách Page';
             </div>
             <div class="modal-body">
                 <form id="editTabForm">
-                    <!-- Không cho phép sửa tên Page -->
                     <div class="mb-3">
                         <label for="edittableName" class="form-label">Tên Page</label>
-                        <input type="text" class="form-control" id="edittableName" name="name" disabled>
-                    </div>
-                    <div class="mb-3">
-                        <label for="editTabType" class="form-label">Loại Page</label>
-                        <input class="form-control" id="editTabType" name="type" disabled>
-                    </div>
-                    <div class="mb-3">
-                        <label for="editMenu" class="form-label">Menu</label>
-                        <select class="form-select" id="editMenu" name="menu_id">
-                            <option class="txt-primary" value="">-- Không --</option>
-                            <?php foreach ($menus as $menu): ?>
-                            <option value="<?= $menu->id ?>"><?= Html::encode($menu->name) ?></option>
-                            <?php endforeach; ?>
-                        </select>
-                    </div>
-
-                    <div class="mb-3">
-                        <label for="editStatus" class="form-label">Trạng thái</label>
-                        <select class="form-select" id="editStatus" name="status">
-                            <option value="0">Hiển thị</option>
-                            <option value="1">Ẩn</option>
-                        </select>
+                        <input type="text" class="form-control" id="edittableName" name="name">
                     </div>
                 </form>
             </div>
@@ -199,8 +199,8 @@ $this->title = 'Danh sách Page';
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header">
-                <h4 class="modal-title" id="trashBinModalLabel">Thùng Rác</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                <h4 class="modal-title" id="trashBinModalLabel">Thùng Rác</h4>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
                 <p>Chọn page bạn muốn khôi phục hoặc xóa hoàn toàn:</p>
@@ -213,10 +213,9 @@ $this->title = 'Danh sách Page';
                         </tr>
                     </thead>
                     <tbody id="trash-bin-list">
-                        <?php $hasDeletedTabs = false; ?>
-                        <?php foreach ($dataProvider->models as $page): ?>
-                        <?php if ($page->deleted == 1): ?>
-                        <?php $hasDeletedTabs = true; ?>
+                        <?php
+                        if ($trashDataProvider->getCount() > 0):
+                            foreach ($trashDataProvider->models as $page): ?>
                         <tr>
                             <td><?= htmlspecialchars($page->name) ?></td>
                             <td class="text-center">
@@ -232,17 +231,15 @@ $this->title = 'Danh sách Page';
                                     <i class="fa-solid fa-rotate-left"></i>
                                 </button>
                                 <button type="button" class="btn btn-danger delete-page-btn"
-                                    data-page-name="<?= htmlspecialchars($page->name) ?>"
                                     data-page-id="<?= htmlspecialchars($page->id) ?>">
                                     <i class="fa-regular fa-trash-can"></i>
                                 </button>
                             </td>
                         </tr>
-                        <?php endif; ?>
                         <?php endforeach; ?>
-                        <?php if (!$hasDeletedTabs): ?>
+                        <?php else: ?>
                         <tr>
-                            <td colspan="2" class="text-center text-muted">
+                            <td colspan="3" class="text-center text-muted">
                                 <em>Không có gì ở đây.</em>
                             </td>
                         </tr>
@@ -256,6 +253,7 @@ $this->title = 'Danh sách Page';
         </div>
     </div>
 </div>
+
 
 <!-- Modal Hide page -->
 <div class="modal fade" id="hideModal" tabindex="-1" aria-labelledby="hideModalLabel" aria-hidden="true">
@@ -291,7 +289,7 @@ $this->title = 'Danh sách Page';
                                 <label class="switch mb-0 mt-1">
                                     <input class="form-check-input toggle-hide-btn" type="checkbox"
                                         data-page-id="<?= htmlspecialchars($page->id) ?>"
-                                        <?php if ($page->deleted == 0): ?> checked <?php endif; ?>>
+                                        <?php if ($page->status == 0): ?> checked <?php endif; ?>>
                                     <span class="switch-state"></span>
                                 </label>
                             </td>

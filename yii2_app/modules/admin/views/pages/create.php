@@ -14,7 +14,6 @@ $this->registerJsFile('@web/js/components/admin/createPage.js', ['depends' => [A
 
 ?>
 
-
 <div class="card">
     <div class="card-header card-no-border pb-0">
         <h4>Thêm Mới Page</h4>
@@ -28,24 +27,31 @@ $this->registerJsFile('@web/js/components/admin/createPage.js', ['depends' => [A
                 <!-- Tên Page -->
                 <div class="col-12 col-md-6 col-lg-3 col-xl-3 mb-3">
                     <label for="pageName" class="form-label">Tên Page</label>
-                    <input type="text" name="pageName" class="form-control" id="pageName">
-                    <span id="pageNameError" class="text-danger"></span>
+                    <input type="text" name="pageName" class="form-control" id="pageName"
+                        value="<?= Html::encode($pageName ?? '') ?>">
+                    <?php if (isset($errors['pageName'])): ?>
+                    <span id="pageNameError" class="text-danger"><?= $errors['pageName'] ?></span>
+                    <?php endif; ?>
                 </div>
 
                 <!-- Chọn loại page -->
                 <div class="col-12 col-md-6 col-lg-3 col-xl-2 mb-3">
                     <label for="type" class="form-label">Loại Page</label>
                     <select name="type" id="type" class="form-select" onchange="toggleTabInputs()">
-                        <option value="richtext">Rich Text</option>
-                        <option value="table">Table</option>
+                        <option value="richtext" <?= (isset($type) && $type == 'richtext') ? 'selected' : '' ?>>Rich
+                            Text</option>
+                        <option value="table" <?= (isset($type) && $type == 'table') ? 'selected' : '' ?>>Table</option>
                     </select>
                 </div>
 
                 <!-- TABLE NAME -->
                 <div class="col-12 col-md-6 col-lg-3 col-xl-3 mb-3" id="tableNameInput">
                     <label for="tableName" class="form-label">Tên Bảng</label>
-                    <input type="text" name="tableName" class="form-control" id="tableName">
-                    <span id="tableNameError" class="text-danger"></span>
+                    <input type="text" name="tableName" class="form-control" id="tableName"
+                        value="<?= Html::encode($tableName ?? '') ?>">
+                    <?php if (isset($errors['tableName'])): ?>
+                    <span id="tableNameError" class="text-danger"><?= $errors['tableName'] ?></span>
+                    <?php endif; ?>
                 </div>
 
                 <!-- Phần input cho loại page "Table" -->
@@ -56,35 +62,24 @@ $this->registerJsFile('@web/js/components/admin/createPage.js', ['depends' => [A
                                 <tr>
                                     <th>Tên</th>
                                     <th>Loại</th>
-                                    <!-- <th>Độ Dài</th> -->
                                     <th class="text-center">Not_Null</th>
-                                    <!-- <th class="text-center">A_I</th> -->
                                     <th></th>
                                 </tr>
                             </thead>
                             <tbody id="columnsContainer">
-                                <!-- Row đầu tiên mặc định ẩn và có dữ liệu sẵn -->
                                 <tr class="default-row">
                                     <td>
                                         <input type="text" name="columns[]" class="form-control" id="column-name-0"
                                             value="<?= BaseModel::HIDDEN_ID_KEY ?>" placeholder="Column Name" readonly>
-                                        <div class="text-danger column-error" id="column-name-error-0">
-                                        </div>
+                                        <div class="text-danger column-error" id="column-name-error-0"></div>
                                     </td>
                                     <td>
                                         <select name="data_types[]" class="form-select" id="data-type-0">
                                             <option value="SERIAL" selected>SERIAL</option>
                                             <option value="TEXT">TEXT</option>
                                         </select>
-                                        <div class="text-danger data-type-error" id="data-type-error-0">
-                                        </div>
+                                        <div class="text-danger data-type-error" id="data-type-error-0"></div>
                                     </td>
-                                    <!-- <td>
-                                                        <input type="number" name="data_sizes[]" class="form-control"
-                                                            id="data-size-0" placeholder="Length" value="" readonly>
-                                                        <div class="text-danger data-size-error" id="data-size-error-0">
-                                                        </div>
-                                                    </td> -->
                                     <td class="text-center">
                                         <input type="checkbox" name="is_not_null[]" value="1" class="form-check-input"
                                             id="is-not-null-0" checked>
@@ -92,51 +87,33 @@ $this->registerJsFile('@web/js/components/admin/createPage.js', ['depends' => [A
                                     <td class="text-center">
                                         <input type="checkbox" name="is_primary[]" value="1" class="form-check-input"
                                             id="is-primary-0" checked>
-                                        <div class="text-danger primary-error" id="primary-error-0">
-                                        </div>
+                                        <div class="text-danger primary-error" id="primary-error-0"></div>
                                     </td>
-                                    <td>
-                                    </td>
+                                    <td></td>
                                 </tr>
                                 <tr>
                                     <td>
                                         <input type="text" name="columns[]" class="form-control" id="column-name-1"
                                             value="" placeholder="Column Name">
-                                        <div class="text-danger column-error" id="column-name-error-1">
-                                        </div>
+                                        <div class="text-danger column-error" id="column-name-error-1"></div>
                                     </td>
                                     <td>
                                         <select name="data_types[]" class="form-select" id="data-type-1">
                                             <option value="TEXT" selected>TEXT</option>
                                             <option value="INT">NUMBER</option>
                                         </select>
-                                        <div class="text-danger data-type-error" id="data-type-error-1">
-                                        </div>
+                                        <div class="text-danger data-type-error" id="data-type-error-1"></div>
                                     </td>
-                                    <!-- <td>
-                                                        <input type="number" name="data_sizes[]" class="form-control"
-                                                            id="data-size-1" placeholder="Length" value="">
-                                                        <div class="text-danger data-size-error" id="data-size-error-1">
-                                                        </div>
-                                                    </td> -->
                                     <td class="text-center">
                                         <input type="checkbox" name="is_not_null[]" value="1" class="form-check-input"
                                             id="is-not-null-1">
                                     </td>
-                                    <!-- <td class="text-center">
-                                                        <input type="checkbox" name="is_primary[]" value="1"
-                                                            class="form-check-input" id="is-primary-1">
-                                                        <div class="text-danger primary-error" id="primary-error-1">
-                                                        </div>
-                                                    </td> -->
-                                    <td>
-                                    </td>
+                                    <td></td>
                                 </tr>
                             </tbody>
                         </table>
                     </div>
-                    <button type="button" class="btn btn-outline-primary my-3" onclick="addColumn()">+
-                        Thêm cột</button>
+                    <button type="button" class="btn btn-outline-primary my-3" onclick="addColumn()">+ Thêm cột</button>
                 </div>
 
                 <!-- Nút tạo -->

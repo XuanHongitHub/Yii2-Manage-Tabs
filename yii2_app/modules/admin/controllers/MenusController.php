@@ -32,7 +32,7 @@ class MenusController extends BaseAdminController
     }
     public function actionCreate()
     {
-        $menus = Menu::find()
+        $potentialMenus = Menu::find()
             ->leftJoin('manager_menu AS parent_menu', 'parent_menu.id = manager_menu.parent_id')
             ->where(['manager_menu.parent_id' => null])
             ->andWhere(['manager_menu.status' => 0])
@@ -46,29 +46,53 @@ class MenusController extends BaseAdminController
                     ->where('manager_page.menu_id = manager_menu.id')
             ])
             ->all();
-
+        $potentialPages = Page::find()
+            ->where(['menu_id' => null])
+            ->andWhere(['status' => 0])
+            ->andWhere(['deleted' => 0])
+            ->all();
         return $this->render('create', [
-            'menus' => $menus,
+            'potentialMenus' => $potentialMenus,
+            'potentialPages' => $potentialPages,
         ]);
     }
-
+    /**
+     * Thêm menu
+     * @throws \Exception
+     * @return Yii\web\Response
+     */
     public function actionStore()
     {
         if (Yii::$app->request->isPost) {
             $data = Yii::$app->request->post();
 
+            if (empty($data['name'])) {
+                return $this->asJson(['success' => false, 'message' => 'Tên menu không được để trống.']);
+            }
+
+            if (empty($data['icon'])) {
+                return $this->asJson(['success' => false, 'message' => 'Vui lòng chọn một icon.']);
+            }
+
             $transaction = Yii::$app->db->beginTransaction();
 
             try {
                 $model = new Menu();
-
                 $model->name = $data['name'];
                 $model->parent_id = $data['parentId'] ?? null;
-                $model->icon = $data['icon'] ?? null;
+                $model->icon = $data['icon'];
 
                 if (!$model->save()) {
-                    throw new \Exception('Không thể lưu menu.', 1);
+                    throw new \Exception('Không thể lưu menu.');
                 }
+
+                // Xử lý các trang liên kết
+                $selectedPages = $data['selectedPages'] ?? [];
+                if (!empty($selectedPages)) {
+                    Page::updateAll(['menu_id' => null], ['menu_id' => $model->id]);
+                    Page::updateAll(['menu_id' => $model->id], ['id' => $selectedPages]);
+                }
+
                 $transaction->commit();
 
                 return $this->asJson(['success' => true, 'message' => 'Thành công.']);
@@ -81,7 +105,11 @@ class MenusController extends BaseAdminController
         return $this->asJson(['success' => false, 'message' => 'Yêu cầu không hợp lệ.']);
     }
 
-
+    /**
+     * / Update Menu
+     * @throws \Exception
+     * @return Yii\web\Response
+     */
     public function actionUpdateMenu()
     {
         if (Yii::$app->request->isPost) {
@@ -95,22 +123,9 @@ class MenusController extends BaseAdminController
                 $model->name = $data['name'];
                 $model->icon = $data['icon'];
                 $model->status = $data['status'];
-                $model->position = $data['position'];
 
                 if (!$model->save()) {
                     throw new \Exception('Không thể lưu menu.', 1);
-                }
-
-                $selectedPages = $data['selectedPages'] ?? [];
-                if (!empty($selectedPages)) {
-                    Page::updateAll(['menu_id' => null], ['menu_id' => $model->id]);
-                    Page::updateAll(['menu_id' => $model->id], ['id' => $selectedPages]);
-                }
-
-                $selectedMenus = $data['selectedMenus'] ?? [];
-                if (!empty($selectedMenus)) {
-                    Menu::updateAll(['parent_id' => null], ['parent_id' => $model->id]);
-                    Menu::updateAll(['parent_id' => $model->id], ['id' => $selectedMenus]);
                 }
 
                 $transaction->commit();
@@ -147,7 +162,6 @@ class MenusController extends BaseAdminController
             ->andWhere(['deleted' => 0])
             ->all();
 
-        // Lấy các page/menu tiềm năng (chưa liên kết)
         $potentialPages = Page::find()
             ->where(['menu_id' => null])
             ->andWhere(['status' => 0])
@@ -155,7 +169,7 @@ class MenusController extends BaseAdminController
             ->all();
 
         $potentialMenus = Menu::find()
-            ->leftJoin('manager_menu AS parent_menu', 'parent_menu.id = manager_menu.parent_id') // Đặt alias cho bảng menu
+            ->leftJoin('manager_menu AS parent_menu', 'parent_menu.id = manager_menu.parent_id')
             ->where(['manager_menu.parent_id' => null])
             ->andWhere([
                 'not in',
@@ -200,16 +214,12 @@ class MenusController extends BaseAdminController
                     throw new \Exception('Không thể lưu menu.');
                 }
 
-                $selectedPages = $data['selectedPages'] ?? [];
-                if (!empty($selectedPages)) {
-                    Page::updateAll(['menu_id' => null], ['menu_id' => $model->id]); // Xóa liên kết cũ
-                    Page::updateAll(['menu_id' => $model->id], ['id' => $selectedPages]); // Thêm liên kết mới
-                }
-
                 $selectedMenus = $data['selectedMenus'] ?? [];
-                if (!empty($selectedMenus)) {
-                    Menu::updateAll(['parent_id' => null], ['parent_id' => $model->id]); // Xóa liên kết cũ
-                    Menu::updateAll(['parent_id' => $model->id], ['id' => $selectedMenus]); // Thêm liên kết mới
+                if (empty($selectedMenus)) {
+                    Menu::updateAll(['parent_id' => null], ['parent_id' => $model->id]);
+                } else {
+                    Menu::updateAll(['parent_id' => null], ['parent_id' => $model->id]);
+                    Menu::updateAll(['parent_id' => $model->id], ['id' => $selectedMenus]);
                 }
 
                 $transaction->commit();
@@ -244,9 +254,10 @@ class MenusController extends BaseAdminController
 
                 $selectedPages = $data['selectedPages'] ?? [];
                 $sortedData = $data['sortedData'] ?? [];
-                Yii::error("selectedPages: " . print_r($selectedPages, true));
 
-                if (!empty($selectedPages)) {
+                if (empty($selectedPages)) {
+                    Page::updateAll(['menu_id' => null], ['menu_id' => $data['menuId']]);
+                } else {
                     Page::updateAll(['menu_id' => null], ['menu_id' => $data['menuId']]);
                     Page::updateAll(
                         ['menu_id' => $menuModel->id],
@@ -318,25 +329,21 @@ class MenusController extends BaseAdminController
 
     public function actionSaveSort()
     {
-        // Kiểm tra nếu có dữ liệu gửi đến
         if (Yii::$app->request->isAjax) {
-            $sortedIDs = Yii::$app->request->post('sortedIDs'); // Lấy mảng các ID được sắp xếp
+            $sortedIDs = Yii::$app->request->post('sortedIDs');
 
-            // Lặp qua từng ID và cập nhật trường position
             foreach ($sortedIDs as $index => $id) {
-                $menu = Menu::findOne($id); // Tìm bản ghi theo ID
+                $menu = Menu::findOne($id);
                 if ($menu) {
-                    $menu->position = $index + 1; // Cập nhật vị trí (thứ tự trong mảng)
-                    $menu->save(); // Lưu thay đổi
+                    $menu->position = $index + 1;
+                    $menu->save();
                 }
             }
 
-            // Trả về kết quả JSON
             Yii::$app->response->format = Response::FORMAT_JSON;
             return ['success' => true, 'message' => 'Sắp xếp thành công.'];
         }
 
-        // Nếu không phải AJAX request, trả về lỗi
         return ['success' => false, 'message' => 'Dữ liệu không hợp lệ.'];
     }
     // Sort Delete
@@ -351,7 +358,7 @@ class MenusController extends BaseAdminController
             return ['success' => false, 'message' => 'Không tìm thấy menu.'];
         }
 
-        $tabMenu->deleted = 1; // Xóa mềm
+        $tabMenu->deleted = 1;
         if ($tabMenu->save(false)) {
             return ['success' => true, 'message' => 'Xóa mềm thành công.'];
         }
@@ -371,12 +378,11 @@ class MenusController extends BaseAdminController
             return $this->asJson(['success' => false, 'message' => 'Không tìm thấy menu.']);
         }
 
-        // Đặt menu_id thành NULL trong bảng page trước khi xóa
         Page::updateAll(['menu_id' => null], ['menu_id' => $menuId]);
 
         if ($tabMenu->delete()) {
-            Yii::$app->session->setFlash('success', 'Xóa hoàn toàn thành công.');
-            return $this->asJson(['success' => true, 'message' => 'Xóa hoàn toàn thành công.']);
+            Yii::$app->session->setFlash('success', 'Xóa thành công.');
+            return $this->asJson(['success' => true, 'message' => 'Xóa thành công.']);
         } else {
             Yii::$app->session->setFlash('error', 'Xóa thất bại.');
             return $this->asJson(['success' => false, 'message' => 'Xóa thất bại.']);

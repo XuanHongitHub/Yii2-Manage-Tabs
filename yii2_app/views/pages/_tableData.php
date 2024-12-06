@@ -99,15 +99,15 @@ $this->title = $menu->name;
             <div class="modal-body">
                 <form id="edit-form">
                     <?php foreach ($columns as $index => $column): ?>
-                    <?php if ($index === 0): ?>
-                    <input type="hidden" name="<?= $column ?>" id="edit-<?= $column ?>">
-                    <?php else: ?>
-                    <div class="form-group">
-                        <label for="edit-<?= $column ?>"><?= ucfirst($column) ?></label>
-                        <input type="text" class="form-control" name="<?= $column ?>" id="edit-<?= $column ?>"
-                            placeholder="Nhập <?= ucfirst($column) ?>">
-                    </div>
-                    <?php endif; ?>
+                        <?php if ($index === 0): ?>
+                            <input type="hidden" name="<?= $column ?>" id="edit-<?= $column ?>">
+                        <?php else: ?>
+                            <div class="form-group">
+                                <label for="edit-<?= $column ?>"><?= ucfirst($column) ?></label>
+                                <input type="text" class="form-control" name="<?= $column ?>" id="edit-<?= $column ?>"
+                                    placeholder="Nhập <?= ucfirst($column) ?>">
+                            </div>
+                        <?php endif; ?>
                     <?php endforeach; ?>
                 </form>
             </div>
@@ -130,15 +130,15 @@ $this->title = $menu->name;
             <div class="modal-body">
                 <form id="add-data-form">
                     <?php foreach ($columns as $index => $column): ?>
-                    <?php if ($index === 0): ?>
-                    <input type="hidden" name="<?= $column ?>" id="<?= $column ?>">
-                    <?php else: ?>
-                    <div class="form-group">
-                        <label for="<?= $column ?>"><?= ucfirst($column) ?></label>
-                        <input type="text" class="form-control" name="<?= $column ?>" id="<?= $column ?>"
-                            placeholder="Nhập <?= $column ?>">
-                    </div>
-                    <?php endif; ?>
+                        <?php if ($index === 0): ?>
+                            <input type="hidden" name="<?= $column ?>" id="<?= $column ?>">
+                        <?php else: ?>
+                            <div class="form-group">
+                                <label for="<?= $column ?>"><?= ucfirst($column) ?></label>
+                                <input type="text" class="form-control" name="<?= $column ?>" id="<?= $column ?>"
+                                    placeholder="Nhập <?= $column ?>">
+                            </div>
+                        <?php endif; ?>
                     <?php endforeach; ?>
                 </form>
             </div>
@@ -297,7 +297,6 @@ $this->title = $menu->name;
                                 'nextPageLabel' => 'Tiếp',
                                 'maxButtonCount' => 5,
                             ],
-
                         ]);
 
                         // Kết thúc Pjax
@@ -350,16 +349,16 @@ $this->title = $menu->name;
                                     <table class="table table-borderless" id="columns-visibility">
                                         <?php $index = 0; ?>
                                         <?php foreach ($columns as $column): ?>
-                                        <tr class="border" <?= $index === 0 ? 'style="display:none;"' : '' ?>>
-                                            <td class="d-flex justify-content-between align-items-center">
-                                                <span><?= htmlspecialchars($column) ?></span>
-                                                <input class="form-check-input column-checkbox" type="checkbox"
-                                                    id="checkbox-<?= htmlspecialchars($column) ?>"
-                                                    data-column="<?= htmlspecialchars($column) ?>"
-                                                    <?= $index === 0 ? 'disabled' : 'checked' ?>>
-                                            </td>
-                                        </tr>
-                                        <?php $index++; ?>
+                                            <tr class="border" <?= $index === 0 ? 'style="display:none;"' : '' ?>>
+                                                <td class="d-flex justify-content-between align-items-center">
+                                                    <span><?= htmlspecialchars($column) ?></span>
+                                                    <input class="form-check-input column-checkbox" type="checkbox"
+                                                        id="checkbox-<?= htmlspecialchars($column) ?>"
+                                                        data-column="<?= htmlspecialchars($column) ?>"
+                                                        <?= $index === 0 ? 'disabled' : 'checked' ?>>
+                                                </td>
+                                            </tr>
+                                            <?php $index++; ?>
                                         <?php endforeach; ?>
                                     </table>
                                 </ul>
@@ -374,12 +373,12 @@ $this->title = $menu->name;
 </div>
 
 <script>
-var add_data_url = "<?= Url::to(['pages/add-data']) ?>";
-var update_data_url = "<?= Url::to(['pages/update-data']) ?>";
-var delete_data_url = "<?= Url::to(['pages/delete-data']) ?>";
-var pageId = "<?= $pageId ?>";
-var tableName = "<?= $dataProvider->query->from[0] ?>";
-var delete_all_data_url = "<?= Url::to(['pages/delete-selected-data']) ?>";
-var import_url = "<?= Url::to(['pages/import-excel']) ?>";
-var export_url = "<?= Url::to(['pages/export-excel']) ?>";
+    var add_data_url = "<?= Url::to(['pages/add-data']) ?>";
+    var update_data_url = "<?= Url::to(['pages/update-data']) ?>";
+    var delete_data_url = "<?= Url::to(['pages/delete-data']) ?>";
+    var pageId = "<?= $pageId ?>";
+    var tableName = "<?= $dataProvider->query->from[0] ?>";
+    var delete_all_data_url = "<?= Url::to(['pages/delete-selected-data']) ?>";
+    var import_url = "<?= Url::to(['pages/import-excel']) ?>";
+    var export_url = "<?= Url::to(['pages/export-excel']) ?>";
 </script>
