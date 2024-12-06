@@ -70,8 +70,9 @@ class PagesController extends Controller
 
         /** @var Page[] $pages */
         $pages = Page::find()
+            ->innerJoin('manager_menu_page', 'manager_page.id = manager_menu_page.page_id')
             ->where(['status' => 0, 'menu_id' => $menuId, 'deleted' => 0])
-            ->orderBy(['position' => SORT_ASC, 'id' => SORT_DESC])
+            ->orderBy(['manager_menu_page.id' => SORT_ASC])
             ->all();
 
         if (!$pages) {

@@ -220,6 +220,8 @@ $this->title = $menu->name;
                         // Hiển thị bảng GridView
                         echo GridView::widget([
                             'dataProvider' => $dataProvider,
+                            'formatter' => ['class' => 'yii\i18n\Formatter','nullDisplay' => ''],
+                            'headerRowOptions' => ['class' => 'sortable-column'],
                             'columns' =>
                             array_merge(
                                 [
@@ -236,20 +238,8 @@ $this->title = $menu->name;
                                 array_map(function ($column, $index) {
                                     return [
                                         'attribute' => $column,
-                                        'contentOptions' => [
-                                            'class' => $index === 0 ? 'hidden-column' : '',
-                                            'data-column' => $column,
-                                        ],
-                                        'headerOptions' => [
-                                            'class' => $index === 0 ? 'sortable-column hidden-column' : 'sortable-column',
-                                            'style' => 'cursor:pointer;',
-                                            'data-column' => $column,
-                                        ],
-                                        'value' => function ($data, $index, $widget) use ($column) {
-                                            return isset($data[$column]) && !empty($data[$column]) ? $data[$column] : '';
-                                        },
-                                        'enableSorting' => true,
-
+                                        'enableSorting' => $index !== 0,
+                                        'visible' => $column !== BaseModel::HIDDEN_ID_KEY,
                                     ];
                                 }, $columns, array_keys($columns)),
                                 [

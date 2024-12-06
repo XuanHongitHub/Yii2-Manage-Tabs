@@ -66,7 +66,7 @@ $this->registerJsFile('js/components/admin/indexMenu.js', ['depends' => AppAsset
                             <?php
                                     $hasChildren = array_filter($menuChildren, fn($child) => $child->parent_id == $parentMenu->id);
                                     $hasParent = array_filter($menuChildren, fn($child) => $child->id == $parentMenu->parent_id);
-                                    $hasPage = array_filter($pages, fn($page) => $page->menu_id == $parentMenu->id);
+                                    $hasPage = $parentMenu->menuPages;
                                     ?>
                             <?php if (!empty($hasChildren)): ?>
                             <i class="fa-solid fa-caret-right"></i>
@@ -84,10 +84,8 @@ $this->registerJsFile('js/components/admin/indexMenu.js', ['depends' => AppAsset
                         </td>
                         <td>
                             <div>
-                                <?php foreach ($pages as $page): ?>
-                                <?php if ($page->menu_id == $parentMenu->id): ?>
-                                <span class="badge badge-primary"><?= Html::encode($page->name) ?></span>
-                                <?php endif; ?>
+                                <?php foreach ($parentMenu->menuPages as $menuPage): ?>
+                                <span class="badge badge-primary"><?= Html::encode($menuPage->page->name) ?></span>
                                 <?php endforeach; ?>
                             </div>
 
@@ -153,10 +151,8 @@ $this->registerJsFile('js/components/admin/indexMenu.js', ['depends' => AppAsset
                         </td>
                         <td>
                             <div>
-                                <?php foreach ($pages as $page): ?>
-                                <?php if ($page->menu_id == $childMenu->id): ?>
-                                <span class="badge badge-primary"><?= Html::encode($page->name) ?></span>
-                                <?php endif; ?>
+                                <?php foreach ($childMenu->menuPages as $menuPage): ?>
+                                <span class="badge badge-primary"><?= Html::encode($menuPage->page->name) ?></span>
                                 <?php endforeach; ?>
                             </div>
 

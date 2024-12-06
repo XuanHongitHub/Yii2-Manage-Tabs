@@ -2,7 +2,10 @@
 
 namespace app\modules\admin\controllers;
 
+use app\models\MenuPage;
 use Yii;
+use yii\data\ActiveDataProvider;
+use yii\helpers\ArrayHelper;
 use yii\web\Response;
 use app\models\Page;
 
@@ -18,16 +21,12 @@ class MenusController extends BaseAdminController
     public function actionIndex()
     {
         $menus = Menu::find()
-            // ->where(['parent_id' => NULL])
             ->orderBy([
                 'position' => SORT_ASC,
             ])
             ->all();
-        $pages = Page::find()
-            ->all();
         return $this->render('index', [
             'menus' => $menus,
-            'pages' => $pages,
         ]);
     }
     public function actionCreate()
@@ -42,12 +41,11 @@ class MenusController extends BaseAdminController
                 'manager_menu.id',
                 (new Query())
                     ->select('menu_id')
-                    ->from('manager_page')
-                    ->where('manager_page.menu_id = manager_menu.id')
+                    ->from('manager_menu_page')
+                    ->where('manager_menu_page.menu_id = manager_menu.id')
             ])
             ->all();
         $potentialPages = Page::find()
-            ->where(['menu_id' => null])
             ->andWhere(['status' => 0])
             ->andWhere(['deleted' => 0])
             ->all();
@@ -150,11 +148,16 @@ class MenusController extends BaseAdminController
             ];
         }
 
+
         $childPages = Page::find()
+            ->innerJoin('manager_menu_page', 'manager_page.id = manager_menu_page.page_id')
             ->where(['menu_id' => $menu_id])
             ->andWhere(['status' => 0])
             ->andWhere(['deleted' => 0])
+            ->orderBy(['manager_menu_page.id' => SORT_ASC])
             ->all();
+
+        $ids = ArrayHelper::getColumn($childPages, 'id');
 
         $childMenus = Menu::find()
             ->where(['parent_id' => $menu_id])
@@ -163,7 +166,7 @@ class MenusController extends BaseAdminController
             ->all();
 
         $potentialPages = Page::find()
-            ->where(['menu_id' => null])
+            ->where(['not in', 'id' , $ids])
             ->andWhere(['status' => 0])
             ->andWhere(['deleted' => 0])
             ->all();
@@ -248,29 +251,21 @@ class MenusController extends BaseAdminController
 
             $transaction = Yii::$app->db->beginTransaction();
             try {
-                if (!$menuModel->save()) {
-                    throw new \Exception('Không thể lưu menu.');
-                }
-
                 $selectedPages = $data['selectedPages'] ?? [];
                 $sortedData = $data['sortedData'] ?? [];
 
-                if (empty($selectedPages)) {
-                    Page::updateAll(['menu_id' => null], ['menu_id' => $data['menuId']]);
-                } else {
-                    Page::updateAll(['menu_id' => null], ['menu_id' => $data['menuId']]);
-                    Page::updateAll(
-                        ['menu_id' => $menuModel->id],
-                        ['id' => $selectedPages]
-                    );
+                MenuPage::deleteAll(['menu_id' => $data['menuId']]);
+                if ($selectedPages) {
+                    usort($sortedData, function ($a, $b) {
+                        return $a['position'] > $b['position'];
+                    });
 
                     foreach ($sortedData as $page) {
-                        $pageModel = Page::findOne($page['id']);
-                        if ($pageModel) {
-                            $pageModel->position = $page['position'];
-                            if (!$pageModel->save(false)) {
-                                throw new \Exception("Không thể lưu subpage ID: {$page['id']}.");
-                            }
+                        $menuPage = new MenuPage();
+                        $menuPage->menu_id = $menuModel->id;
+                        $menuPage->page_id = $page['id'];
+                        if ( !$menuPage->save()) {
+                            throw new \Exception("Không thể lưu subpage ID: {$page['id']}." . json_encode($menuPage->getErrors()));
                         }
                     }
                 }

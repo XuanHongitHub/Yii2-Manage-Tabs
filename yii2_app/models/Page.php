@@ -15,12 +15,11 @@ use Yii;
  * @property string $type
  * @property int|null $status
  * @property int|null $deleted
- * @property int|null $menu_id
- * @property int|null $position
  * @property string $created_at
  * @property string $updated_at
  *
  * @property User $user
+ * @property MenuPage[] $managerMenuPages
  */
 class Page extends \yii\db\ActiveRecord
 {
@@ -39,7 +38,7 @@ class Page extends \yii\db\ActiveRecord
     {
         return [
             [['user_id', 'name', 'type'], 'required'],
-            [['user_id', 'menu_id', 'deleted', 'status', 'position'], 'integer'],
+            [['user_id', 'deleted', 'status'], 'integer'],
             [['type'], 'string'],
             [['created_at', 'updated_at'], 'safe'],
             [['name', 'table_name'], 'string', 'max' => 255],
@@ -59,10 +58,8 @@ class Page extends \yii\db\ActiveRecord
             'table_name' => 'Table Name',
             'content' => 'Content',
             'type' => 'Page Type',
-            'menu_id' => 'Group ID',
             'deleted' => 'Deleted',
             'status' => 'Status',
-            'position' => 'Position',
             'created_at' => 'Created At',
             'updated_at' => 'Updated At',
         ];
@@ -76,5 +73,15 @@ class Page extends \yii\db\ActiveRecord
     public function getUser()
     {
         return $this->hasOne(User::class, ['id' => 'user_id']);
+    }
+
+    /**
+     * Gets query for [[MenuPages]].
+     *
+     * @return \yii\db\ActiveQuery
+     */
+    public function getMenuPages()
+    {
+        return $this->hasMany(MenuPage::class, ['page_id' => 'id']);
     }
 }
