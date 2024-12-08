@@ -11,7 +11,6 @@ use yii\helpers\Url;
 
 RichtextAsset::register($this);
 
-
 ?>
 
 <div class="page-content">
@@ -54,6 +53,6 @@ RichtextAsset::register($this);
 </div>
 
 <script>
-var pageId = <?= $page->id ?>;
-var save_richtext_url = "<?= Url::to(['pages/save-rich-text']) ?>";
+    var pageId = <?= $page->id ?>;
+    var save_richtext_url = "<?= Url::to(['pages/save-rich-text']) ?>";
 </script>

@@ -20,7 +20,6 @@ $this->registerMetaTag(['name' => 'keywords', 'content' => $this->params['meta_k
 $this->registerLinkTag(['rel' => 'icon', 'type' => 'image/x-icon', 'href' => Yii::getAlias('@web/favicon.ico')]);
 $errorMessage = Yii::$app->session->getFlash('error');
 $successMessage = Yii::$app->session->getFlash('success');
-$isAdmin = Yii::$app->user->identity->isUserAdmin();
 ?>
 <?php $this->beginPage() ?>
 <!DOCTYPE html>
@@ -72,52 +71,52 @@ $isAdmin = Yii::$app->user->identity->isUserAdmin();
                         <li class="profile-nav onhover-dropdown p-0">
                             <div class="d-flex align-items-center profile-media">
                                 <?php if (!Yii::$app->user->isGuest): ?>
-                                <svg style="margin-bottom: -5px; width: 30px !important; height: 30px !important;">
-                                    <use href="<?= Yii::getAlias('@web') ?>/images/icon-sprite.svg#fill-user"></use>
-                                </svg>
-                                <div class="flex-grow-1">
-                                    <span><?= Html::encode(Yii::$app->user->identity->username) ?></span>
-                                    <p class="mb-0">
-                                        <?php if (Yii::$app->user->identity->role == 10): ?>
-                                        User
-                                        <?php elseif (Yii::$app->user->identity->role == 20): ?>
-                                        Admin
-                                        <?php else: ?>
-                                        <?= Html::encode(Yii::$app->user->identity->role) ?>
-                                        <?php endif; ?>
-                                        <i class="middle fa fa-angle-down"></i>
-                                    </p>
+                                    <svg style="margin-bottom: -5px; width: 30px !important; height: 30px !important;">
+                                        <use href="<?= Yii::getAlias('@web') ?>/images/icon-sprite.svg#fill-user"></use>
+                                    </svg>
+                                    <div class="flex-grow-1">
+                                        <span><?= Html::encode(Yii::$app->user->identity->username) ?></span>
+                                        <p class="mb-0">
+                                            <?php if (Yii::$app->user->identity->role == 10): ?>
+                                                User
+                                            <?php elseif (Yii::$app->user->identity->role == 20): ?>
+                                                Admin
+                                            <?php else: ?>
+                                                <?= Html::encode(Yii::$app->user->identity->role) ?>
+                                            <?php endif; ?>
+                                            <i class="middle fa fa-angle-down"></i>
+                                        </p>
 
+                                    </div>
                                 </div>
-                            </div>
-                            <ul class="profile-dropdown onhover-show-div">
-                                <li><a href="<?= Yii::$app->urlManager->createUrl(['admin/pages/index']) ?>"><span><i
-                                                class="fa-solid fa-gear me-2"></i>Cài đặt</span></a></li>
-                                <li><a href="<?= Yii::$app->urlManager->createUrl(['site/change-password']) ?>"><span><i
-                                                class="fa-solid fa-key me-2"></i></i>Đổi mật khẩu</span></a></li>
-                                <li>
-                                    <form
-                                        action="<?= Html::encode(Yii::$app->urlManager->createUrl(['site/logout'])) ?>"
-                                        method="post">
-                                        <input type="hidden" name="_csrf" value="<?= Yii::$app->request->csrfToken; ?>">
-                                        <a class="d-inline" href="#"
-                                            onclick="this.closest('form').submit(); return false;">
-                                            <span><i class="fa-solid fa-right-to-bracket me-2"></i> Đăng xuất</span>
-                                        </a>
-                                    </form>
-                                </li>
-                            </ul>
+                                <ul class="profile-dropdown onhover-show-div">
+                                    <li><a href="<?= Yii::$app->urlManager->createUrl(['admin/pages/index']) ?>"><span><i
+                                                    class="fa-solid fa-gear me-2"></i>Cài đặt</span></a></li>
+                                    <li><a href="<?= Yii::$app->urlManager->createUrl(['site/change-password']) ?>"><span><i
+                                                    class="fa-solid fa-key me-2"></i></i>Đổi mật khẩu</span></a></li>
+                                    <li>
+                                        <form
+                                            action="<?= Html::encode(Yii::$app->urlManager->createUrl(['site/logout'])) ?>"
+                                            method="post">
+                                            <input type="hidden" name="_csrf" value="<?= Yii::$app->request->csrfToken; ?>">
+                                            <a class="d-inline" href="#"
+                                                onclick="this.closest('form').submit(); return false;">
+                                                <span><i class="fa-solid fa-right-to-bracket me-2"></i> Đăng xuất</span>
+                                            </a>
+                                        </form>
+                                    </li>
+                                </ul>
                             <?php else: ?>
-                            <div class="auth-buttons">
-                                <a href="<?= Yii::$app->urlManager->createUrl(['site/login']) ?>"
-                                    class="btn btn-primary me-1">
-                                    <i class="fa-solid fa-right-to-bracket"></i> Login
-                                </a>
-                                <a href="<?= Yii::$app->urlManager->createUrl(['site/signup']) ?>"
-                                    class="btn btn-outline-success">
-                                    <i class="fa-solid fa-user-plus"></i> Sign Up
-                                </a>
-                            </div>
+                                <div class="auth-buttons">
+                                    <a href="<?= Yii::$app->urlManager->createUrl(['site/login']) ?>"
+                                        class="btn btn-primary me-1">
+                                        <i class="fa-solid fa-right-to-bracket"></i> Login
+                                    </a>
+                                    <a href="<?= Yii::$app->urlManager->createUrl(['site/signup']) ?>"
+                                        class="btn btn-outline-success">
+                                        <i class="fa-solid fa-user-plus"></i> Sign Up
+                                    </a>
+                                </div>
                             <?php endif; ?>
                         </li>
                     </ul>
@@ -146,44 +145,28 @@ $isAdmin = Yii::$app->user->identity->isUserAdmin();
                         <div class="left-arrow" id="left-arrow"><i data-feather="arrow-left"></i></div>
                         <div id="sidebar-menu">
                             <li class="back-btn"><a href="<?= \yii\helpers\Url::to(['/']) ?>"><img class="img-fluid"
-                                                                                                   src="<?= Yii::getAlias('@web') ?>/images/logo-icon.png" alt=""></a>
+                                        src="<?= Yii::getAlias('@web') ?>/images/logo-icon.png" alt=""></a>
                                 <div class="mobile-back text-end"><span>Back</span><i class="fa fa-angle-right ps-2"
-                                                                                      aria-hidden="true"></i></div>
+                                        aria-hidden="true"></i></div>
                             </li>
-                            <?php echo  \yii\widgets\Menu::widget([
+                            <?php echo \yii\widgets\Menu::widget([
                                 'items' => [
                                     [
-                                            'label' => '',
+                                        'label' => '',
                                         'url' => ['/']
                                     ],
-                                    [
-                                        'label' => '<i class="fa-solid fa-social"></i> Quan ly page',
-                                        'url' => '#',
-                                        'items' => [
-                                            ['label' => '<i class="fa-solid fa-magnifying-glass"></i> Danh sach', 'url' => ['pages/index'],'template' => '<a href="{url}">{label}</a>'],
-                                            ['label' => '<i class="fa-solid fa-magnifying-glass"></i> them moi', 'url' => ['pages/create'],'template' => '<a href="{url}">{label}</a>'],
-                                        ],
-                                    ],
-                                    [
-                                        'label' => '<i class="fa-solid fa-magnifying-glass"></i> Quan ly menu',
-                                        'url' => '#',
-                                        'items' => [
-                                            ['label' => 'Danh sach', 'url' => ['menus/index'],'template' => '<a href="{url}">{label}</a>'],
-                                            ['label' => 'them moi', 'url' => ['menus/create'],'template' => '<a href="{url}">{label}</a>'],
-                                        ],
-                                    ],
-                                    ['label' => 'File Manager', 'url' => ['files/index'],'template' => '<a class="sidebar-link sidebar-title link-nav" href="{url}"><span>{label}</span></a>'],
-                                    ['label' => 'Người dùng', 'url' => ['users/index'],'template' => '<a class="sidebar-link sidebar-title link-nav" href="{url}"><span>{label}</span></a>', 'visible' => $isAdmin],
+                                    ['label' => 'Quản lý Page', 'url' => ['pages/index'], 'template' => '<a class="sidebar-link sidebar-title link-nav" href="{url}"><i class="fa-solid fa-table"></i> <span>{label}</span></a>'],
+                                    ['label' => 'Quản lý Menu', 'url' => ['menus/index'], 'template' => '<a class="sidebar-link sidebar-title link-nav" href="{url}"><i class="fa-solid fa-folder-tree"></i> <span>{label}</span></a>'],
+                                    ['label' => 'Quản lý File', 'url' => ['files/index'], 'template' => '<a class="sidebar-link sidebar-title link-nav" href="{url}"><i class="fa-solid fa-file"></i> <span>{label}</span></a>'],
+                                    ['label' => 'Quản lý Người dùng', 'url' => ['users/index'], 'template' => '<a class="sidebar-link sidebar-title link-nav" href="{url}"><i class="fa-solid fa-user"></i> <span>{label}</span></a>', 'visible' => $isAdmin],
                                 ],
                                 'encodeLabels' => false,
-                                'options'=>['class'=>'sidebar-links','id'=>'simple-bar'],
-                                'itemOptions' => ['class'=>'sidebar-list'],
+                                'options' => ['class' => 'sidebar-links', 'id' => 'simple-bar'],
+                                'itemOptions' => ['class' => 'sidebar-list'],
                                 'submenuTemplate' => "\n<ul class='sidebar-submenu'>\n{items}\n</ul>\n",
                                 'linkTemplate' => '<a class="sidebar-link sidebar-title" href="{url}"><span>{label}</span><div class="according-menu"><i class="fa fa-angle-right"></i></div></a>',
 
-                            ]);?>
-
-
+                            ]); ?>
 
                         </div>
                         <div class="right-arrow" id="right-arrow"><i data-feather="arrow-right"></i></div>
@@ -235,8 +218,8 @@ $isAdmin = Yii::$app->user->identity->isUserAdmin();
 </div>
 
 <script>
-var successMessage = <?= json_encode($successMessage) ?>;
-var errorMessage = <?= json_encode($errorMessage) ?>;
+    var successMessage = <?= json_encode($successMessage) ?>;
+    var errorMessage = <?= json_encode($errorMessage) ?>;
 </script>
 
 </html>

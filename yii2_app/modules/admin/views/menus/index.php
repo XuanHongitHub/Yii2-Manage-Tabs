@@ -50,8 +50,6 @@ $this->registerJsFile('js/components/admin/indexMenu.js', ['depends' => AppAsset
                         <th style="width: 25%">Page</th>
                         <th style="width: 6%" class="text-center text-nowrap">Trạng Thái</th>
                         <th style="width: 6%">Thao tác</th>
-                        <th style="width: 3%"></th>
-
                     </tr>
                 </thead>
                 <?php
@@ -129,8 +127,6 @@ $this->registerJsFile('js/components/admin/indexMenu.js', ['depends' => AppAsset
                                 <i class="fa-regular fa-trash-can"></i>
                             </button>
                         </td>
-                        <td>
-                        </td>
                     </tr>
                 <tbody id="children-<?= Html::encode($parentMenu->id) ?>" class="child-group">
                     <?php foreach ($menuChildren as $childMenu): ?>
@@ -199,9 +195,6 @@ $this->registerJsFile('js/components/admin/indexMenu.js', ['depends' => AppAsset
                                 <i class="fa-regular fa-trash-can"></i>
                             </button>
 
-                        </td>
-                        <td class="sort-icon text-center" style="color: #6e6e6e;">
-                            <i class="fas fa-sort"></i>
                         </td>
                     </tr>
                     <?php endif; ?>
@@ -300,10 +293,14 @@ $this->registerJsFile('js/components/admin/indexMenu.js', ['depends' => AppAsset
             </div>
             <div class="modal-body">
                 <div class="mb-3">
-                    <label for="submenu-menus" class="form-label">Menu Con:</label>
-                    <select id="submenu-menus" class="form-select form-multi-select" multiple>
-                        <!-- Options sẽ được thêm qua AJAX -->
+                    <label for="sub-menus" class="form-label">Menu Con:</label>
+                    <select id="sub-menus" class="form-select form-multi-select" multiple>
                     </select>
+                </div>
+                <div class="mt-3">
+                    <label>Sắp xếp:</label>
+                    <ul id="sortable-submenus" class="list-group">
+                    </ul>
                 </div>
             </div>
             <div class="modal-footer">
@@ -500,7 +497,6 @@ $this->registerJsFile('js/components/admin/indexMenu.js', ['depends' => AppAsset
     </div>
 </div>
 
-
 <script>
 var save_sort_url = "<?= \yii\helpers\Url::to(['menus/save-sort']) ?>";
 var update_status_url = "<?= \yii\helpers\Url::to(['menus/update-hide-status']) ?>";
@@ -508,6 +504,7 @@ var update_sortOrder_url = "<?= \yii\helpers\Url::to(['menus/update-sort-order']
 var restore_menu_url = "<?= \yii\helpers\Url::to(['menus/restore-menu']) ?>";
 var delete_permanently_url = "<?= \yii\helpers\Url::to(['menus/delete-permanently-menu']) ?>";
 var delete_soft_url = "<?= \yii\helpers\Url::to(['menus/delete-menu']) ?>";
+var get_sub_page_url = "<?= \yii\helpers\Url::to(['menus/get-subpage']) ?>";
 var get_sub_menu_url = "<?= \yii\helpers\Url::to(['menus/get-submenu']) ?>";
 var save_sub_menu_url = "<?= \yii\helpers\Url::to(['menus/save-sub-menu']) ?>";
 var save_sub_page_url = "<?= \yii\helpers\Url::to(['menus/save-sub-page']) ?>";

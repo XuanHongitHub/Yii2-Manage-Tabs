@@ -8,9 +8,6 @@ use yii\bootstrap5\Html;
 use yii\helpers\Json;
 use yii\web\JqueryAsset;
 use yii\web\View;
-use app\assets\FontAwesomeAsset;
-use app\models\User;
-use app\models\Page;
 use app\models\Menu;
 
 AppAsset::register($this);
@@ -23,7 +20,6 @@ $this->registerMetaTag(['name' => 'keywords', 'content' => $this->params['meta_k
 $this->registerLinkTag(['rel' => 'icon', 'type' => 'image/x-icon', 'href' => Yii::getAlias('@web/favicon.ico')]);
 $successMessage = Yii::$app->session->getFlash('success');
 $errorMessage = Yii::$app->session->getFlash('error');
-$isAdmin = Yii::$app->user->identity->isUserAdmin();
 
 $tabMenus = Menu::find()
     ->where(['deleted' => 0])
@@ -87,7 +83,6 @@ foreach ($tabMenus as $menu) {
                 <div
                     class="nav-right col-xxl-7 col-xl-6 col-auto box-col-6 pull-right right-header p-0 ms-auto d-flex align-items-center me-3">
                     <ul class="nav-menus">
-
                         <li class="profile-nav onhover-dropdown p-0">
                             <div class="d-flex align-items-center profile-media">
                                 <?php if (!Yii::$app->user->isGuest): ?>
@@ -176,52 +171,52 @@ foreach ($tabMenus as $menu) {
                                     </div>
                                 </li>
                                 <?php foreach ($menus as $menu) {
-                                    if (!isset($menu['items'])) {?>
+                                        if (!isset($menu['items'])) {?>
+                                <li class="sidebar-list">
+                                    <a class="sidebar-link sidebar-title link-nav"
+                                        href="<?= \yii\helpers\Url::to(['/pages', 'menuId' => $menu['id']]) ?>"
+                                        data-menu-id="<?= $menu['id'] ?>">
+                                        <svg class="stroke-icon">
+                                            <use
+                                                href="<?= Yii::getAlias('@web') ?>/images/icon-sprite.svg#<?= $menu['icon'] ?>">
+                                            </use>
+                                        </svg>
+                                        <span><?= Html::encode($menu['name']) ?></span>
+                                    </a>
+                                </li>
+                                <?php }else{ ?>
+                                <li class="sidebar-list">
+                                    <a class="sidebar-link sidebar-title" href="#">
+                                        <svg class="stroke-icon">
+                                            <use
+                                                href="<?= Yii::getAlias('@web') ?>/images/icon-sprite.svg#<?= $menu['icon'] ?>">
+                                            </use>
+                                        </svg>
+                                        <svg class="fill-icon">
+                                            <use
+                                                href="<?= Yii::getAlias('@web') ?>/images/icon-sprite.svg#fill-editors">
+                                            </use>
+                                        </svg>
+                                        <span><?= Html::encode($menu['name']) ?></span>
+                                        <div class="according-menu"><i class="fa fa-angle-right"></i></div>
+                                    </a>
+                                    <ul class="sidebar-submenu" style="display: none;">
+                                        <?php foreach ($menu['items'] as $menuItem) { ?>
                                         <li class="sidebar-list">
-                                            <a class="sidebar-link sidebar-title link-nav"
-                                               href="<?= \yii\helpers\Url::to(['/pages', 'menuId' => $menu['id']]) ?>"
-                                               data-menu-id="<?= $menu['id'] ?>">
-                                                <svg class="stroke-icon">
+                                            <a href="<?= \yii\helpers\Url::to(['/pages', 'menuId' => $menuItem['id']]) ?>"
+                                                data-menu-id="<?= $menuItem['id'] ?>"
+                                                class="<?= Yii::$app->request->get('pageId') === $menuItem['id'] ? 'active' : '' ?>">
+                                                <svg class="svg-menu">
                                                     <use
-                                                            href="<?= Yii::getAlias('@web') ?>/images/icon-sprite.svg#<?= $menu['icon'] ?>">
+                                                        href="<?= Yii::getAlias('@web') ?>/images/icon-sprite.svg#<?= $menuItem['icon'] ?>">
                                                     </use>
                                                 </svg>
-                                                <span><?= Html::encode($menu['name']) ?></span>
+                                                <?= Html::encode($menuItem['name']) ?>
                                             </a>
                                         </li>
-                                <?php }else{ ?>
-                                    <li class="sidebar-list">
-                                        <a class="sidebar-link sidebar-title" href="#">
-                                            <svg class="stroke-icon">
-                                                <use
-                                                        href="<?= Yii::getAlias('@web') ?>/images/icon-sprite.svg#<?= $menu['icon'] ?>">
-                                                </use>
-                                            </svg>
-                                            <svg class="fill-icon">
-                                                <use
-                                                        href="<?= Yii::getAlias('@web') ?>/images/icon-sprite.svg#fill-editors">
-                                                </use>
-                                            </svg>
-                                            <span><?= Html::encode($menu['name']) ?></span>
-                                            <div class="according-menu"><i class="fa fa-angle-right"></i></div>
-                                        </a>
-                                        <ul class="sidebar-submenu" style="display: none;">
-                                            <?php foreach ($menu['items'] as $menuItem) { ?>
-                                                <li class="sidebar-list">
-                                                    <a href="<?= \yii\helpers\Url::to(['/pages', 'menuId' => $menuItem['id']]) ?>"
-                                                       data-menu-id="<?= $menuItem['id'] ?>"
-                                                       class="<?= Yii::$app->request->get('pageId') === $menuItem['id'] ? 'active' : '' ?>">
-                                                        <svg class="svg-menu">
-                                                            <use
-                                                                    href="<?= Yii::getAlias('@web') ?>/images/icon-sprite.svg#<?= $menuItem['icon'] ?>">
-                                                            </use>
-                                                        </svg>
-                                                        <?= Html::encode($menuItem['name']) ?>
-                                                    </a>
-                                                </li>
-                                            <?php } ?>
-                                        </ul>
-                                    </li>
+                                        <?php } ?>
+                                    </ul>
+                                </li>
                                 <?php } } ?>
                             </ul>
                         </div>

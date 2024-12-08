@@ -3,6 +3,7 @@
 namespace app\controllers;
 
 use app\models\BaseModel;
+use app\models\Config;
 use Yii;
 use yii\filters\VerbFilter;
 use yii\web\Controller;
@@ -144,10 +145,10 @@ class PagesController extends Controller
     public function actionLoadPageData()
     {
         $pageId = Yii::$app->request->get('pageId');
+        $menuId = Yii::$app->request->get('menuId');
         $searchTerm = Yii::$app->request->get('search', '');
         $pageSize = Yii::$app->request->get('pageSize', 10);
         $page = Page::findOne($pageId);
-
         if ($page === null) {
             return 'No data';
         }
@@ -190,6 +191,7 @@ class PagesController extends Controller
                 'dataProvider' => $dataProvider,
                 'columns' => $columnNames,
                 'pageId' => $pageId,
+                'menuId' => $menuId,
             ]);
         } elseif ($page->type === 'richtext') {
             $content = $page->content;
@@ -198,6 +200,7 @@ class PagesController extends Controller
                 'page' => $page,
                 'content' => $content,
                 'pageId' => $page->id,
+                'menuId' => $menuId,
             ]);
         }
 
@@ -713,4 +716,36 @@ class PagesController extends Controller
             unlink($event->data);
         }, $tempFilePath);
     }
+
+    public function actionSaveColumnsVisibility()
+    {
+        Yii::$app->response->format = Response::FORMAT_JSON;
+
+        // Lấy dữ liệu từ request
+        $columnName = Yii::$app->request->post('column_name');
+        $isVisible = Yii::$app->request->post('is_visible');
+        $menuId = Yii::$app->request->post('menuId');
+        $pageId = Yii::$app->request->post('pageId');
+
+        // Kiểm tra dữ liệu đầu vào
+        if (!$columnName || !$menuId || !$pageId) {
+            return ['success' => false, 'message' => 'Dữ liệu không hợp lệ.'];
+        }
+
+        $isVisible = in_array($isVisible, ['true', '1'], true) ? 1 : 0;
+
+        $config = Config::findOne(['column_name' => $columnName, 'menu_id' => $menuId, 'page_id' => $pageId]) ?? new Config();
+        $config->column_name = $columnName;
+        $config->menu_id = $menuId;
+        $config->page_id = $pageId;
+        $config->is_visible = $isVisible;
+
+        if ($config->save()) {
+            return ['success' => true, 'message' => 'Cập nhật trạng thái hiển thị thành công.'];
+        }
+
+        return ['success' => false, 'message' => 'Không thể lưu trạng thái hiển thị.', 'errors' => $config->getErrors()];
+    }
+
+
 }

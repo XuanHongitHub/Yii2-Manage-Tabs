@@ -9,12 +9,12 @@ $(document).ready(function () {
 });
 
 function loadPageData(pageId) {
-
     $.ajax({
         url: loadPageUrl,
         type: "GET",
         data: {
             pageId: pageId,
+            menuId: menuId,
         },
         success: function (data) {
             $('#table-data-current').html(data);

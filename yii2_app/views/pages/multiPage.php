@@ -16,12 +16,12 @@ $this->title = $menu->name;
     <div class="card-body">
         <ul class="simple-wrapper nav nav-tabs" id="page-list">
             <?php foreach ($pages as $index => $page): ?>
-            <li class="nav-item">
-                <a class="nav-link <?= $index === 0 ? 'active' : '' ?>" href="#" data-id="<?= $page->id ?>"
-                    onclick="loadPageData(<?= $page->id ?>, null)">
-                    <?= htmlspecialchars($page->name) ?>
-                </a>
-            </li>
+                <li class="nav-item">
+                    <a class="nav-link <?= $index === 0 ? 'active' : '' ?>" href="#" data-id="<?= $page->id ?>"
+                        onclick="loadPageData(<?= $page->id ?>, null)">
+                        <?= htmlspecialchars($page->name) ?>
+                    </a>
+                </li>
             <?php endforeach; ?>
         </ul>
         <div class="page-content">
@@ -45,6 +45,7 @@ foreach ($pages as $page) {
 
 ?>
 <script>
-var firstpageId = <?= !empty($firstpageId) ? $pages[0]->id : 'null' ?>;
-var loadPageUrl = "<?= Url::to(['pages/load-page-data']) ?>";
+    var firstpageId = <?= !empty($firstpageId) ? $pages[0]->id : 'null' ?>;
+    var loadPageUrl = "<?= Url::to(['pages/load-page-data']) ?>";
+    var menuId = <?= $menuId = $_GET['menuId']; ?>
 </script>

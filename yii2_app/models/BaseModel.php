@@ -7,7 +7,7 @@ use yii\db\ActiveRecord;
 
 class BaseModel extends ActiveRecord
 {
-    const HIDDEN_ID_KEY = 'hidden_id';
+    const HIDDEN_ID_KEY = 'id';
     private static $customTableName;
 
     /**

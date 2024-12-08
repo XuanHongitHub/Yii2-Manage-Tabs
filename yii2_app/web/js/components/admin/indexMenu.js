@@ -47,64 +47,6 @@ $(document).ready(function () {
         }
     });
 
-
-    $(document).off('click', 'th.sortable').on('click', 'th.sortable', function () {
-        var columnIndex = $(this).index();
-        var parentId = $(this).closest('table').attr('data-parent-id');
-        var rows = $(`tr.child-row[data-parent-id="${parentId}"]`).get();
-
-        rows.sort(function (a, b) {
-            var cellA = $(a).children('td').eq(columnIndex).text().trim();
-            var cellB = $(b).children('td').eq(columnIndex).text().trim();
-
-            if (cellA < cellB) return -1;
-            if (cellA > cellB) return 1;
-            return 0;
-        });
-
-        $.each(rows, function (index, row) {
-            $(row).parent().append(row);
-        });
-    });
-
-    $('.child-group').each(function () {
-        $(this).sortable({
-            handle: '.sort-icon',
-            update: function (event, ui) {
-                var parentId = $(this).closest('.parent-group').find('.parent-row').data(
-                    'parent-id');
-                var sortedIDs = $(this).sortable('toArray', {
-                    attribute: 'data-sort-id'
-                });
-
-                console.log("Parent ID: ", parentId);
-                console.log("Sorted IDs: ", sortedIDs);
-
-                $.ajax({
-                    url: save_sort_url,
-                    method: 'POST',
-                    headers: {
-                        'X-CSRF-Token': $('meta[name="csrf-token"]').attr('content')
-                    },
-                    data: {
-                        parentId: parentId,
-                        sortedIDs: sortedIDs
-                    },
-                    success: function (response) {
-                        if (response.success) {
-                            showToast('Sắp xếp thành công!');
-                        } else {
-                            showToast('Có lỗi xảy ra khi lưu dữ liệu.');
-                        }
-                    },
-                    error: function () {
-                        showToast('Có lỗi xảy ra khi lưu dữ liệu.');
-                    }
-                });
-            }
-        });
-    });
-
 });
 
 $(document).ready(function () {
@@ -427,8 +369,8 @@ $(document).ready(function () {
         button.prop('disabled', true);
 
         $('#saveSubMenuChanges').attr('data-menu-id', menuId);
-        $('#submenu-pages').empty();
-        $('#submenu-menus').empty();
+        $('#sub-menus').empty();
+        $('#sortable-submenus').empty();
         $('#subMenuModalLabel').text('Menu cho ' + menuName);
 
         $.ajax({
@@ -438,17 +380,28 @@ $(document).ready(function () {
             success: function (response) {
                 if (response.success) {
                     response.childMenus.forEach(menu => {
-                        $('#submenu-menus').append(
+                        $('#sub-menus').append(
                             `<option value="${menu.id}" selected>${menu.name}</option>`
                         );
                     });
 
                     response.potentialMenus.forEach(menu => {
-                        $('#submenu-menus').append(
+                        $('#sub-menus').append(
                             `<option value="${menu.id}">${menu.name}</option>`
                         );
                     });
 
+                    if (response.childMenus.length > 0) {
+                        response.childMenus.forEach(menu => {
+                            $('#sortable-submenus').append(`
+                                <li class="list-group-item" data-id="${menu.id}">
+                                    ${menu.name}
+                                </li>
+                            `);
+                        });
+                    }
+
+                    $('#sortable-submenus').sortable();
                     $('#subMenuModal').modal('show');
                 } else {
                     alert(response.message || 'Không thể tải dữ liệu.');
@@ -464,10 +417,51 @@ $(document).ready(function () {
         });
     });
 
+    $(document).off('change', '#sub-menus').on('change', '#sub-menus', function () {
+        var selectedValues = $(this).val();
+        var currentList = $('#sortable-submenus li').map(function () {
+            return $(this).data('id');
+        }).get();
+
+        currentList.forEach(function (id) {
+            if (!selectedValues.includes(id.toString())) {
+                $(`#sortable-submenus li[data-id="${id}"]`).remove();
+            }
+        });
+
+        selectedValues.forEach(function (id) {
+            if (!$(`#sortable-submenus li[data-id="${id}"]`).length) {
+                var option = $(`#sub-menus option[value="${id}"]`);
+                $('#sortable-submenus').append(`
+                    <li class="list-group-item" data-id="${id}">
+                        ${option.text()}
+                    </li>
+                `);
+            }
+        });
+    });
+
+    $('#sortable-submenus').sortable({
+        update: function () {
+            var sortedIds = $('#sortable-submenus li').map(function () {
+                return $(this).data('id');
+            }).get();
+
+            $('#sub-menus').val(sortedIds).trigger('change');
+        }
+    });
+
     $(document).off('click', '#saveSubMenuChanges').on('click', '#saveSubMenuChanges', function () {
         var menuId = $(this).attr('data-menu-id');
-        var selectedPages = $('#submenu-pages').val();
-        var selectedMenus = $('#submenu-menus').val();
+        var selectedMenus = $('#sub-menus').val();
+        var sortedData = [];
+
+        $('#sortable-submenus li').each(function (index) {
+            sortedData.push({
+                id: $(this).data('id'),
+                position: index + 1
+            });
+        });
         $.ajax({
             url: save_sub_menu_url,
             type: 'POST',
@@ -476,8 +470,8 @@ $(document).ready(function () {
             },
             data: {
                 menuId: menuId,
-                selectedPages: selectedPages,
-                selectedMenus: selectedMenus
+                selectedMenus: selectedMenus,
+                sortedData
             },
             success: function (response) {
                 if (response.success) {
@@ -510,6 +504,7 @@ $(document).ready(function () {
     });
 });
 
+
 $(document).off('click', '.edit-subpage-btn').on('click', '.edit-subpage-btn', function () {
     var button = $(this);
     var menuId = button.data('menu-id');
@@ -522,12 +517,8 @@ $(document).off('click', '.edit-subpage-btn').on('click', '.edit-subpage-btn', f
     $('#sortable-subpages').empty();
     $('#saveSubPageChanges').attr('data-menu-id', menuId);
 
-    $('#sortable-subpages').append(
-        '<li class="list-group-item text-muted">-- Đang tải dữ liệu... --</li>'
-    );
-
     $.ajax({
-        url: get_sub_menu_url,
+        url: get_sub_page_url,
         type: 'GET',
         data: { menu_id: menuId },
         success: function (response) {
@@ -553,10 +544,6 @@ $(document).off('click', '.edit-subpage-btn').on('click', '.edit-subpage-btn', f
                             </li>
                         `);
                     });
-                } else {
-                    $('#sortable-subpages').append(
-                        '<li class="list-group-item text-muted">-- Không có Page nào --</li>'
-                    );
                 }
 
                 $('#sortable-subpages').sortable();
@@ -574,21 +561,18 @@ $(document).off('click', '.edit-subpage-btn').on('click', '.edit-subpage-btn', f
         }
     });
 });
-// Đồng bộ hóa khi có sự thay đổi ở danh sách chọn
 $(document).off('change', '#sub-pages').on('change', '#sub-pages', function () {
-    var selectedValues = $(this).val(); // Lấy các giá trị được chọn
+    var selectedValues = $(this).val();
     var currentList = $('#sortable-subpages li').map(function () {
         return $(this).data('id');
     }).get();
 
-    // Xóa các phần tử không còn được chọn
     currentList.forEach(function (id) {
         if (!selectedValues.includes(id.toString())) {
             $(`#sortable-subpages li[data-id="${id}"]`).remove();
         }
     });
 
-    // Thêm các phần tử mới được chọn
     selectedValues.forEach(function (id) {
         if (!$(`#sortable-subpages li[data-id="${id}"]`).length) {
             var option = $(`#sub-pages option[value="${id}"]`);
@@ -601,14 +585,12 @@ $(document).off('change', '#sub-pages').on('change', '#sub-pages', function () {
     });
 });
 
-// Đồng bộ hóa khi thay đổi sắp xếp thủ công
 $('#sortable-subpages').sortable({
     update: function () {
         var sortedIds = $('#sortable-subpages li').map(function () {
             return $(this).data('id');
         }).get();
 
-        // Cập nhật trạng thái chọn trong `#sub-pages`
         $('#sub-pages').val(sortedIds).trigger('change');
     }
 });

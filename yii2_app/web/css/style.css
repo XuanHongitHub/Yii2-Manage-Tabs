@@ -14965,9 +14965,12 @@ th {
   border-bottom-color: rgba(106, 113, 133, 0.3);
 }
 
-.table th,
-.table td {
+.table th {
   padding: 0.75rem;
+}
+
+.table td {
+  /* padding: 0.75rem; */
 }
 
 .table.table-primary th {
@@ -38921,6 +38924,10 @@ footer p .footer-icon {
   stroke: #363636;
 }
 
+.page-wrapper .page-body-wrapper div.sidebar-wrapper .sidebar-main .sidebar-links .simplebar-wrapper .simplebar-mask .simplebar-content-wrapper .simplebar-content>li a i {
+  color: #6a6a6a;
+}
+
 .page-wrapper .page-body-wrapper div.sidebar-wrapper .sidebar-main .sidebar-links .simplebar-wrapper .simplebar-mask .simplebar-content-wrapper .simplebar-content>li a svg.fill-icon {
   fill: #363636;
 }
@@ -39833,6 +39840,10 @@ footer p .footer-icon {
   stroke: var(--theme-default);
 }
 
+.page-wrapper.compact-wrapper .page-body-wrapper div.sidebar-wrapper .sidebar-main .sidebar-links .simplebar-wrapper .simplebar-mask .simplebar-content-wrapper .simplebar-content>li .sidebar-link.active i {
+  color: var(--theme-default);
+}
+
 .page-wrapper.compact-wrapper .page-body-wrapper div.sidebar-wrapper .sidebar-main .sidebar-links .simplebar-wrapper .simplebar-mask .simplebar-content-wrapper .simplebar-content>li .sidebar-link.active svg.fil-icon {
   fill: var(--theme-default);
 }
@@ -39891,7 +39902,7 @@ footer p .footer-icon {
 }
 
 .page-wrapper.compact-wrapper .page-body-wrapper .page-body {
-  min-height: calc(100vh - 80px);
+  min-height: calc(100vh - 129px);
   margin-top: 75px;
   margin-left: 260px;
 }
@@ -45388,8 +45399,8 @@ footer p .footer-icon {
 }
 
 /* Ẩn cột id */
-table th[data-column="hidden_id"],
-table td[data-column="hidden_id"] {
+table th[data-column="id"],
+table td[data-column="id"] {
   display: none !important;
 }
 

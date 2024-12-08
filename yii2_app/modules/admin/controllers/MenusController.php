@@ -81,14 +81,21 @@ class MenusController extends BaseAdminController
                 $model->icon = $data['icon'];
 
                 if (!$model->save()) {
-                    throw new \Exception('Không thể lưu menu.');
+                    throw new \Exception('Không thể lưu menu: ' . json_encode($model->getErrors()));
                 }
 
-                // Xử lý các trang liên kết
                 $selectedPages = $data['selectedPages'] ?? [];
                 if (!empty($selectedPages)) {
-                    Page::updateAll(['menu_id' => null], ['menu_id' => $model->id]);
-                    Page::updateAll(['menu_id' => $model->id], ['id' => $selectedPages]);
+
+                    foreach ($selectedPages as $page) {
+                        $menuPage = new MenuPage();
+                        $menuPage->menu_id = $model->id;
+                        $menuPage->page_id = $page;
+
+                        if (!$menuPage->save()) {
+                            throw new \Exception('Không thể lưu subpage ID: ' . $page['id'] . '. Lỗi: ' . json_encode($menuPage->getErrors()));
+                        }
+                    }
                 }
 
                 $transaction->commit();
@@ -102,6 +109,7 @@ class MenusController extends BaseAdminController
 
         return $this->asJson(['success' => false, 'message' => 'Yêu cầu không hợp lệ.']);
     }
+
 
     /**
      * / Update Menu
@@ -148,25 +156,8 @@ class MenusController extends BaseAdminController
             ];
         }
 
-
-        $childPages = Page::find()
-            ->innerJoin('manager_menu_page', 'manager_page.id = manager_menu_page.page_id')
-            ->where(['menu_id' => $menu_id])
-            ->andWhere(['status' => 0])
-            ->andWhere(['deleted' => 0])
-            ->orderBy(['manager_menu_page.id' => SORT_ASC])
-            ->all();
-
-        $ids = ArrayHelper::getColumn($childPages, 'id');
-
         $childMenus = Menu::find()
             ->where(['parent_id' => $menu_id])
-            ->andWhere(['status' => 0])
-            ->andWhere(['deleted' => 0])
-            ->all();
-
-        $potentialPages = Page::find()
-            ->where(['not in', 'id' , $ids])
             ->andWhere(['status' => 0])
             ->andWhere(['deleted' => 0])
             ->all();
@@ -190,10 +181,46 @@ class MenusController extends BaseAdminController
         return [
             'success' => true,
             'isChildMenu' => $menu->parent_id !== null,
-            'childPages' => array_map(fn($page) => ['id' => $page->id, 'name' => $page->name], $childPages),
             'childMenus' => array_map(fn($menu) => ['id' => $menu->id, 'name' => $menu->name], $childMenus),
-            'potentialPages' => array_map(fn($page) => ['id' => $page->id, 'name' => $page->name], $potentialPages),
             'potentialMenus' => array_map(fn($menu) => ['id' => $menu->id, 'name' => $menu->name], $potentialMenus),
+        ];
+    }
+
+    public function actionGetSubpage($menu_id)
+    {
+        Yii::$app->response->format = Response::FORMAT_JSON;
+        $menu = Menu::findOne($menu_id);
+        if (!$menu) {
+            return [
+                'success' => false,
+                'message' => 'Menu không tồn tại.'
+            ];
+        }
+
+
+        $childPages = Page::find()
+            ->innerJoin('manager_menu_page', 'manager_page.id = manager_menu_page.page_id')
+            ->where(['menu_id' => $menu_id])
+            ->andWhere(['status' => 0])
+            ->andWhere(['deleted' => 0])
+            ->orderBy(['manager_menu_page.id' => SORT_ASC])
+            ->all();
+
+        $ids = ArrayHelper::getColumn($childPages, 'id');
+
+
+        $potentialPages = Page::find()
+            ->where(['not in', 'id', $ids])
+            ->andWhere(['status' => 0])
+            ->andWhere(['deleted' => 0])
+            ->all();
+
+
+        return [
+            'success' => true,
+            'isChildMenu' => $menu->parent_id !== null,
+            'childPages' => array_map(fn($page) => ['id' => $page->id, 'name' => $page->name], $childPages),
+            'potentialPages' => array_map(fn($page) => ['id' => $page->id, 'name' => $page->name], $potentialPages),
         ];
     }
     public function actionSaveSubMenu()
@@ -202,27 +229,39 @@ class MenusController extends BaseAdminController
             $data = Yii::$app->request->post();
 
             if (empty($data['menuId'])) {
-                return $this->asJson(['success' => false, 'message' => 'menuId menu không được để trống.']);
+                return $this->asJson(['success' => false, 'message' => 'menuId không được để trống.']);
             }
 
-            $model = Menu::findOne($data['menuId']);
-            if (!$model) {
+            $menuModel = Menu::findOne($data['menuId']);
+            if (!$menuModel) {
                 return $this->asJson(['success' => false, 'message' => 'Menu không tồn tại.']);
             }
 
             $transaction = Yii::$app->db->beginTransaction();
             try {
-
-                if (!$model->save()) {
-                    throw new \Exception('Không thể lưu menu.');
-                }
-
                 $selectedMenus = $data['selectedMenus'] ?? [];
-                if (empty($selectedMenus)) {
-                    Menu::updateAll(['parent_id' => null], ['parent_id' => $model->id]);
-                } else {
-                    Menu::updateAll(['parent_id' => null], ['parent_id' => $model->id]);
-                    Menu::updateAll(['parent_id' => $model->id], ['id' => $selectedMenus]);
+                $sortedData = $data['sortedData'] ?? [];
+
+                // Xóa tất cả các menu con hiện tại trong menu cha
+                Menu::updateAll(['parent_id' => null], ['parent_id' => $menuModel->id]);
+
+                if ($selectedMenus) {
+                    // Sắp xếp lại dữ liệu các menu con theo thứ tự đã gửi từ client
+                    usort($sortedData, function ($a, $b) {
+                        return $a['position'] > $b['position'];
+                    });
+
+                    // Lưu lại các menu con theo thứ tự đã sắp xếp
+                    foreach ($sortedData as $menu) {
+                        $menuModelToUpdate = Menu::findOne($menu['id']);
+                        if ($menuModelToUpdate) {
+                            $menuModelToUpdate->parent_id = $menuModel->id;
+                            $menuModelToUpdate->position = $menu['position']; // Cập nhật thứ tự
+                            if (!$menuModelToUpdate->save()) {
+                                throw new \Exception("Không thể lưu menu con ID: {$menu['id']}." . json_encode($menuModelToUpdate->getErrors()));
+                            }
+                        }
+                    }
                 }
 
                 $transaction->commit();
@@ -235,6 +274,8 @@ class MenusController extends BaseAdminController
 
         return $this->asJson(['success' => false, 'message' => 'Yêu cầu không hợp lệ.']);
     }
+
+
     public function actionSaveSubPage()
     {
         if (Yii::$app->request->isPost) {
@@ -264,7 +305,7 @@ class MenusController extends BaseAdminController
                         $menuPage = new MenuPage();
                         $menuPage->menu_id = $menuModel->id;
                         $menuPage->page_id = $page['id'];
-                        if ( !$menuPage->save()) {
+                        if (!$menuPage->save()) {
                             throw new \Exception("Không thể lưu subpage ID: {$page['id']}." . json_encode($menuPage->getErrors()));
                         }
                     }

@@ -1,32 +1,51 @@
 $(document).ready(function () {
-    let columnVisibility = {};
-
+    applyColumnVisibility();
     function applyColumnVisibility() {
         $('.column-checkbox').each(function () {
-            const column = $(this).data('column');
-            const isChecked = columnVisibility[column] !== false;
+            const columnName = $(this).data('column');
+            const isVisible = $(this).is(':checked');
 
-            $(this).prop('checked', isChecked);
-
-            if (isChecked) {
-                $(`th[data-column="${column}"], td[data-column="${column}"]`).show();
+            if (isVisible) {
+                $(`.table th[data-column="${columnName}"], .table td[data-column="${columnName}"]`).show();
             } else {
-                $(`th[data-column="${column}"], td[data-column="${column}"]`).hide();
+                $(`.table th[data-column="${columnName}"], .table td[data-column="${columnName}"]`).hide();
             }
         });
     }
-
     $(document).off('change', '.column-checkbox').on('change', '.column-checkbox', function () {
-        const column = $(this).data('column');
-        const isChecked = $(this).is(':checked');
+        const columnName = $(this).data('column');
+        const isVisible = $(this).is(':checked');
 
-        columnVisibility[column] = isChecked;
-
-        if (isChecked) {
-            $(`th[data-column="${column}"], td[data-column="${column}"]`).show();
+        if (isVisible) {
+            $(`th[data-column="${columnName}"], td[data-column="${columnName}"]`).show();
         } else {
-            $(`th[data-column="${column}"], td[data-column="${column}"]`).hide();
+            $(`th[data-column="${columnName}"], td[data-column="${columnName}"]`).hide();
         }
+
+        $.ajax({
+            url: save_column_visibility_url,
+            type: 'POST',
+            headers: {
+                'X-CSRF-Token': $('meta[name="csrf-token"]').attr('content')
+            },
+            data: {
+                menuId,
+                pageId,
+                column_name: columnName,
+                is_visible: isVisible,
+            },
+            success: function (response) {
+                if (response.success) {
+                    console.log('Cập nhật thành công:', response.message);
+                } else {
+                    alert('Lỗi cập nhật: ' + response.message);
+                }
+            },
+            error: function (xhr, status, error) {
+                console.log('Lỗi AJAX:', error);
+                alert('Không thể cập nhật cột.');
+            }
+        });
     });
 
     $(document).off('pjax:send').on('pjax:send', function () {
@@ -43,18 +62,16 @@ $(document).ready(function () {
         applyColumnVisibility();
     });
 
-    applyColumnVisibility();
-
     $(document).off('click', '#add-row-btn').on('click', '#add-row-btn', function (e) {
         e.preventDefault();
 
         var formData = $('#add-data-form').serialize();
 
         $.ajax({
-            url: add_data_url, // Đường dẫn xử lý thêm dữ liệu
+            url: add_data_url,
             type: "POST",
             headers: {
-                'X-CSRF-Token': $('meta[name="csrf-token"]').attr('content') // CSRF Token
+                'X-CSRF-Token': $('meta[name="csrf-token"]').attr('content')
             },
             data: {
                 data: formData,
@@ -148,7 +165,7 @@ $(document).ready(function () {
                     'X-CSRF-Token': $('meta[name="csrf-token"]').attr('content')
                 },
                 data: {
-                    hidden_id: rowId,
+                    id: rowId,
                     pageId,
                 },
                 success: function (response) {
@@ -302,6 +319,10 @@ $(document).on('click', '#export-excel-btn', function () {
     var search = '';
     var sort = $('th.sortable-column a.desc, th.sortable-column a.asc').data('sort');
 
+    if (!sort) {
+        sort = '-id';
+    }
+
     if (lastAjaxUrl.includes('search=')) {
         const urlParams = new URLSearchParams(lastAjaxUrl.split('?')[1]);
         search = urlParams.get('search');
@@ -311,8 +332,8 @@ $(document).on('click', '#export-excel-btn', function () {
 
     window.location.href = exportUrl;
     loadingSpinner.remove();
-
 });
+
 
 
 

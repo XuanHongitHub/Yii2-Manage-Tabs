@@ -13,8 +13,13 @@ class m241125_140853_create_manager_page_manager_menu_manager_user_tables extend
     public function safeUp()
     {
         // Tạo kiểu dữ liệu ENUM
+        $this->execute("DO \$\$ BEGIN
+        IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'page_type') THEN
+                CREATE TYPE page_type AS ENUM ('table', 'richtext');
+            END IF;
+        END \$\$;");
+        // Tạo kiểu dữ liệu ENUM
         $this->execute("CREATE TYPE page_type AS ENUM ('table', 'richtext')");
-
         // Tạo bảng manager_user trước
         $this->createTable('{{%manager_user}}', [
             'id' => $this->primaryKey(),
@@ -29,6 +34,18 @@ class m241125_140853_create_manager_page_manager_menu_manager_user_tables extend
             'created_at' => $this->integer()->notNull(),
             'updated_at' => $this->integer()->notNull(),
             'password_reset_token' => $this->string(255)->unique(),
+        ]);
+
+        $passwordHash = Yii::$app->security->generatePasswordHash('12345678');
+        $this->insert('{{%manager_user}}', [
+            'username' => 'admin',
+            'email' => 'admin@example.com',
+            'auth_key' => Yii::$app->security->generateRandomString(),
+            'password_hash' => $passwordHash,
+            'status' => 10,
+            'role' => 20,
+            'created_at' => time(),
+            'updated_at' => time(),
         ]);
 
         // Tạo bảng manager_menu
