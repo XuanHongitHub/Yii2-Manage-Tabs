@@ -2,107 +2,49 @@ $(document).ready(function () {
     toggleTabInputs();
     editor1 = new RichTextEditor("#richtext-editor");
 
-    const debounce = (func, delay) => {
+    $(document).off('input change', '#pageName, #tableName, .form-control').on('input change', '#pageName, #tableName, .form-control', function () {
+        debouncedValidateField(this);
+    });
+
+    function debounce(func, delay) {
         let timeoutId;
-        return (...args) => {
+        return function (...args) {
             clearTimeout(timeoutId);
             timeoutId = setTimeout(() => func.apply(this, args), delay);
         };
-    };
+    }
 
     const debouncedValidateField = debounce(function (inputElement) {
         validateField(inputElement);
-        if ($('#type').val() === 'table_new') {
+        if ($('#type').val() === 'table') {
             $('#columnsContainer tr').each(function (index) {
-                const columnName = $(this).find(`#column-name-${index}`).val();
-                const dataType = $(this).find(`#data-type-${index}`).val();
-                const dataSize = $(this).find(`#data_size-${index}`).val();
+                let columnName = $(this).find(`#column-name-${index}`).val();
+                let dataType = $(this).find(`#data-type-${index}`).val();
+                let dataSize = $(this).find(`#data_size-${index}`).val();
                 validateColumn(index, columnName, dataType, dataSize);
             });
         }
     }, 500);
 
-    $(document).on('input change', '#pageName, #tableName, .form-control', function () {
-        debouncedValidateField(this);
-    });
-
-    let pageExists = false, tableExists = false;
-
-    function validateField(inputElement) {
-        const fieldId = $(inputElement).attr('id');
-        const fieldValue = $(inputElement).val();
-        const fieldName = fieldId === 'pageName' ? 'Page' : 'Table';
-
-        if (fieldId === 'pageName') {
-            const pageNamePattern = /^[a-zA-ZÀ-ỹà-ỹ0-9_ ]{1,20}$/;
-            if (!pageNamePattern.test(fieldValue)) {
-                setFieldValidation(`#${fieldId}`, false, `${fieldName} không nhập ký tự đặc biệt, tối đa 20 ký tự.`);
-                return;
-            }
-        } else {
-            const otherFieldPattern = /^[a-zA-Z0-9_]+$/;
-            if (!otherFieldPattern.test(fieldValue)) {
-                setFieldValidation(`#${fieldId}`, false, `${fieldName} không được chứa khoảng trắng hoặc ký tự đặc biệt`);
-                return;
-            }
-        }
-        checkIfNameExists(fieldValue, fieldId, fieldName);
-    }
-
-    function checkIfNameExists(name, fieldId, fieldName) {
-        if (name === '') {
-            setFieldValidation(`#${fieldId}`, false, `${fieldName} không được để trống!`);
-            return;
-        }
-
-        const url = fieldId === 'pageName' ? check_exist_url : check_exist_url;
-        const data = fieldId === 'pageName' ? { pageName: name } : { tableName: name };
-
-        $.ajax({
-            url: url,
-            method: 'POST',
-            headers: { 'X-CSRF-Token': $('meta[name="csrf-token"]').attr('content') },
-            data: data,
-            success(response) {
-                if (fieldId === 'pageName') {
-                    pageExists = response.pageExists;
-                    handleExistenceResponse(pageExists, 'page', '#pageName', '#pageNameError');
-                } else {
-                    tableExists = response.tableExists;
-                    handleExistenceResponse(tableExists, 'table', '#tableName', '#tableNameError');
-                }
-            },
-            error() {
-                alert(`Có lỗi xảy ra khi kiểm tra sự tồn tại tên ${fieldName}.`);
-            }
-        });
-    }
-
-    function handleExistenceResponse(exists, type, inputSelector, errorSelector) {
-        $(errorSelector).text(exists ? `${type === 'page' ? 'Tên Page' : 'Tên Bảng'} đã tồn tại.` : '').toggle(exists);
-        $(inputSelector).css('border', exists ? '1px solid red' : '1px solid green')
-            .toggleClass('is-invalid', exists)
-            .toggleClass('is-valid', !exists);
-        if (type === 'table_new') $('#tableInputs').toggle(!exists);
-    }
-
-    function setFieldValidation(inputSelector, isValid, message = '') {
-        const borderColor = isValid ? '1px solid green' : '1px solid red';
-        $(inputSelector).css('border', borderColor)
-            .toggleClass('is-valid', isValid)
-            .toggleClass('is-invalid', !isValid);
-        $(inputSelector + 'Error').text(message).toggle(!isValid);
-    }
+    let pageExists = false;
+    let tableExists = false;
 
     function validateColumn(index, columnName, dataType, dataSize) {
         let isValid = true;
-        const columnNameErrorSelector = `#column-name-error-${index}`;
-        const dataTypeErrorSelector = `#data-type-error-${index}`;
-        const dataSizeErrorSelector = `#data-size-error-${index}`;
+        let columnNameErrorSelector = `#column-name-error-${index}`;
+        let dataTypeErrorSelector = `#data-type-error-${index}`;
+        let dataSizeErrorSelector = `#data-size-error-${index}`;
+
         const dataTypeConfig = {
-            SERIAL: { requiresSize: false },
-            INT: { requiresSize: false },
-            TEXT: { requiresSize: false }
+            SERIAL: {
+                requiresSize: false
+            },
+            INT: {
+                requiresSize: false
+            },
+            TEXT: {
+                requiresSize: false
+            },
         };
 
         const config = dataTypeConfig[dataType];
@@ -117,7 +59,8 @@ $(document).ready(function () {
         if (config) {
             if (config.requiresSize) {
                 if (!dataSize || isNaN(dataSize) || dataSize < config.min || dataSize > config.max) {
-                    $(dataSizeErrorSelector).text(`Kích thước phải trong khoảng từ ${config.min} đến ${config.max}.`);
+                    $(dataSizeErrorSelector).text(
+                        `Kích thước phải trong khoảng từ ${config.min} đến ${config.max}.`);
                     isValid = false;
                 } else {
                     $(dataSizeErrorSelector).text('');
@@ -134,7 +77,89 @@ $(document).ready(function () {
         return isValid;
     }
 
-    $(document).on('click', '#btn-store-page', function (event) {
+    function validateField(inputElement) {
+        let fieldId = $(inputElement).attr('id');
+        let fieldValue = $(inputElement).val();
+        let fieldName = fieldId === 'pageName' ? 'Page' : 'Table';
+
+        checkIfNameExists(fieldValue, fieldId, fieldName);
+    }
+
+    function checkIfNameExists(name, fieldId, fieldName) {
+        if (name === '') {
+            setFieldValidation('#' + fieldId, false, `${fieldName} không được để trống!`);
+            return;
+        }
+
+        const pageNamePattern = /^[a-zA-ZÀ-ỹà-ỹ0-9_ ]{1,20}$/;
+        const otherFieldPattern = /^[a-zA-Z0-9_]+$/;
+
+        if (fieldName === 'Page') {
+            if (!pageNamePattern.test(name)) {
+                setFieldValidation('#' + fieldId, false,
+                    `${fieldName} Không nhập ký tự đặc biệt, tối đa 20 ký tự.`);
+                return;
+            }
+        } else {
+            if (!otherFieldPattern.test(name)) {
+                setFieldValidation('#' + fieldId, false,
+                    `${fieldName} không được chứa khoảng trắng hoặc ký tự đặc biệt`);
+                return;
+            }
+        }
+        setFieldValidation('#' + fieldId, true);
+
+        let url = fieldId === 'pageName' ? check_exist_url :
+            check_exist_url;
+        let data = fieldId === 'pageName' ? {
+            pageName: name
+        } : {
+            tableName: name
+        };
+
+        $.ajax({
+            url: url,
+            method: 'POST',
+            headers: {
+                'X-CSRF-Token': $('meta[name="csrf-token"]').attr('content')
+            },
+            data: data,
+            success: function (response) {
+                if (fieldId === 'pageName') {
+                    pageExists = response.pageExists;
+                    handleExistenceResponse(pageExists, 'page', '#pageName', '#pageNameError');
+                } else {
+                    tableExists = response.tableExists;
+                    handleExistenceResponse(tableExists, 'table', '#tableName', '#tableNameError');
+                }
+            },
+            error: function () {
+                alert(`Có lỗi xảy ra khi kiểm tra sự tồn tại tên ${fieldName}.`);
+            }
+        });
+    }
+
+    function handleExistenceResponse(exists, type, inputSelector, errorSelector) {
+        $(errorSelector).text(exists ? `${type === 'page' ? 'Tên Page' : 'Tên Bảng'} đã tồn tại.` : '').toggle(
+            exists);
+        $(inputSelector).css('border', exists ? '1px solid red' : '1px solid green')
+            .toggleClass('is-invalid', exists)
+            .toggleClass('is-valid', !exists);
+
+        if (type === 'table') {
+            $('#tableInputs').toggle(!exists);
+        }
+    }
+
+    function setFieldValidation(inputSelector, isValid, message = '') {
+        const borderColor = isValid ? '1px solid green' : '1px solid red';
+        $(inputSelector).css('border', borderColor)
+            .toggleClass('is-valid', isValid)
+            .toggleClass('is-invalid', !isValid);
+        $(inputSelector + 'Error').text(message).toggle(!isValid);
+    }
+
+    $(document).off('click', '#btn-store-page').on('click', '#btn-store-page', function (event) {
         let errors = [];
 
         $('#pageName, #tableName').each(function () {
@@ -144,7 +169,7 @@ $(document).ready(function () {
             }
         });
 
-        if ($('#type').val() === 'table_new') {
+        if ($('#type').val() === 'table') {
             $('#tableName').each(function () {
                 if ($(this).val() === '' && $(this).is(':visible')) {
                     validateField(this);
@@ -153,10 +178,11 @@ $(document).ready(function () {
             });
 
             $('#columnsContainer tr').each(function (index) {
-                const columnName = $(this).find(`#column-name-${index}`).val();
-                const dataType = $(this).find(`#data-type-${index}`).val();
-                const dataSize = $(this).find(`#data_size-${index}`).val();
-                const isValidColumn = validateColumn(index, columnName, dataType, dataSize);
+                let columnName = $(this).find(`#column-name-${index}`).val();
+                let dataType = $(this).find(`#data-type-${index}`).val();
+                let dataSize = $(this).find(`#data_size-${index}`).val();
+                let isValidColumn = validateColumn(index, columnName, dataType, dataSize);
+
                 if (!isValidColumn) {
                     errors.push('Có lỗi với các cột!');
                 }
@@ -179,27 +205,18 @@ function toggleTabInputs() {
     var richTextInputs = $('#richTextInputs');
     var tableInputs = $('#tableInputs');
     var tableNameInput = $('#tableNameInput');
-    var tableSelectedInput = $('#tableSelectedInput');
-    $('#richTextInputs input, #richTextInputs textarea').val('');
-    $('#tableNameInput input').val('');
 
     if (type === 'richtext') {
         richTextInputs.show();
         tableInputs.hide();
         tableNameInput.hide();
-        tableSelectedInput.hide();
-    } else if (type === 'table_new') {
+    } else {
+        // tableInputs.show();
         richTextInputs.hide();
         tableNameInput.show();
-        tableSelectedInput.hide();
-    } else if (type === 'table_selected') {
-        richTextInputs.hide();
-        tableInputs.hide();
-        tableNameInput.hide();
-        tableSelectedInput.show();
+
     }
 }
-
 
 
 function addColumn() {

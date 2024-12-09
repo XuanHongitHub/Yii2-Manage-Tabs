@@ -94,9 +94,9 @@ $this->title = 'Danh sách Page';
                     'label' => 'Loại',
                     'format' => 'raw',
                     'value' => function ($data) {
-                        return $data->type == 'table' ?
-                            '<span class="badge badge-light-primary">Table</span>' :
-                            '<span class="badge badge-light-danger">Richtext</span>';
+                        return $data->type == 'richtext' ?
+                            '<span class="badge badge-light-danger">Richtext</span>' :
+                            '<span class="badge badge-light-primary">Table</span>';
                     },
                 ],
                 [
@@ -216,33 +216,33 @@ $this->title = 'Danh sách Page';
                         <?php
                         if ($trashDataProvider->getCount() > 0):
                             foreach ($trashDataProvider->models as $page): ?>
-                        <tr>
-                            <td><?= htmlspecialchars($page->name) ?></td>
-                            <td class="text-center">
-                                <?php if ($page->type == 'table'): ?>
-                                <span class="badge badge-light-primary">Table</span>
-                                <?php else: ?>
-                                <span class="badge badge-light-danger">Richtext</span>
-                                <?php endif; ?>
-                            </td>
-                            <td class="text-nowrap">
-                                <button type="button" class="btn btn-warning restore-page-btn"
-                                    data-page-id="<?= htmlspecialchars($page->id) ?>">
-                                    <i class="fa-solid fa-rotate-left"></i>
-                                </button>
-                                <button type="button" class="btn btn-danger delete-page-btn"
-                                    data-page-id="<?= htmlspecialchars($page->id) ?>">
-                                    <i class="fa-regular fa-trash-can"></i>
-                                </button>
-                            </td>
-                        </tr>
-                        <?php endforeach; ?>
+                                <tr>
+                                    <td><?= htmlspecialchars($page->name) ?></td>
+                                    <td class="text-center">
+                                        <?php if ($page->type == 'richtext'): ?>
+                                            <span class="badge badge-light-danger">Richtext</span>
+                                        <?php else: ?>
+                                            <span class="badge badge-light-primary">Table</span>
+                                        <?php endif; ?>
+                                    </td>
+                                    <td class="text-nowrap">
+                                        <button type="button" class="btn btn-warning restore-page-btn"
+                                            data-page-id="<?= htmlspecialchars($page->id) ?>">
+                                            <i class="fa-solid fa-rotate-left"></i>
+                                        </button>
+                                        <button type="button" class="btn btn-danger delete-page-btn"
+                                            data-page-id="<?= htmlspecialchars($page->id) ?>">
+                                            <i class="fa-regular fa-trash-can"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                            <?php endforeach; ?>
                         <?php else: ?>
-                        <tr>
-                            <td colspan="3" class="text-center text-muted">
-                                <em>Không có gì ở đây.</em>
-                            </td>
-                        </tr>
+                            <tr>
+                                <td colspan="3" class="text-center text-muted">
+                                    <em>Không có gì ở đây.</em>
+                                </td>
+                            </tr>
                         <?php endif; ?>
                     </tbody>
                 </table>
@@ -275,26 +275,26 @@ $this->title = 'Danh sách Page';
                     </thead>
                     <tbody id="hide-index">
                         <?php foreach ($dataProvider->models as $page): ?>
-                        <?php if ($page->deleted == 0): ?>
-                        <tr>
-                            <td class="py-0"><?= htmlspecialchars($page->name) ?></td>
-                            <td class="text-center py-0">
-                                <?php if ($page->type == 'table'): ?>
-                                <span class="badge badge-light-primary">Table</span>
-                                <?php else: ?>
-                                <span class="badge badge-light-danger">Richtext</span>
-                                <?php endif; ?>
-                            </td>
-                            <td class="py-0 text-center">
-                                <label class="switch mb-0 mt-1">
-                                    <input class="form-check-input toggle-hide-btn" type="checkbox"
-                                        data-page-id="<?= htmlspecialchars($page->id) ?>"
-                                        <?php if ($page->status == 0): ?> checked <?php endif; ?>>
-                                    <span class="switch-state"></span>
-                                </label>
-                            </td>
-                        </tr>
-                        <?php endif; ?>
+                            <?php if ($page->deleted == 0): ?>
+                                <tr>
+                                    <td class="py-0"><?= htmlspecialchars($page->name) ?></td>
+                                    <td class="text-center py-0">
+                                        <?php if ($page->type == 'richtext'): ?>
+                                            <span class="badge badge-light-danger">Richtext</span>
+                                        <?php else: ?>
+                                            <span class="badge badge-light-primary">Table</span>
+                                        <?php endif; ?>
+                                    </td>
+                                    <td class="py-0 text-center">
+                                        <label class="switch mb-0 mt-1">
+                                            <input class="form-check-input toggle-hide-btn" type="checkbox"
+                                                data-page-id="<?= htmlspecialchars($page->id) ?>"
+                                                <?php if ($page->status == 0): ?> checked <?php endif; ?>>
+                                            <span class="switch-state"></span>
+                                        </label>
+                                    </td>
+                                </tr>
+                            <?php endif; ?>
                         <?php endforeach; ?>
                     </tbody>
                 </table>
@@ -331,13 +331,13 @@ $this->title = 'Danh sách Page';
 </div>
 
 <script>
-var save_sort_url = "<?= Url::to(['pages/save-sort']) ?>";
-var update_status_url = "<?= Url::to(['pages/update-hide-status']) ?>";
-var update_sortOrder_url = "<?= Url::to(['pages/update-sort-order']) ?>";
-var restore_page_url = "<?= Url::to(['pages/restore-page']) ?>";
-var delete_permanently_url = "<?= Url::to(['pages/delete-permanently-page']) ?>";
-var delete_soft_url = "<?= Url::to(['pages/delete-page']) ?>";
-var save_sub_page_url = "<?= Url::to(['pages/save-sub-page']) ?>";
-var yiiWebAlias = "<?= Yii::getAlias('@web') ?>";
-var update_page_url = "<?= Url::to(['pages/update-page']) ?>";
+    var save_sort_url = "<?= Url::to(['pages/save-sort']) ?>";
+    var update_status_url = "<?= Url::to(['pages/update-hide-status']) ?>";
+    var update_sortOrder_url = "<?= Url::to(['pages/update-sort-order']) ?>";
+    var restore_page_url = "<?= Url::to(['pages/restore-page']) ?>";
+    var delete_permanently_url = "<?= Url::to(['pages/delete-permanently-page']) ?>";
+    var delete_soft_url = "<?= Url::to(['pages/delete-page']) ?>";
+    var save_sub_page_url = "<?= Url::to(['pages/save-sub-page']) ?>";
+    var yiiWebAlias = "<?= Yii::getAlias('@web') ?>";
+    var update_page_url = "<?= Url::to(['pages/update-page']) ?>";
 </script>
