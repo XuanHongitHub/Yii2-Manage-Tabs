@@ -730,7 +730,7 @@ class PagesController extends Controller
         $menuId = Yii::$app->request->post('menuId');
         $pageId = Yii::$app->request->post('pageId');
 
-        if (!$columnsVisibility || !$menuId || !$pageId) {
+        if (!$columnsVisibility || (!$menuId && !$pageId)) {
             return ['success' => false, 'message' => 'Dữ liệu không hợp lệ.'];
         }
 
@@ -738,23 +738,24 @@ class PagesController extends Controller
             $columnName = $columnVisibility['column_name'];
             $isVisible = in_array($columnVisibility['is_visible'], ['true', '1'], true) ? 1 : 0;
 
-            // Tìm bản ghi nếu đã tồn tại
-            $config = Config::findOne([
-                'column_name' => $columnName,
-                'menu_id' => $menuId,
-                'page_id' => $pageId
-            ]);
-
-            if (!$config) {
-                // Nếu không tìm thấy bản ghi, tạo mới
+            if ($menuId === null || $pageId === null) {
+                // Nếu menu_id hoặc page_id là null, tạo một bản ghi mới với menu_id và page_id là null (local)
                 $config = new Config();
+                $config->column_name = $columnName;
+                $config->menu_id = null; // Local configuration (không liên quan đến menu cụ thể)
+                $config->page_id = null; // Local configuration
+                $config->is_visible = $isVisible;
+            } else {
+                $config = Config::findOne([
+                    'column_name' => $columnName,
+                    'menu_id' => $menuId,
+                    'page_id' => $pageId
+                ]) ?? new Config();
                 $config->column_name = $columnName;
                 $config->menu_id = $menuId;
                 $config->page_id = $pageId;
+                $config->is_visible = $isVisible;
             }
-
-            // Cập nhật trạng thái is_visible
-            $config->is_visible = $isVisible;
 
             if (!$config->save()) {
                 return ['success' => false, 'message' => 'Không thể lưu trạng thái hiển thị.', 'errors' => $config->getErrors()];

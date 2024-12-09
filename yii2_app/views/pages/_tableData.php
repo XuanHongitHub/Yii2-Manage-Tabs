@@ -18,14 +18,12 @@ $this->title = $menu->name;
 $configColumns = Config::find()
     ->where(['page_id' => $pageId])
     ->andWhere(['or', ['menu_id' => $menuId], ['menu_id' => null]])
+    ->orderBy(['menu_id' => SORT_DESC])
     ->all();
-
 $hiddenColumns = [];
 
 foreach ($configColumns as $config) {
-    if (!$config->is_visible) {
-        $hiddenColumns[$config->column_name] = false;
-    }
+    $hiddenColumns[$config->column_name] = $config->is_visible;
 }
 ?>
 <!-- Modal Nhập Excel -->
