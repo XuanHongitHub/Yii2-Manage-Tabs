@@ -60,8 +60,12 @@ class PagesController extends BaseAdminController
         ]);
     }
 
-
     public function actionCreate()
+    {
+        return $this->render('create');
+    }
+
+    public function actionGetTableName()
     {
         $allTables = Yii::$app->db->createCommand("SELECT table_name FROM information_schema.tables WHERE table_schema = 'public'")->queryAll();
 
@@ -75,13 +79,11 @@ class PagesController extends BaseAdminController
             return !in_array(strtolower($table['table_name']), $allExcludedTables);
         });
 
-        $validTableNames = array_map(function ($table) {
+        $tables = array_map(function ($table) {
             return $table['table_name'];
         }, $validTables);
 
-        return $this->render('create', [
-            'validTableNames' => $validTableNames,
-        ]);
+        return $this->asJson($tables);
     }
 
 
@@ -93,49 +95,27 @@ class PagesController extends BaseAdminController
             $pageName = Yii::$app->request->post('pageName');
             $tableName = Yii::$app->request->post('tableName');
             $content = Yii::$app->request->post('content');
-            Yii::error("Dữ liệu nhận từ form: type={$pageType}, pageName={$pageName}, tableName={$tableName}", 'application');
 
-            $page = new Page();
-            $page->user_id = $userId;
-            $page->type = $pageType;
-            $page->name = $pageName;
-            $page->table_name = $tableName;
-            $page->created_at = date('Y-m-d H:i:s');
-            $page->updated_at = date('Y-m-d H:i:s');
+            Yii::error("Dữ liệu nhận từ form: type={$pageType}, pageName={$pageName}, tableName={$tableName}", 'application');
 
             $existingPage = Page::find()->where(['name' => $pageName, 'user_id' => $userId])->exists();
             if ($existingPage) {
-                $page->addError('', 'Tên trang đã tồn tại. Vui lòng chọn tên khác.');
+                Yii::$app->session->setFlash('error', 'Tên trang đã tồn tại. Vui lòng chọn tên khác.');
+                return $this->redirect(['create']);
             }
 
-            if ($page->hasErrors()) {
-                $errorMessages = [];
-                foreach ($page->errors as $field => $messages) {
-                    foreach ($messages as $message) {
-                        $errorMessages[] = ucfirst($field) . ': ' . $message;
-                    }
-                }
-                Yii::$app->session->setFlash('error', implode('; ', $errorMessages));
-                return $this->render('create', ['page' => $page]);
-            }
+            $tableExists = Yii::$app->db->createCommand("SELECT to_regclass(:tableName)", [':tableName' => $tableName])->queryScalar();
 
-            if ($pageType === 'table_new') {
-                $columns = Yii::$app->request->post('columns', []);
-                $dataTypes = Yii::$app->request->post('data_types', []);
-                $dataSizes = Yii::$app->request->post('data_sizes', []);
-                $isNotNull = Yii::$app->request->post('is_not_null', []);
-                $isPrimary = Yii::$app->request->post('is_primary', []);
-
-                Yii::info("Dữ liệu table: columns=" . implode(', ', $columns) . ", dataTypes=" . implode(', ', $dataTypes), 'application');
-                foreach ($isPrimary as $index => $primary) {
-                    if (isset($isPrimary[$index]) && $isPrimary[$index] == '1') {
-                        $isNotNull[$index] = '1';
-                    }
-                }
-
+            if ($pageType === 'table') {
                 $transaction = Yii::$app->db->beginTransaction();
                 try {
-                    if ($page->save()) {
+                    if (!$tableExists) {
+                        $columns = Yii::$app->request->post('columns', []);
+                        $dataTypes = Yii::$app->request->post('data_types', []);
+                        $dataSizes = Yii::$app->request->post('data_sizes', []);
+                        $isNotNull = Yii::$app->request->post('is_not_null', []);
+                        $isPrimary = Yii::$app->request->post('is_primary', []);
+
                         $createTableQuery = "CREATE TABLE \"$tableName\"";
                         $columnDefs = [];
                         foreach ($columns as $index => $column) {
@@ -163,13 +143,25 @@ class PagesController extends BaseAdminController
 
                         $createTableQuery .= ' (' . implode(', ', $columnDefs) . ')';
                         Yii::$app->db->createCommand($createTableQuery)->execute();
-
-                        Yii::$app->session->setFlash('success', 'Tạo bảng thành công.');
-                        $transaction->commit();
-
-                        return $this->redirect(['create', BaseModel::HIDDEN_ID_KEY => $page->id]);
+                        Yii::$app->session->setFlash('success', 'Bảng mới đã được tạo thành công.');
                     } else {
-                        throw new \Exception('Không thể tạo page.');
+                        Yii::$app->session->setFlash('info', 'Bảng đã tồn tại. Chỉ thêm thông tin page.');
+                    }
+
+                    $page = new Page();
+                    $page->user_id = $userId;
+                    $page->type = $pageType;
+                    $page->name = $pageName;
+                    $page->table_name = $tableName;
+                    $page->created_at = date('Y-m-d H:i:s');
+                    $page->updated_at = date('Y-m-d H:i:s');
+
+                    if ($page->save()) {
+                        $transaction->commit();
+                        Yii::$app->session->setFlash('success', 'Page đã được tạo thành công!');
+                        return $this->redirect(['create', 'id' => $page->id]);
+                    } else {
+                        throw new \Exception('Không thể lưu thông tin page.');
                     }
                 } catch (\Exception $e) {
                     $transaction->rollBack();
@@ -177,12 +169,11 @@ class PagesController extends BaseAdminController
                     return $this->redirect(['create']);
                 }
             } elseif ($pageType === 'richtext') {
-                $existingTab = Page::findOne(['name' => $tableName, 'type' => 'richtext', 'user_id' => $userId]);
-                if ($existingTab) {
-                    Yii::$app->session->setFlash('error', 'Tên page đã tồn tại. Vui lòng chọn tên khác.');
-                    return $this->redirect(['create']);
-                }
-
+                $page = new Page();
+                $page->user_id = $userId;
+                $page->type = $pageType;
+                $page->name = $pageName;
+                $page->table_name = $tableName;
                 $page->content = $content;
 
                 if ($page->save()) {
@@ -192,18 +183,12 @@ class PagesController extends BaseAdminController
                     Yii::$app->session->setFlash('error', 'Đã xảy ra lỗi khi tạo page. Vui lòng thử lại.');
                     return $this->redirect(['create']);
                 }
-            } elseif ($pageType === 'table_selected') {
-                if ($page->save()) {
-                    Yii::$app->session->setFlash('success', 'Tạo page thành công!');
-                    return $this->redirect(['create']);
-                } else {
-                    Yii::$app->session->setFlash('error', 'Đã xảy ra lỗi khi tạo page. Vui lòng thử lại.');
-                    return $this->redirect(['create']);
-                }
             }
         }
+
         return $this->render('create');
     }
+
 
 
     public function actionCheckNameExistence()
@@ -212,34 +197,16 @@ class PagesController extends BaseAdminController
         $tableName = Yii::$app->request->post('tableName');
 
         $pageExists = Page::find()->where(['name' => $pageName])->exists();
-        $tableExists = Page::find()->where(['table_name' => $tableName])->exists();
+
+        $tableExists = Yii::$app->db->createCommand("SELECT EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = :tableName)")
+            ->bindValue(':tableName', $tableName)
+            ->queryScalar();
 
         return $this->asJson([
             'pageExists' => $pageExists,
             'tableExists' => $tableExists
         ]);
     }
-
-    public function actionGetTableSelected()
-    {
-        if (Yii::$app->request->isPost) {
-
-            $allTables = Yii::$app->db->createCommand("SELECT table_name FROM information_schema.tables WHERE table_schema = 'public'")->queryAll();
-
-            $excludedTables = ['manager_page', 'manager_user', 'manager_menu', 'manager_menu_page', 'manager_config', 'migration'];
-
-            $validTables = array_filter($allTables, function ($table) use ($excludedTables) {
-                return !in_array(strtolower($table['table_name']), $excludedTables);
-            });
-
-            return $this->asJson([
-                'validTables' => $validTables
-            ]);
-        }
-
-        return $this->redirect(['create']);
-    }
-
 
     public function actionDelete($id)
     {

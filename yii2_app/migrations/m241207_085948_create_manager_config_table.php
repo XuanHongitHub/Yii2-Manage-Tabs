@@ -16,7 +16,7 @@ class m241207_085948_create_manager_config_table extends Migration
         $this->createTable('{{%manager_config}}', [
             'id' => $this->primaryKey(),
             'page_id' => $this->integer()->notNull(),
-            'menu_id' => $this->integer()->notNull(),
+            'menu_id' => $this->integer(),
             'column_name' => $this->string(255)->notNull(),
             'is_visible' => $this->boolean()->notNull()->defaultValue(true),
         ]);

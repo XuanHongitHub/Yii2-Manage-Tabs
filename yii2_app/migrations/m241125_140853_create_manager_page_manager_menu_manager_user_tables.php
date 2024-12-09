@@ -15,12 +15,11 @@ class m241125_140853_create_manager_page_manager_menu_manager_user_tables extend
         // Tạo kiểu dữ liệu ENUM
         $this->execute("DO \$\$ BEGIN
         IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'page_type') THEN
-            CREATE TYPE page_type AS ENUM ('table_new', 'table_selected', 'richtext');
+                CREATE TYPE page_type AS ENUM ('table', 'richtext');
             END IF;
         END \$\$;");
-
         // Tạo kiểu dữ liệu ENUM
-        $this->execute("CREATE TYPE page_type AS ENUM ('table_new', 'table_selected', 'richtext')");
+        $this->execute("CREATE TYPE page_type AS ENUM ('table', 'richtext')");
         // Tạo bảng manager_user trước
         $this->createTable('{{%manager_user}}', [
             'id' => $this->primaryKey(),

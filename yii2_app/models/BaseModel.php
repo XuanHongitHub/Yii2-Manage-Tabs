@@ -10,12 +10,6 @@ class BaseModel extends ActiveRecord
     const HIDDEN_ID_KEY = 'id';
     private static $customTableName;
 
-    /**
-     * Phương thức khởi tạo tên bảng
-     *
-     * @param string $tableName
-     * @return static
-     */
     public static function withTable($tableName)
     {
         $instance = new static();
@@ -23,16 +17,34 @@ class BaseModel extends ActiveRecord
         return $instance;
     }
 
-    /**
-     * Override method tableName để trả về tableName động
-     *
-     * @return string
-     */
     public static function tableName()
     {
         return self::$customTableName;
     }
 
+    /**
+     * Phương thức __get để xử lý cột động không hợp lệ.
+     */
+    public function __get($name)
+    {
+        if (array_key_exists($name, $this->getTableSchema()->columns)) {
+            return $this->getAttribute($name);
+        }
+
+        return parent::__get($name);
+    }
+
+    /**
+     * Phương thức __set để xử lý việc gán giá trị cho cột động.
+     */
+    public function __set($name, $value)
+    {
+        if (array_key_exists($name, $this->getTableSchema()->columns)) {
+            return $this->setAttribute($name, $value);
+        }
+
+        return parent::__set($name, $value);
+    }
 
     /**
      * Tự động tạo rules dựa vào cấu trúc bảng
@@ -51,7 +63,6 @@ class BaseModel extends ActiveRecord
         // Rule cho các cột bắt buộc
         $required = [];
         foreach ($tableSchema->columns as $column) {
-            // Bỏ qua cột là primary key với auto increment
             if ($column->isPrimaryKey && $column->autoIncrement) {
                 continue;
             }
@@ -60,13 +71,13 @@ class BaseModel extends ActiveRecord
                 $required[] = $column->name;
             }
         }
+
         if ($required) {
             $rules[] = [$required, 'required'];
         }
 
         // Rule cho các kiểu dữ liệu
         foreach ($tableSchema->columns as $column) {
-            // Bỏ qua cột là primary key với auto increment
             if ($column->isPrimaryKey && $column->autoIncrement) {
                 continue;
             }

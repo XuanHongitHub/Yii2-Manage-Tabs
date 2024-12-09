@@ -2,6 +2,10 @@ $(document).ready(function () {
     toggleTabInputs();
     editor1 = new RichTextEditor("#richtext-editor");
 
+    let pageExists = false,
+        tableExists = false,
+        isTableFromAutocomplete = false;
+
     const debounce = (func, delay) => {
         let timeoutId;
         return (...args) => {
@@ -12,7 +16,18 @@ $(document).ready(function () {
 
     const debouncedValidateField = debounce(function (inputElement) {
         validateField(inputElement);
-        if ($('#type').val() === 'table_new') {
+    }, 500);
+
+    $(document).on('input change', '#pageName, #tableName, .form-control', function () {
+        if ($(this).attr('id') === 'tableName' && !isTableFromAutocomplete) {
+            debouncedValidateField(this);
+        } else if ($(this).attr('id') !== 'tableName') {
+            debouncedValidateField(this);
+        }
+    });
+
+    $(document).on('input change', '#columnsContaine .form-control', function () {
+        if ($('#type').val() === 'table' && !isTableFromAutocomplete && tableExists == false) {
             $('#columnsContainer tr').each(function (index) {
                 const columnName = $(this).find(`#column-name-${index}`).val();
                 const dataType = $(this).find(`#data-type-${index}`).val();
@@ -20,13 +35,7 @@ $(document).ready(function () {
                 validateColumn(index, columnName, dataType, dataSize);
             });
         }
-    }, 500);
-
-    $(document).on('input change', '#pageName, #tableName, .form-control', function () {
-        debouncedValidateField(this);
     });
-
-    let pageExists = false, tableExists = false;
 
     function validateField(inputElement) {
         const fieldId = $(inputElement).attr('id');
@@ -40,15 +49,16 @@ $(document).ready(function () {
                 return;
             }
         } else {
-            const otherFieldPattern = /^[a-zA-Z0-9_]+$/;
-            if (!otherFieldPattern.test(fieldValue)) {
-                setFieldValidation(`#${fieldId}`, false, `${fieldName} không được chứa khoảng trắng hoặc ký tự đặc biệt`);
-                return;
+            if (!isTableFromAutocomplete) {
+                const otherFieldPattern = /^[a-zA-Z0-9_]+$/;
+                if (!otherFieldPattern.test(fieldValue)) {
+                    setFieldValidation(`#${fieldId}`, false, `${fieldName} không được chứa khoảng trắng hoặc ký tự đặc biệt`);
+                    return;
+                }
             }
         }
         checkIfNameExists(fieldValue, fieldId, fieldName);
     }
-
     function checkIfNameExists(name, fieldId, fieldName) {
         if (name === '') {
             setFieldValidation(`#${fieldId}`, false, `${fieldName} không được để trống!`);
@@ -68,8 +78,12 @@ $(document).ready(function () {
                     pageExists = response.pageExists;
                     handleExistenceResponse(pageExists, 'page', '#pageName', '#pageNameError');
                 } else {
-                    tableExists = response.tableExists;
-                    handleExistenceResponse(tableExists, 'table', '#tableName', '#tableNameError');
+                    if (!isTableFromAutocomplete) {
+                        tableExists = response.tableExists;
+                        handleExistenceResponse(tableExists, 'table', '#tableName', '#tableNameError');
+                    } else {
+                        handleExistenceResponse(false, 'table', '#tableName', '#tableNameError');
+                    }
                 }
             },
             error() {
@@ -79,11 +93,42 @@ $(document).ready(function () {
     }
 
     function handleExistenceResponse(exists, type, inputSelector, errorSelector) {
-        $(errorSelector).text(exists ? `${type === 'page' ? 'Tên Page' : 'Tên Bảng'} đã tồn tại.` : '').toggle(exists);
-        $(inputSelector).css('border', exists ? '1px solid red' : '1px solid green')
-            .toggleClass('is-invalid', exists)
-            .toggleClass('is-valid', !exists);
-        if (type === 'table_new') $('#tableInputs').toggle(!exists);
+        if (type === 'table') {
+            if (exists) {
+                $('#tableInputs').hide();
+                $(inputSelector).css('border', '1px solid green')
+                    .addClass('is-valid')
+                    .removeClass('is-invalid');
+                $('#tableInputs').hide();
+                tableExists = true;
+            } else {
+                if (!isTableFromAutocomplete) {
+                    $(inputSelector).css('border', '1px solid green')
+                        .addClass('is-valid')
+                        .removeClass('is-invalid');
+                    $('#tableInputs').show();
+                    $(errorSelector).text('').hide();
+                    tableExists = false;
+                }
+            }
+        } else if (type === 'page') {
+            if (exists) {
+                $(errorSelector).text('Tên Page đã tồn tại')
+                    .css('color', 'red')
+                    .show();
+                $(inputSelector).css('border', '1px solid red')
+                    .addClass('is-invalid')
+                    .removeClass('is-valid');
+                $('#tableInputs').hide();
+                pageExists = true;
+            } else {
+                $(errorSelector).text('').hide();
+                $(inputSelector).css('border', '1px solid green')
+                    .addClass('is-valid')
+                    .removeClass('is-invalid');
+                pageExists = false;
+            }
+        }
     }
 
     function setFieldValidation(inputSelector, isValid, message = '') {
@@ -134,6 +179,51 @@ $(document).ready(function () {
         return isValid;
     }
 
+    $('#tableName').autocomplete({
+        source: function (request, response) {
+            $.ajax({
+                url: get_table_url,
+                dataType: "json",
+                data: {
+                    term: request.term
+                },
+                success: function (data) {
+                    response($.map(data, function (value, key) {
+                        return {
+                            label: value,
+                            value: value
+                        };
+                    }));
+                }
+            });
+        },
+        minLength: 1,
+        select: function (event, ui) {
+            console.log("Bạn đã chọn bảng: " + ui.item.value);
+            $('#tableInputs').hide();
+            $('#columnsContainer .new-row').empty();
+            $('#tableNameSuccess').text('Sử dụng bảng sẵn có').css('color', 'green').show();
+
+            $('#tableName').val(ui.item.value);
+            isTableFromAutocomplete = true;
+            tableExists = true;
+        },
+        close: function () {
+            if (!tableExists) {
+                isTableFromAutocomplete = false;
+                $('#tableInputs').show();
+                $('#tableNameSuccess').text('').hide();
+            }
+        }
+    });
+
+
+    $(document).on('input', '#tableName', function () {
+        isTableFromAutocomplete = false;
+        $('#tableInputs').show();
+        $('#tableNameSuccess').text('').hide();
+        tableExists = false;
+    });
     $(document).on('click', '#btn-store-page', function (event) {
         let errors = [];
 
@@ -144,26 +234,28 @@ $(document).ready(function () {
             }
         });
 
-        if ($('#type').val() === 'table_new') {
-            $('#tableName').each(function () {
-                if ($(this).val() === '' && $(this).is(':visible')) {
-                    validateField(this);
-                    errors.push('Tên bảng không được để trống!');
-                }
-            });
+        if ($('#type').val() === 'table') {
+            if (!isTableFromAutocomplete) {
+                $('#tableName').each(function () {
+                    if ($(this).val() === '' && $(this).is(':visible')) {
+                        validateField(this);
+                        errors.push('Tên bảng không được để trống!');
+                    }
+                });
 
-            $('#columnsContainer tr').each(function (index) {
-                const columnName = $(this).find(`#column-name-${index}`).val();
-                const dataType = $(this).find(`#data-type-${index}`).val();
-                const dataSize = $(this).find(`#data_size-${index}`).val();
-                const isValidColumn = validateColumn(index, columnName, dataType, dataSize);
-                if (!isValidColumn) {
-                    errors.push('Có lỗi với các cột!');
-                }
-            });
+                $('#columnsContainer tr').each(function (index) {
+                    const columnName = $(this).find(`#column-name-${index}`).val();
+                    const dataType = $(this).find(`#data-type-${index}`).val();
+                    const dataSize = $(this).find(`#data_size-${index}`).val();
+                    const isValidColumn = validateColumn(index, columnName, dataType, dataSize);
+                    if (!isValidColumn) {
+                        errors.push('Có lỗi với các cột!');
+                    }
+                });
+            }
         }
 
-        if (pageExists || tableExists) {
+        if (pageExists || (tableExists && !isTableFromAutocomplete)) {
             errors.push('Tên Page hoặc Tên Bảng đã tồn tại.');
         }
 
@@ -179,7 +271,6 @@ function toggleTabInputs() {
     var richTextInputs = $('#richTextInputs');
     var tableInputs = $('#tableInputs');
     var tableNameInput = $('#tableNameInput');
-    var tableSelectedInput = $('#tableSelectedInput');
     $('#richTextInputs input, #richTextInputs textarea').val('');
     $('#tableNameInput input').val('');
 
@@ -187,26 +278,17 @@ function toggleTabInputs() {
         richTextInputs.show();
         tableInputs.hide();
         tableNameInput.hide();
-        tableSelectedInput.hide();
-    } else if (type === 'table_new') {
+    } else if (type === 'table') {
         richTextInputs.hide();
         tableNameInput.show();
-        tableSelectedInput.hide();
-    } else if (type === 'table_selected') {
-        richTextInputs.hide();
-        tableInputs.hide();
-        tableNameInput.hide();
-        tableSelectedInput.show();
     }
 }
 
-
-
 function addColumn() {
-    const rowIndex = $('#columnsContainer tr').length; // Lấy số dòng hiện tại trong tbody
+    const rowIndex = $('#columnsContainer tr').length;
 
     const newRow = `
-        <tr>
+        <tr class="new-row">
             <td>
                 <input type="text" name="columns[]" class="form-control" id="column-name-${rowIndex}" placeholder="Column Name">
                 <div class="text-danger column-error" id="column-name-error-${rowIndex}"></div>
@@ -228,7 +310,6 @@ function addColumn() {
     `;
     $('#columnsContainer').append(newRow);
 }
-
 
 function removeColumn(button) {
     const row = button.closest('tr');

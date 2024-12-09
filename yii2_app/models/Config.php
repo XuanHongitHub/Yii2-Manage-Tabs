@@ -32,7 +32,7 @@ class Config extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
-            [['page_id', 'menu_id', 'column_name'], 'required'],
+            [['page_id', 'column_name'], 'required'],
             [['page_id', 'menu_id'], 'default', 'value' => null],
             [['page_id', 'menu_id'], 'integer'],
             [['is_visible'], 'boolean'],

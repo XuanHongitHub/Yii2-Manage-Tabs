@@ -1,51 +1,58 @@
 $(document).ready(function () {
-    applyColumnVisibility();
-    function applyColumnVisibility() {
-        $('.column-checkbox').each(function () {
-            const columnName = $(this).data('column');
-            const isVisible = $(this).is(':checked');
 
-            if (isVisible) {
-                $(`.table th[data-column="${columnName}"], .table td[data-column="${columnName}"]`).show();
-            } else {
-                $(`.table th[data-column="${columnName}"], .table td[data-column="${columnName}"]`).hide();
-            }
-        });
-    }
-    $(document).off('change', '.column-checkbox').on('change', '.column-checkbox', function () {
+    let originalVisibility = {}; // Lưu trạng thái ban đầu của các cột
+
+    // Lưu trạng thái ban đầu của các cột
+    $('#columns-visibility .column-switch').each(function () {
         const columnName = $(this).data('column');
-        const isVisible = $(this).is(':checked');
+        originalVisibility[columnName] = $(this).prop('checked');
+    });
 
-        if (isVisible) {
-            $(`th[data-column="${columnName}"], td[data-column="${columnName}"]`).show();
-        } else {
-            $(`th[data-column="${columnName}"], td[data-column="${columnName}"]`).hide();
-        }
+    $(document).off('click', '#save-columns-visible').on('click', '#save-columns-visible', function () {
+        let columnsVisibility = [];
 
-        $.ajax({
-            url: save_column_visibility_url,
-            type: 'POST',
-            headers: {
-                'X-CSRF-Token': $('meta[name="csrf-token"]').attr('content')
-            },
-            data: {
-                menuId,
-                pageId,
-                column_name: columnName,
-                is_visible: isVisible,
-            },
-            success: function (response) {
-                if (response.success) {
-                    console.log('Cập nhật thành công:', response.message);
-                } else {
-                    alert('Lỗi cập nhật: ' + response.message);
-                }
-            },
-            error: function (xhr, status, error) {
-                console.log('Lỗi AJAX:', error);
-                alert('Không thể cập nhật cột.');
+        // Kiểm tra sự thay đổi và lưu vào mảng columnsVisibility
+        $('#columns-visibility .column-switch').each(function (index) {
+            const columnName = $(this).data('column');
+            const isChecked = $(this).prop('checked');
+
+            // Nếu trạng thái checkbox thay đổi
+            if (originalVisibility[columnName] !== isChecked) {
+                columnsVisibility.push({
+                    column_name: columnName,
+                    is_visible: isChecked
+                });
             }
         });
+
+        // Nếu có thay đổi, gửi yêu cầu AJAX
+        if (columnsVisibility.length > 0) {
+            $.ajax({
+                url: save_column_visibility_url,
+                type: 'POST',
+                headers: {
+                    'X-CSRF-Token': $('meta[name="csrf-token"]').attr('content')
+                },
+                data: {
+                    menuId: 1,
+                    pageId: 1,
+                    columns_visibility: columnsVisibility
+                },
+                success: function (response) {
+                    if (response.success) {
+                        console.log('Cập nhật thành công:', response.message);
+                    } else {
+                        alert('Lỗi cập nhật: ' + response.message);
+                    }
+                },
+                error: function (xhr, status, error) {
+                    console.log('Lỗi AJAX:', error);
+                    alert('Không thể cập nhật cột.');
+                }
+            });
+        } else {
+            console.log('Không có thay đổi để cập nhật.');
+        }
     });
 
     $(document).off('pjax:send').on('pjax:send', function () {
@@ -59,7 +66,6 @@ $(document).ready(function () {
 
     $(document).off('pjax:complete').on('pjax:complete', function () {
         $('.spinner-fixed').remove();
-        applyColumnVisibility();
     });
 
     $(document).off('click', '#add-row-btn').on('click', '#add-row-btn', function (e) {

@@ -475,7 +475,6 @@ class PagesController extends Controller
                     ]);
                 }
 
-
                 $columnMap = array_flip($headers);
 
                 $errors = [];
@@ -483,12 +482,17 @@ class PagesController extends Controller
                     $rowData = [];
                     foreach ($columnMap as $excelColumn => $tableColumnIndex) {
                         if (isset($row[$tableColumnIndex])) {
-                            $rowData[$excelColumn] = (string) $row[$tableColumnIndex]; // Chuyển đổi thành chuỗi
+                            $excelColumnString = (string) $excelColumn;
+                            $rowData[$excelColumnString] = (string) $row[$tableColumnIndex];
                         }
                     }
 
                     $modelInstance = clone $model;
-                    $modelInstance->setAttributes($rowData, false);
+
+                    // Sử dụng setAttribute thay vì trực tiếp gán giá trị
+                    foreach ($rowData as $key => $value) {
+                        $modelInstance->setAttribute($key, $value);
+                    }
 
                     if (!$modelInstance->save()) {
                         $rowNumber = $rowIndex + 2;
@@ -517,6 +521,7 @@ class PagesController extends Controller
             ]);
         }
     }
+
     private function parseExcel($filePath)
     {
         $spreadsheet = IOFactory::load($filePath);
@@ -721,31 +726,41 @@ class PagesController extends Controller
     {
         Yii::$app->response->format = Response::FORMAT_JSON;
 
-        // Lấy dữ liệu từ request
-        $columnName = Yii::$app->request->post('column_name');
-        $isVisible = Yii::$app->request->post('is_visible');
+        $columnsVisibility = Yii::$app->request->post('columns_visibility');
         $menuId = Yii::$app->request->post('menuId');
         $pageId = Yii::$app->request->post('pageId');
 
-        // Kiểm tra dữ liệu đầu vào
-        if (!$columnName || !$menuId || !$pageId) {
+        if (!$columnsVisibility || !$menuId || !$pageId) {
             return ['success' => false, 'message' => 'Dữ liệu không hợp lệ.'];
         }
 
-        $isVisible = in_array($isVisible, ['true', '1'], true) ? 1 : 0;
+        foreach ($columnsVisibility as $columnVisibility) {
+            $columnName = $columnVisibility['column_name'];
+            $isVisible = in_array($columnVisibility['is_visible'], ['true', '1'], true) ? 1 : 0;
 
-        $config = Config::findOne(['column_name' => $columnName, 'menu_id' => $menuId, 'page_id' => $pageId]) ?? new Config();
-        $config->column_name = $columnName;
-        $config->menu_id = $menuId;
-        $config->page_id = $pageId;
-        $config->is_visible = $isVisible;
+            // Tìm bản ghi nếu đã tồn tại
+            $config = Config::findOne([
+                'column_name' => $columnName,
+                'menu_id' => $menuId,
+                'page_id' => $pageId
+            ]);
 
-        if ($config->save()) {
-            return ['success' => true, 'message' => 'Cập nhật trạng thái hiển thị thành công.'];
+            if (!$config) {
+                // Nếu không tìm thấy bản ghi, tạo mới
+                $config = new Config();
+                $config->column_name = $columnName;
+                $config->menu_id = $menuId;
+                $config->page_id = $pageId;
+            }
+
+            // Cập nhật trạng thái is_visible
+            $config->is_visible = $isVisible;
+
+            if (!$config->save()) {
+                return ['success' => false, 'message' => 'Không thể lưu trạng thái hiển thị.', 'errors' => $config->getErrors()];
+            }
         }
 
-        return ['success' => false, 'message' => 'Không thể lưu trạng thái hiển thị.', 'errors' => $config->getErrors()];
+        return ['success' => true, 'message' => 'Cập nhật trạng thái hiển thị thành công.'];
     }
-
-
 }
