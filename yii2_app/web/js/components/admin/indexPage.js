@@ -1,8 +1,19 @@
 $(document).ready(function () {
-    $('#saveTabChanges').on('click', function () {
+    $('.edit-btn').on('click', function () {
+        var pageId = $(this).data('page-id');
+        var pageName = $(this).data('page-name');
+        var pageType = $(this).data('page-type');
+        var status = $(this).data('status');
+
+        $('#editpageName').val(pageName);
+        $('#editTabType').val(pageType);
+        $('#editMenu').val(menuId);
+        $('#editStatus').val(status);
+        $('#editTabForm').data('page-id', pageId);
+    });
+    $('#savePageChanges').on('click', function () {
         var form = $('#editTabForm');
         var pageId = form.data('page-id');
-        var menuId = $('#editMenu').val();
         var status = $('#editStatus').val();
 
         $.ajax({
@@ -22,6 +33,71 @@ $(document).ready(function () {
             },
             error: function () {
                 alert('Có lỗi xảy ra, vui lòng thử lại.');
+            }
+        });
+    });
+    $('.setting-btn').on('click', function () {
+        var pageId = $(this).data('page-id');
+
+        $.ajax({
+            url: get_table_page_url,
+            method: 'GET',
+            data: { pageId: pageId },
+            success: function (response) {
+                var data = JSON.parse(response);
+                var columns = data.columns;
+                var hiddenColumns = data.hiddenColumns;
+
+                var columnsList = $('#columns-visibility tbody');
+                columnsList.empty();
+
+                columns.forEach(function (column) {
+                    var isChecked = hiddenColumns[column] === undefined || hiddenColumns[column] ? 'checked' : '';
+
+                    var columnRow = `
+                        <tr>
+                            <td>${column}</td>
+                            <td class="text-end">
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input column-switch" type="checkbox" 
+                                           id="switch-${column}" data-column="${column}" ${isChecked}>
+                                </div>
+                            </td>
+                        </tr>
+                    `;
+
+                    columnsList.append(columnRow);
+                });
+
+                $('#settingModal').modal('show');
+            },
+            error: function () {
+                alert('Lỗi khi tải dữ liệu cột');
+            }
+        });
+    });
+
+    $('.column-switch').on('change', function () {
+        var column = $(this).data('column');
+        var isChecked = $(this).prop('checked');
+
+        // Gửi dữ liệu lên server để cập nhật
+        $.ajax({
+            url: '/path/to/your/actionSaveColumnVisibility', // Đường dẫn đến action cập nhật trạng thái cột
+            method: 'POST',
+            data: {
+                column: column,
+                visible: isChecked ? 1 : 0
+            },
+            success: function (response) {
+                if (response.success) {
+                    alert('Cập nhật thành công!');
+                } else {
+                    alert('Có lỗi xảy ra!');
+                }
+            },
+            error: function () {
+                alert('Lỗi khi gửi yêu cầu');
             }
         });
     });

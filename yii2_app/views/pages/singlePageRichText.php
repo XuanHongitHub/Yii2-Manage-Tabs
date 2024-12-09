@@ -8,8 +8,6 @@ use yii\helpers\Url;
 /** @var app\models\Page $page */
 /** @var string $content */
 
-RichtextAsset::register($this);
-
 $this->title = $page->name;
 ?>
 
@@ -24,30 +22,10 @@ $this->title = $page->name;
     </div>
     <div class="card-body">
         <div class="page-content">
-            <div class="d-flex flex-wrap justify-content-end align-items-center me-3 my-1">
-                <button class="btn btn-secondary me-2" id="cancel-edit-button" style="display:none;">Hủy</button>
-                <button class="btn btn-warning" id="edit-button">
-                    <i class="fa fa-edit me-1"></i> Sửa
-                </button>
-                <button class="btn btn-success" id="save-button" style="display:none;">
-                    <i class="fa fa-save me-1"></i> Lưu
-                </button>
-            </div>
 
             <div class="form-group my-1" id="view-content">
-                <!-- Hiển thị nội dung ban đầu -->
                 <div id="content-display"><?= $content ?></div>
-            </div>
-
-            <!-- Form chỉnh sửa nội dung (ẩn khi không chỉnh sửa) -->
-            <div class="form-group my-1" id="edit-content" style="display:none;">
-                <textarea id="richtext-editor"><?= Html::encode($content) ?></textarea>
             </div>
         </div>
     </div>
 </div>
-
-<script>
-    var pageId = <?= $pageId ?>;
-    var save_richtext_url = "<?= Url::to(['pages/save-rich-text']) ?>";
-</script>

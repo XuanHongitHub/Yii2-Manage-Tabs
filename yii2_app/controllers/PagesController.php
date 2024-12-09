@@ -739,11 +739,10 @@ class PagesController extends Controller
             $isVisible = in_array($columnVisibility['is_visible'], ['true', '1'], true) ? 1 : 0;
 
             if ($menuId === null || $pageId === null) {
-                // Nếu menu_id hoặc page_id là null, tạo một bản ghi mới với menu_id và page_id là null (local)
                 $config = new Config();
                 $config->column_name = $columnName;
-                $config->menu_id = null; // Local configuration (không liên quan đến menu cụ thể)
-                $config->page_id = null; // Local configuration
+                $config->menu_id = null;
+                $config->page_id = null;
                 $config->is_visible = $isVisible;
             } else {
                 $config = Config::findOne([

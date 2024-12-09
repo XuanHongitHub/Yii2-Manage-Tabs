@@ -1,6 +1,8 @@
 <?php
 
 use app\assets\AppAsset;
+use app\models\BaseModel;
+use app\models\Config;
 use yii\bootstrap5\ActiveForm;
 use yii\data\ActiveDataProvider;
 use yii\helpers\Html;
@@ -114,26 +116,42 @@ $this->title = 'Danh sách Page';
                 [
                     'class' => 'yii\grid\ActionColumn',
                     'header' => 'Hành động',
-                    'template' => '{edit} {delete}',
+                    'template' => '{edit} {setting} {delete} ',
                     'buttons' => [
                         'edit' => function ($url, $model, $key) {
-                            if ($model->type === 'richtext') {
-                                $url = Url::to(['pages/edit', 'id' => $model->id]);
-                                return Html::a('<i class="fa-solid fa-pen-to-square"></i>', $url, [
-                                    'class' => 'btn btn-primary btn-sm edit-btn',
-                                    'title' => 'Chỉnh sửa trang',
+                            return Html::button('<i class="fa-solid fa-pen-to-square"></i>', [
+                                'class' => 'btn btn-primary btn-m edit-btn',
+                                'data-bs-toggle' => 'modal',
+                                'data-bs-target' => '#editModal',
+                                'data-page-id' => $model->id,
+                                'data-page-name' => $model->name,
+                                'data-page-type' => $model->type,
+                                'data-page-status' => $model->status,
+                                'title' => 'Chỉnh sửa trang',
+                            ]);
+                        },
+                        'setting' => function ($url, $model, $key) {
+                            if ($model->type === 'table') {
+                                return Html::button('<i class="fa-solid fa-border-all"></i>', [
+                                    'class' => 'btn btn-outline-primary btn-m setting-btn',
+                                    'data-page-id' => $model->id,
+                                    'title' => 'Tùy chỉnh cột',
                                 ]);
                             } else {
-                                return Html::button('<i class="fa-solid fa-pen-to-square"></i>', [
-                                    'class' => 'btn btn-primary btn-sm edit-btn disabled',
-                                    'data-page-id' => $model->id,
-                                    'title' => 'Chỉnh sửa trang',
+                                $url = Url::to([
+                                    'pages/edit',
+                                    'id' => $model->id,
+                                    'returnUrl' => Url::current() // Lưu URL hiện tại làm returnUrl
+                                ]);                                
+                                return Html::a('<i class="fa-solid fa-file-pen"></i>', $url, [
+                                    'class' => 'btn btn-outline-primary btn-m',
+                                    'title' => 'Sửa nội dung Richtext',
                                 ]);
                             }
                         },
                         'delete' => function ($url, $model, $key) {
                             return Html::button('<i class="fa-regular fa-trash-can"></i>', [
-                                'class' => 'btn btn-danger btn-sm delete-btn',
+                                'class' => 'btn btn-danger btn-m delete-btn',
                                 'data-bs-toggle' => 'modal',
                                 'data-bs-target' => '#deleteModal',
                                 'data-page-id' => $model->id,
@@ -175,14 +193,21 @@ $this->title = 'Danh sách Page';
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h4 class="modal-title" id="editModalLabel">Sửa Page</h4>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                <h4 class="modal-title" id="editModalLabel">Sửa Page</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
                 <form id="editTabForm">
                     <div class="mb-3">
-                        <label for="edittableName" class="form-label">Tên Page</label>
-                        <input type="text" class="form-control" id="edittableName" name="name">
+                        <label for="editpageName" class="form-label">Tên Page</label>
+                        <input type="text" class="form-control" id="editpageName" name="name">
+                    </div>
+                    <div class="mb-3">
+                        <label for="editStatus" class="form-label">Trạng thái</label>
+                        <select class="form-select" id="editStatus" name="status">
+                            <option value="0" <?= $page->status == 0 ? 'selected' : '' ?>>Hiển thị</option>
+                            <option value="1" <?= $page->status == 1 ? 'selected' : '' ?>>Ẩn</option>
+                        </select>
                     </div>
                 </form>
             </div>
@@ -193,6 +218,35 @@ $this->title = 'Danh sách Page';
         </div>
     </div>
 </div>
+
+<!-- Modal setting -->
+<div class="modal fade" id="settingModal" tabindex="-1" aria-labelledby="settingModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="editTableModalLabel">Tùy chỉnh cột</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <table class="table table-borderless" id="columns-visibility">
+                    <thead>
+                        <tr>
+                            <th>Cột</th>
+                            <th class="text-end">Ẩn/Hiện</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    </tbody>
+                </table>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+                <button type="button" id="saveColumnChanges" class="btn btn-primary">Lưu thay đổi</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 
 <!-- Modal Thùng Rác -->
 <div class="modal fade" id="trashBinModal" tabindex="-1" aria-labelledby="trashBinModalLabel" aria-hidden="true">
@@ -216,33 +270,33 @@ $this->title = 'Danh sách Page';
                         <?php
                         if ($trashDataProvider->getCount() > 0):
                             foreach ($trashDataProvider->models as $page): ?>
-                                <tr>
-                                    <td><?= htmlspecialchars($page->name) ?></td>
-                                    <td class="text-center">
-                                        <?php if ($page->type == 'richtext'): ?>
-                                            <span class="badge badge-light-danger">Richtext</span>
-                                        <?php else: ?>
-                                            <span class="badge badge-light-primary">Table</span>
-                                        <?php endif; ?>
-                                    </td>
-                                    <td class="text-nowrap">
-                                        <button type="button" class="btn btn-warning restore-page-btn"
-                                            data-page-id="<?= htmlspecialchars($page->id) ?>">
-                                            <i class="fa-solid fa-rotate-left"></i>
-                                        </button>
-                                        <button type="button" class="btn btn-danger delete-page-btn"
-                                            data-page-id="<?= htmlspecialchars($page->id) ?>">
-                                            <i class="fa-regular fa-trash-can"></i>
-                                        </button>
-                                    </td>
-                                </tr>
-                            <?php endforeach; ?>
+                        <tr>
+                            <td><?= htmlspecialchars($page->name) ?></td>
+                            <td class="text-center">
+                                <?php if ($page->type == 'richtext'): ?>
+                                <span class="badge badge-light-danger">Richtext</span>
+                                <?php else: ?>
+                                <span class="badge badge-light-primary">Table</span>
+                                <?php endif; ?>
+                            </td>
+                            <td class="text-nowrap">
+                                <button type="button" class="btn btn-warning restore-page-btn"
+                                    data-page-id="<?= htmlspecialchars($page->id) ?>">
+                                    <i class="fa-solid fa-rotate-left"></i>
+                                </button>
+                                <button type="button" class="btn btn-danger delete-page-btn"
+                                    data-page-id="<?= htmlspecialchars($page->id) ?>">
+                                    <i class="fa-regular fa-trash-can"></i>
+                                </button>
+                            </td>
+                        </tr>
+                        <?php endforeach; ?>
                         <?php else: ?>
-                            <tr>
-                                <td colspan="3" class="text-center text-muted">
-                                    <em>Không có gì ở đây.</em>
-                                </td>
-                            </tr>
+                        <tr>
+                            <td colspan="3" class="text-center text-muted">
+                                <em>Không có gì ở đây.</em>
+                            </td>
+                        </tr>
                         <?php endif; ?>
                     </tbody>
                 </table>
@@ -275,26 +329,26 @@ $this->title = 'Danh sách Page';
                     </thead>
                     <tbody id="hide-index">
                         <?php foreach ($dataProvider->models as $page): ?>
-                            <?php if ($page->deleted == 0): ?>
-                                <tr>
-                                    <td class="py-0"><?= htmlspecialchars($page->name) ?></td>
-                                    <td class="text-center py-0">
-                                        <?php if ($page->type == 'richtext'): ?>
-                                            <span class="badge badge-light-danger">Richtext</span>
-                                        <?php else: ?>
-                                            <span class="badge badge-light-primary">Table</span>
-                                        <?php endif; ?>
-                                    </td>
-                                    <td class="py-0 text-center">
-                                        <label class="switch mb-0 mt-1">
-                                            <input class="form-check-input toggle-hide-btn" type="checkbox"
-                                                data-page-id="<?= htmlspecialchars($page->id) ?>"
-                                                <?php if ($page->status == 0): ?> checked <?php endif; ?>>
-                                            <span class="switch-state"></span>
-                                        </label>
-                                    </td>
-                                </tr>
-                            <?php endif; ?>
+                        <?php if ($page->deleted == 0): ?>
+                        <tr>
+                            <td class="py-0"><?= htmlspecialchars($page->name) ?></td>
+                            <td class="text-center py-0">
+                                <?php if ($page->type == 'richtext'): ?>
+                                <span class="badge badge-light-danger">Richtext</span>
+                                <?php else: ?>
+                                <span class="badge badge-light-primary">Table</span>
+                                <?php endif; ?>
+                            </td>
+                            <td class="py-0 text-center">
+                                <label class="switch mb-0 mt-1">
+                                    <input class="form-check-input toggle-hide-btn" type="checkbox"
+                                        data-page-id="<?= htmlspecialchars($page->id) ?>"
+                                        <?php if ($page->status == 0): ?> checked <?php endif; ?>>
+                                    <span class="switch-state"></span>
+                                </label>
+                            </td>
+                        </tr>
+                        <?php endif; ?>
                         <?php endforeach; ?>
                     </tbody>
                 </table>
@@ -331,13 +385,14 @@ $this->title = 'Danh sách Page';
 </div>
 
 <script>
-    var save_sort_url = "<?= Url::to(['pages/save-sort']) ?>";
-    var update_status_url = "<?= Url::to(['pages/update-hide-status']) ?>";
-    var update_sortOrder_url = "<?= Url::to(['pages/update-sort-order']) ?>";
-    var restore_page_url = "<?= Url::to(['pages/restore-page']) ?>";
-    var delete_permanently_url = "<?= Url::to(['pages/delete-permanently-page']) ?>";
-    var delete_soft_url = "<?= Url::to(['pages/delete-page']) ?>";
-    var save_sub_page_url = "<?= Url::to(['pages/save-sub-page']) ?>";
-    var yiiWebAlias = "<?= Yii::getAlias('@web') ?>";
-    var update_page_url = "<?= Url::to(['pages/update-page']) ?>";
+var save_sort_url = "<?= Url::to(['pages/save-sort']) ?>";
+var update_status_url = "<?= Url::to(['pages/update-hide-status']) ?>";
+var update_sortOrder_url = "<?= Url::to(['pages/update-sort-order']) ?>";
+var restore_page_url = "<?= Url::to(['pages/restore-page']) ?>";
+var delete_permanently_url = "<?= Url::to(['pages/delete-permanently-page']) ?>";
+var delete_soft_url = "<?= Url::to(['pages/delete-page']) ?>";
+var save_sub_page_url = "<?= Url::to(['pages/save-sub-page']) ?>";
+var yiiWebAlias = "<?= Yii::getAlias('@web') ?>";
+var update_page_url = "<?= Url::to(['pages/update-page']) ?>";
+var get_table_page_url = "<?= Url::to(['pages/get-table-page']) ?>";
 </script>

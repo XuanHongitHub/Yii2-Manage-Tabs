@@ -196,7 +196,7 @@ foreach ($configColumns as $config) {
                                     <i class="fa-solid fa-border-all"></i> Tùy Chỉnh
                                 </button>
                             </div>
-                            <!-- Modal -->
+                            <!-- Modal Config -->
                             <div class="modal fade" id="columnsModal" tabindex="-1" aria-labelledby="columnsModalLabel"
                                 aria-hidden="true">
                                 <div class="modal-dialog">
@@ -293,50 +293,50 @@ foreach ($configColumns as $config) {
                             'formatter' => ['class' => 'yii\i18n\Formatter', 'nullDisplay' => ''],
                             'headerRowOptions' => ['class' => 'sortable-column'],
                             'columns' =>
-                            array_merge(
-                                [
+                                array_merge(
                                     [
-                                        'class' => 'yii\grid\CheckboxColumn',
-                                        'name' => BaseModel::HIDDEN_ID_KEY,
-                                        'headerOptions' => ['style' => 'text-align:center; width: 3%;'],
-                                        'contentOptions' => ['style' => 'text-align:center;'],
-                                        'checkboxOptions' => function ($data, $key, $index, $column) {
-                                            return ['value' => $data[BaseModel::HIDDEN_ID_KEY], 'data-hidden_id' => $data[BaseModel::HIDDEN_ID_KEY], 'class' => 'checkbox-row'];
-                                        }
-                                    ],
-                                ],
-                                array_map(function ($column, $index) use ($hiddenColumns) {
-                                    return [
-                                        'attribute' => $column,
-                                        'enableSorting' => $index !== 0,
-                                        'visible' => ($column !== BaseModel::HIDDEN_ID_KEY) && (!isset($hiddenColumns[$column]) || $hiddenColumns[$column] !== false)
-                                    ];
-                                }, $columns, array_keys($columns)),
-                                [
-                                    [
-                                        'class' => 'yii\grid\ActionColumn',
-                                        'header' => 'Thao tác',
-                                        'headerOptions' => ['style' => 'width: 10%; text-align:center; white-space: nowrap;'],
-                                        'contentOptions' => ['style' => 'text-align:center; white-space: nowrap;'],
-                                        'template' => '{update} {delete}',
-                                        'buttons' => [
-                                            'update' => function ($url, $data, $key) {
-                                                return Html::a('<i class="fa-solid fa-pen-to-square"></i>', '#', [
-                                                    'class' => 'btn btn-secondary btn-m btn-edit',
-                                                    'data-row' => json_encode($data),
-                                                    'data-pjax' => 0,
-                                                ]);
-                                            },
-                                            'delete' => function ($url, $data, $key) {
-                                                return Html::a('<i class="fa-regular fa-trash-can"></i>', '#', [
-                                                    'class' => 'btn btn-danger btn-m btn-delete',
-                                                    'data-hidden_id' => $data[BaseModel::HIDDEN_ID_KEY],
-                                                ]);
-                                            },
+                                        [
+                                            'class' => 'yii\grid\CheckboxColumn',
+                                            'name' => BaseModel::HIDDEN_ID_KEY,
+                                            'headerOptions' => ['style' => 'text-align:center; width: 3%;'],
+                                            'contentOptions' => ['style' => 'text-align:center;'],
+                                            'checkboxOptions' => function ($data, $key, $index, $column) {
+                                                return ['value' => $data[BaseModel::HIDDEN_ID_KEY], 'data-hidden_id' => $data[BaseModel::HIDDEN_ID_KEY], 'class' => 'checkbox-row'];
+                                            }
                                         ],
                                     ],
-                                ]
-                            ),
+                                    array_map(function ($column, $index) use ($hiddenColumns) {
+                                        return [
+                                            'attribute' => $column,
+                                            'enableSorting' => $index !== 0,
+                                            'visible' => ($column !== BaseModel::HIDDEN_ID_KEY) && (!isset($hiddenColumns[$column]) || $hiddenColumns[$column] !== false)
+                                        ];
+                                    }, $columns, array_keys($columns)),
+                                    [
+                                        [
+                                            'class' => 'yii\grid\ActionColumn',
+                                            'header' => 'Thao tác',
+                                            'headerOptions' => ['style' => 'width: 10%; text-align:center; white-space: nowrap;'],
+                                            'contentOptions' => ['style' => 'text-align:center; white-space: nowrap;'],
+                                            'template' => '{update} {delete}',
+                                            'buttons' => [
+                                                'update' => function ($url, $data, $key) {
+                                                    return Html::a('<i class="fa-solid fa-pen-to-square"></i>', '#', [
+                                                        'class' => 'btn btn-secondary btn-m btn-edit',
+                                                        'data-row' => json_encode($data),
+                                                        'data-pjax' => 0,
+                                                    ]);
+                                                },
+                                                'delete' => function ($url, $data, $key) {
+                                                    return Html::a('<i class="fa-regular fa-trash-can"></i>', '#', [
+                                                        'class' => 'btn btn-danger btn-m btn-delete',
+                                                        'data-hidden_id' => $data[BaseModel::HIDDEN_ID_KEY],
+                                                    ]);
+                                                },
+                                            ],
+                                        ],
+                                    ]
+                                ),
                             'tableOptions' => ['class' => 'table table-bordered table-hover table-responsive'],
                             'layout' => "{items}\n<div class='d-flex justify-content-between align-items-center mt-3'>
                                                 <div class='d-flex justify-content-start'>{summary}</div>

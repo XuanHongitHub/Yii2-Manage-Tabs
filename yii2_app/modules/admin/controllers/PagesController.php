@@ -3,6 +3,7 @@
 namespace app\modules\admin\controllers;
 
 use app\models\BaseModel;
+use app\models\Config;
 use app\models\PageSearch;
 use yii\db\Query;
 use yii\web\Controller;
@@ -63,6 +64,25 @@ class PagesController extends BaseAdminController
     public function actionCreate()
     {
         return $this->render('create');
+    }
+    public function actionGetTablePage($pageId)
+    {
+        $configColumns = Config::find()
+            ->where(['page_id' => $pageId])
+            ->all();
+
+        $columns = [];
+        $hiddenColumns = [];
+
+        foreach ($configColumns as $config) {
+            $columns[] = $config->column_name;
+            $hiddenColumns[$config->column_name] = $config->is_visible;
+        }
+
+        return json_encode([
+            'columns' => $columns,
+            'hiddenColumns' => $hiddenColumns
+        ]);
     }
 
     public function actionGetTableName()
@@ -397,15 +417,11 @@ class PagesController extends BaseAdminController
     public function actionUpdatePage()
     {
         $pageId = Yii::$app->request->post('pageId');
-        $menuId = Yii::$app->request->post('menuId');
         $status = Yii::$app->request->post('status');
-        $position = Yii::$app->request->post('position');
 
         $page = Page::findOne($pageId);
         if ($page) {
-            $page->menu_id = $menuId;
             $page->status = $status == 1 ? 1 : 0;
-            $page->position = $position;
             $page->save();
             Yii::$app->session->setFlash('success', 'Page đã được cập nhật thành công.');
             return json_encode(['status' => 'success']);
@@ -418,8 +434,9 @@ class PagesController extends BaseAdminController
      * Edit RichtextData Action.
      *
      */
-    public function actionEdit($id)
+    public function actionEdit()
     {
+        $id = Yii::$app->request->get('id');
         $page = Page::findOne(['id' => $id]);
         if (!$page) {
             throw new NotFoundHttpException('Page không tồn tại.');

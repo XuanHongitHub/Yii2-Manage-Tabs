@@ -58,8 +58,8 @@ $this->title = $page->name;
 </div>
 
 <script>
-    var urlParams = new URLSearchParams(window.location.search);
-    var id = urlParams.get('id');
-    var save_richtext_url = "<?= Url::to(['pages/save-rich-text']) ?>";
-    var list_page_url = "<?= Url::to(['pages/index']) ?>";
+var urlParams = new URLSearchParams(window.location.search);
+var id = urlParams.get('id');
+var save_richtext_url = "<?= Url::to(['pages/save-rich-text']) ?>";
+var list_page_url = "<?= Url::to(['pages/index']) ?>";
 </script>
