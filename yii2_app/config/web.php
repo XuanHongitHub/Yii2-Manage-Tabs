@@ -28,6 +28,9 @@ $config = [
             // !!! insert a secret key in the following (if it is empty) - this is required by cookie validation
             'cookieValidationKey' => 'RO0cHKKisBbbDZ4exwyCDOSn92rQ9KGt',
         ],
+        'shortcode' => [
+            'class' => 'app\components\ShortcodeComponent'
+        ],
         'cache' => [
             'class' => 'yii\caching\FileCache',
         ],
