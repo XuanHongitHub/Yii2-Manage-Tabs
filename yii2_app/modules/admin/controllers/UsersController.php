@@ -36,10 +36,18 @@ class UsersController extends BaseAdminController
 
     public function actionIndex()
     {
+        $dataProvider = new \yii\data\ActiveDataProvider([
+            'query' => User::find(),
+            'pagination' => [
+                'pageSize' => 10,
+            ],
+        ]);
+
         return $this->render('index', [
-            'users' => User::find()->all(),
+            'dataProvider' => $dataProvider,
         ]);
     }
+
     public function actionUpdateUser($id)
     {
         $user = User::findOne($id);

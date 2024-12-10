@@ -5,7 +5,6 @@ $(document).ready(function () {
     let pageExists = false,
         tableExists = false,
         isTableFromAutocomplete = false;
-
     const debounce = (func, delay) => {
         let timeoutId;
         return (...args) => {
@@ -22,6 +21,7 @@ $(document).ready(function () {
         if ($(this).attr('id') === 'tableName' && !isTableFromAutocomplete) {
             debouncedValidateField(this);
         } else if ($(this).attr('id') !== 'tableName') {
+            const tableName = $('#tableName').val();
             debouncedValidateField(this);
         }
     });
@@ -51,8 +51,10 @@ $(document).ready(function () {
         } else {
             if (!isTableFromAutocomplete) {
                 const otherFieldPattern = /^[a-zA-Z0-9_]+$/;
-                if (!otherFieldPattern.test(fieldValue)) {
-                    setFieldValidation(`#${fieldId}`, false, `${fieldName} không được chứa khoảng trắng hoặc ký tự đặc biệt`);
+                const restrictedTableName = ['table_name', 'manager_page', 'manager_user', 'manager_menu', 'manager_menu_page', 'manager_config', 'migration'];
+
+                if (!otherFieldPattern.test(fieldValue) || restrictedTableName.includes(fieldValue)) {
+                    setFieldValidation(`#${fieldId}`, false, `${fieldName} không được chứa khoảng trắng, ký tự đặc biệt hoặc tên bảng bị cấm`);
                     return;
                 }
             }
@@ -144,6 +146,23 @@ $(document).ready(function () {
         const columnNameErrorSelector = `#column-name-error-${index}`;
         const dataTypeErrorSelector = `#data-type-error-${index}`;
         const dataSizeErrorSelector = `#data-size-error-${index}`;
+        const restrictedColumns = ['id'];
+
+        // Kiểm tra cột bị cấm và tên cột hợp lệ
+        if (restrictedColumns.includes(columnName.toLowerCase()) || !/^[a-zA-Z0-9_]+$/.test(columnName)) {
+            let errorMessage = '';
+            if (restrictedColumns.includes(columnName.toLowerCase())) {
+                errorMessage = `Tên cột '${columnName}' không được phép sử dụng.`;
+            } else {
+                errorMessage = 'Tên cột chỉ có thể bao gồm chữ cái, số và dấu gạch dưới.';
+            }
+            $(columnNameErrorSelector).text(errorMessage).show();
+            isValid = false;
+        } else {
+            $(columnNameErrorSelector).text('').hide();
+        }
+
+        // Kiểm tra kiểu dữ liệu và kích thước
         const dataTypeConfig = {
             SERIAL: { requiresSize: false },
             INT: { requiresSize: false },
@@ -151,13 +170,6 @@ $(document).ready(function () {
         };
 
         const config = dataTypeConfig[dataType];
-
-        if (!/^[a-zA-Z0-9_]+$/.test(columnName)) {
-            $(columnNameErrorSelector).text('Tên cột chỉ có thể bao gồm chữ cái, số và dấu gạch dưới.');
-            isValid = false;
-        } else {
-            $(columnNameErrorSelector).text('');
-        }
 
         if (config) {
             if (config.requiresSize) {

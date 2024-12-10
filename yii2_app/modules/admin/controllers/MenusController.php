@@ -14,7 +14,6 @@ use app\modules\admin\components\BaseAdminController;
 use yii\filters\AccessControl;
 use yii\db\Query;
 
-
 class MenusController extends BaseAdminController
 {
 
@@ -80,8 +79,12 @@ class MenusController extends BaseAdminController
                 $model->parent_id = $data['parentId'] ?? null;
                 $model->icon = $data['icon'];
 
+
                 if (!$model->save()) {
-                    throw new \Exception('Không thể lưu menu: ' . json_encode($model->getErrors()));
+                    if ($model->getErrors('name')) {
+                        $errorMessages[] = "Tên menu đã tồn tại.";
+                    }
+                    throw new \Exception('Không thể tạo menu: ' . implode(', ', $errorMessages));
                 }
 
                 $selectedPages = $data['selectedPages'] ?? [];

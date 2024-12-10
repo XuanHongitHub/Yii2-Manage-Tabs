@@ -1,27 +1,21 @@
 $(document).ready(function () {
 
-    let originalVisibility = {};
-
-    $('#columns-visibility .column-switch').each(function () {
-        const columnName = $(this).data('column');
-        originalVisibility[columnName] = $(this).prop('checked');
-    });
-
     $(document).off('click', '#save-columns-visible').on('click', '#save-columns-visible', function () {
-        let columnsVisibility = [];
+        let columnsVisibility = []; // Mảng lưu thông tin các cột
 
-        $('#columns-visibility .column-switch').each(function (index) {
+        // Lặp qua tất cả các cột và kiểm tra trạng thái của chúng
+        $('#columns-visibility .column-switch').each(function () {
             const columnName = $(this).data('column');
-            const isChecked = $(this).prop('checked');
+            const isChecked = $(this).prop('checked'); // Kiểm tra trạng thái checkbox của cột
 
-            if (originalVisibility[columnName] !== isChecked) {
-                columnsVisibility.push({
-                    column_name: columnName,
-                    is_visible: isChecked
-                });
-            }
+            // Thêm thông tin cột vào mảng columnsVisibility
+            columnsVisibility.push({
+                column_name: columnName,
+                is_visible: isChecked
+            });
         });
 
+        // Nếu có cột nào thay đổi thì gửi AJAX
         if (columnsVisibility.length > 0) {
             $.ajax({
                 url: save_column_visibility_url,
@@ -30,26 +24,33 @@ $(document).ready(function () {
                     'X-CSRF-Token': $('meta[name="csrf-token"]').attr('content')
                 },
                 data: {
-                    menuId,
-                    pageId,
-                    columns_visibility: columnsVisibility
+                    menuId,       // menuId của bạn
+                    pageId,       // pageId của bạn
+                    columns_visibility: columnsVisibility  // Dữ liệu các cột
                 },
                 success: function (response) {
                     if (response.success) {
-                        console.log('Cập nhật thành công:', response.message);
+                        showToast(response.message);
+                        $('#columnsModal').modal('hide');
+                        location.reload(); // Tải lại trang để áp dụng thay đổi
                     } else {
-                        alert('Lỗi cập nhật: ' + response.message);
+                        showToast('Lỗi cập nhật: ' + response.message);
                     }
                 },
                 error: function (xhr, status, error) {
                     console.log('Lỗi AJAX:', error);
-                    alert('Không thể cập nhật cột.');
+                    showToast('Không thể cập nhật cột.');
                 }
             });
         } else {
-            console.log('Không có thay đổi để cập nhật.');
+            swal({
+                title: "Thông báo!",
+                text: "Không có gì thay đổi để cập nhật.",
+                icon: "warning",
+            });
         }
     });
+
 
     $(document).off('pjax:send').on('pjax:send', function () {
         var loadingSpinner = $(`
@@ -86,22 +87,26 @@ $(document).ready(function () {
                     showToast('Thêm dữ liệu thành công!');
                     loadData();
                 } else {
+                    $('.error-message').remove();
+
                     var errorMessage = response.message;
                     if (response.errors) {
                         $.each(response.errors, function (field, messages) {
                             errorMessage += field + ": " + messages.join(", ") + "\n";
+
+                            var errorHtml = '<div class="error-message text-danger">' + messages.join(", ") + '</div>';
+                            $('#' + field).closest('.form-group').append(errorHtml);
                         });
                     }
-                    alert(errorMessage);
                 }
             },
             error: function () {
-                alert(
-                    'Không thể thêm dữ liệu. Vui lòng thử lại.'
-                );
+                alert('Không thể thêm dữ liệu. Vui lòng thử lại.');
             }
         });
     });
+
+
 
     $(document).off('click', '.btn-edit').on('click', '.btn-edit', function () {
         var rowData = $(this).data('row');
@@ -133,28 +138,29 @@ $(document).ready(function () {
             },
             success: function (response) {
                 if (response.success) {
-                    $('#edit-form')[0].reset(); // Reset form
-                    $('#editModal').modal('hide'); // Đóng modal
+                    $('#edit-form')[0].reset();
+                    $('#editModal').modal('hide');
                     showToast('Cập nhật dữ liệu thành công!');
                     loadData();
                 } else {
+                    $('.error-message').remove();
+
                     var errorMessage = response.message;
                     if (response.errors) {
                         $.each(response.errors, function (field, messages) {
                             errorMessage += field + ": " + messages.join(", ") + "\n";
+
+                            var errorHtml = '<div class="error-message text-danger">' + messages.join(", ") + '</div>';
+                            $('#edit-' + field).closest('.form-group').append(errorHtml);
                         });
                     }
-                    alert(errorMessage);
                 }
             },
             error: function () {
-                alert(
-                    'Không thể cập nhật dữ liệu. Vui lòng thử lại.'
-                );
+                alert('Không thể cập nhật dữ liệu. Vui lòng thử lại.');
             }
         });
     });
-
     $(document).off('click', '.btn-delete').on('click', '.btn-delete', function (e) {
         e.preventDefault();
 

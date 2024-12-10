@@ -1,9 +1,12 @@
 <?php
 
 use yii\helpers\Html;
-use app\models\User;
+use yii\grid\GridView;
+use yii\widgets\ActiveForm;
+use yii\helpers\Url;
 
 /** @var yii\web\View $this */
+/** @var yii\data\ActiveDataProvider $dataProvider */
 
 $this->title = 'Quản Lý Người Dùng';
 
@@ -14,58 +17,62 @@ $this->title = 'Quản Lý Người Dùng';
         <div class="d-flex">
             <div class="me-auto">
                 <h4>Quản Lý Người Dùng</h4>
-                <p class="mt-1 f-m-light">Administering user accounts.</p>
+                <p class="mt-1 f-m-light">Danh sách tài khoản người dùng.</p>
             </div>
-
-
         </div>
     </div>
-    <div class="card-body pt-0">
-        <div class="table-responsive">
-            <table class="display border table-bordered dataTable no-footer">
-                <thead>
-                    <tr>
-                        <th>ID</th>
-                        <th>Tên</th>
-                        <th>Email</th>
-                        <th style="text-align: center;">Trạng thái</th>
-                        <th>Quyền</th>
-                        <th>Thao tác</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <?php foreach ($users as $user): ?>
-                        <tr>
-                            <td><?= Html::encode($user->id) ?></td>
-                            <td><?= Html::encode($user->username) ?></td>
-                            <td><?= Html::encode($user->email) ?></td>
-                            <td style="text-align: center;">
-                                <form action="<?= \yii\helpers\Url::to(['users/update-user', 'id' => $user->id]) ?>"
-                                    method="post">
-                                    <?= Html::hiddenInput(Yii::$app->request->csrfParam, Yii::$app->request->csrfToken) ?>
-
-                                    <label class="switch mb-0 mt-1">
-                                        <input type="checkbox" name="status" <?= $user->status == 10 ? 'checked' : '' ?>>
-                                        <span class="switch-state"></span>
-                                    </label>
-                            </td>
-                            <td>
-                                <select class="form-control" name="role">
-                                    <option value="10" <?= $user->role == 10 ? 'selected' : '' ?>>User
-                                    </option>
-                                    <option value="20" <?= $user->role == 20 ? 'selected' : '' ?>>Admin
-                                    </option>
-                                </select>
-                            </td>
-                            <td>
-                                <button type="submit" class="btn btn-primary">Update</button>
-                                </form>
-                            </td>
-                        </tr>
-                    <?php endforeach; ?>
-                </tbody>
-            </table>
-        </div>
-
+    <div class="card-body">
+        <?= GridView::widget([
+            'dataProvider' => $dataProvider,
+            'columns' => [
+                [
+                    'attribute' => 'username',
+                    'label' => 'Tên',
+                ],
+                'email',
+                [
+                    'attribute' => 'status',
+                    'label' => 'Trạng thái',
+                    'format' => 'raw',
+                    'value' => function ($model) {
+                        return Html::beginForm(Url::to(['users/update-user', 'id' => $model->id]), 'post', ['class' => 'd-inline'])
+                            . Html::hiddenInput(Yii::$app->request->csrfParam, Yii::$app->request->csrfToken)
+                            . Html::dropDownList('status', $model->status, [
+                                10 => 'Kích hoạt',
+                                0 => 'Vô hiệu hóa'
+                            ], [
+                                'class' => 'form-control',
+                            ])
+                            . Html::endForm();
+                    }
+                ],
+                [
+                    'attribute' => 'role',
+                    'label' => 'Quyền',
+                    'format' => 'raw',
+                    'value' => function ($model) {
+                        return Html::beginForm(Url::to(['users/update-user', 'id' => $model->id]), 'post', ['class' => 'd-inline'])
+                            . Html::hiddenInput(Yii::$app->request->csrfParam, Yii::$app->request->csrfToken)
+                            . Html::dropDownList('role', $model->role, [10 => 'User', 20 => 'Admin'], [
+                                'class' => 'form-control',
+                            ])
+                            . Html::endForm();
+                    }
+                ],
+                [
+                    'class' => 'yii\grid\ActionColumn',
+                    'contentOptions' => ['style' => 'width: 10%; text-align: center;'],
+                    'template' => '{update}',
+                    'buttons' => [
+                        'update' => function ($url, $model) {
+                            return Html::submitButton('Update', [
+                                'class' => 'btn btn-primary',
+                                'form' => 'form-update-' . $model->id,
+                            ]);
+                        },
+                    ],
+                ],
+            ],
+        ]); ?>
     </div>
 </div>

@@ -67,23 +67,82 @@ class PagesController extends BaseAdminController
     }
     public function actionGetTablePage($pageId)
     {
+        Yii::$app->response->format = Response::FORMAT_JSON;
+
+        $page = Page::findOne(['id' => $pageId]);
+
+        if (!$page) {
+            return $this->asJson(['success' => false, 'message' => 'Page không tồn tại.']);
+        }
+
+        $tableName = $page->table_name;
+
+        $model = BaseModel::withTable($tableName);
+
+        $tableSchema = Yii::$app->db->schema->getTableSchema($model::tableName());
+        if (!$tableSchema) {
+            return $this->asJson(['success' => false, 'message' => 'Bảng không tồn tại.']);
+        }
+
+        $allColumns = array_keys($tableSchema->columns);
+
+        $allColumns = array_filter($allColumns, function ($column) {
+            return $column !== BaseModel::HIDDEN_ID_KEY;
+        });
+
         $configColumns = Config::find()
-            ->where(['page_id' => $pageId])
+            ->where(['page_id' => $pageId, 'menu_id' => null])
             ->all();
 
-        $columns = [];
         $hiddenColumns = [];
-
         foreach ($configColumns as $config) {
-            $columns[] = $config->column_name;
             $hiddenColumns[$config->column_name] = $config->is_visible;
         }
 
-        return json_encode([
-            'columns' => $columns,
+        return $this->asJson([
+            'columns' => array_values($allColumns),
             'hiddenColumns' => $hiddenColumns
         ]);
     }
+
+    public function actionSaveColumnsVisibility()
+    {
+        Yii::$app->response->format = Response::FORMAT_JSON;
+
+        $columnsVisibility = Yii::$app->request->post('columns_visibility');
+        $pageId = Yii::$app->request->post('pageId');
+
+        if (!$columnsVisibility || (!$pageId)) {
+            return ['success' => false, 'message' => 'Dữ liệu không hợp lệ.'];
+        }
+
+        foreach ($columnsVisibility as $columnVisibility) {
+            $columnName = $columnVisibility['column_name'];
+            $isVisible = in_array($columnVisibility['is_visible'], ['true', '1'], true) ? 1 : 0;
+
+            $config = Config::findOne([
+                'column_name' => $columnName,
+                'menu_id' => null,
+                'page_id' => $pageId
+            ]) ?? new Config();
+
+            $config->column_name = $columnName;
+            $config->menu_id = null;
+            $config->page_id = $pageId;
+            $config->is_visible = $isVisible;
+
+            if (!$config->save()) {
+                return [
+                    'success' => false,
+                    'message' => 'Không thể lưu trạng thái hiển thị.',
+                    'errors' => $config->getErrors()
+                ];
+            }
+        }
+
+        return ['success' => true, 'message' => 'Cập nhật trạng thái hiển thị thành công.'];
+    }
+
 
     public function actionGetTableName()
     {
@@ -417,11 +476,13 @@ class PagesController extends BaseAdminController
     public function actionUpdatePage()
     {
         $pageId = Yii::$app->request->post('pageId');
+        $pageName = Yii::$app->request->post('pageName');
         $status = Yii::$app->request->post('status');
 
         $page = Page::findOne($pageId);
         if ($page) {
             $page->status = $status == 1 ? 1 : 0;
+            $page->name = $pageName;
             $page->save();
             Yii::$app->session->setFlash('success', 'Page đã được cập nhật thành công.');
             return json_encode(['status' => 'success']);

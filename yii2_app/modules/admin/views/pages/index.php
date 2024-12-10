@@ -45,8 +45,8 @@ $this->title = 'Danh sách Page';
     <div class="card-body">
         <?php Pjax::begin([
             'id' => 'page-gridview-pjax',
-            'enablePushState' => false,  // Tắt pushState để không thay đổi URL
-            'enableReplaceState' => false // Tắt replaceState để không thay đổi URL
+            'enablePushState' => false,
+            'enableReplaceState' => false
         ]); ?>
 
         <div class="d-flex">
@@ -119,10 +119,8 @@ $this->title = 'Danh sách Page';
                     'template' => '{edit} {setting} {delete} ',
                     'buttons' => [
                         'edit' => function ($url, $model, $key) {
-                            return Html::button('<i class="fa-solid fa-pen-to-square"></i>', [
+                            return Html::button('<i class="fa-solid fa-gear"></i>', [
                                 'class' => 'btn btn-primary btn-m edit-btn',
-                                'data-bs-toggle' => 'modal',
-                                'data-bs-target' => '#editModal',
                                 'data-page-id' => $model->id,
                                 'data-page-name' => $model->name,
                                 'data-page-type' => $model->type,
@@ -138,13 +136,14 @@ $this->title = 'Danh sách Page';
                                     'title' => 'Tùy chỉnh cột',
                                 ]);
                             } else {
-                                $url = Url::to([
-                                    'pages/edit',
-                                    'id' => $model->id,
-                                    'returnUrl' => Url::current() // Lưu URL hiện tại làm returnUrl
-                                ]);                                
-                                return Html::a('<i class="fa-solid fa-file-pen"></i>', $url, [
+                                // return Html::a('<i class="fa-solid fa-file-pen"></i>', ['/pages/edit', 'id' => $model->id], [
+                                //     'class' => 'btn btn-outline-primary btn-m',
+                                //     'title' => 'Sửa nội dung Richtext',
+                                // ]);
+                                return Html::button('<i class="fa-solid fa-file-pen"></i>', [
                                     'class' => 'btn btn-outline-primary btn-m',
+                                    'id' => 'edit-richtext',
+                                    'data-id' => $model->id,
                                     'title' => 'Sửa nội dung Richtext',
                                 ]);
                             }
@@ -182,10 +181,7 @@ $this->title = 'Danh sách Page';
         ]) ?>
 
         <?php Pjax::end(); ?>
-
     </div>
-
-
 </div>
 
 <!-- Modal sửa -->
@@ -193,27 +189,29 @@ $this->title = 'Danh sách Page';
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h4 class="modal-title" id="editModalLabel">Sửa Page</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                <h4 class="modal-title" id="editModalLabel">Sửa Page</h4>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                <form id="editTabForm">
+                <form id="editPageForm">
                     <div class="mb-3">
-                        <label for="editpageName" class="form-label">Tên Page</label>
-                        <input type="text" class="form-control" id="editpageName" name="name">
+                        <label for="editName" class="form-label">Tên Page</label>
+                        <input type="text" class="form-control" id="editName" name="name">
+                        <div id="editNameError" class="text-danger" style="display: none;">Tên page không được để trống
+                            và không chứa ký tự đặc biệt.</div>
                     </div>
                     <div class="mb-3">
                         <label for="editStatus" class="form-label">Trạng thái</label>
                         <select class="form-select" id="editStatus" name="status">
-                            <option value="0" <?= $page->status == 0 ? 'selected' : '' ?>>Hiển thị</option>
-                            <option value="1" <?= $page->status == 1 ? 'selected' : '' ?>>Ẩn</option>
+                            <option value="0">Hiển thị</option>
+                            <option value="1">Ẩn</option>
                         </select>
                     </div>
                 </form>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
-                <button type="button" class="btn btn-primary" id="saveTabChanges">Lưu thay đổi</button>
+                <button type="button" class="btn btn-primary" id="savePageChanges">Lưu thay đổi</button>
             </div>
         </div>
     </div>
@@ -236,12 +234,18 @@ $this->title = 'Danh sách Page';
                         </tr>
                     </thead>
                     <tbody>
+                        <tr>
+                            <td colspan="2">
+                                <div class="list-group">
+                                </div>
+                            </td>
+                        </tr>
                     </tbody>
                 </table>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
-                <button type="button" id="saveColumnChanges" class="btn btn-primary">Lưu thay đổi</button>
+                <button type="button" id="save-columns-visible" class="btn btn-primary">Lưu thay đổi</button>
             </div>
         </div>
     </div>
@@ -395,4 +399,5 @@ var save_sub_page_url = "<?= Url::to(['pages/save-sub-page']) ?>";
 var yiiWebAlias = "<?= Yii::getAlias('@web') ?>";
 var update_page_url = "<?= Url::to(['pages/update-page']) ?>";
 var get_table_page_url = "<?= Url::to(['pages/get-table-page']) ?>";
+var save_column_visibility_url = "<?= Url::to(['pages/save-columns-visibility']) ?>";
 </script>
