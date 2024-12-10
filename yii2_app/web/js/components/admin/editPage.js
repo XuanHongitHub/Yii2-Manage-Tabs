@@ -1,5 +1,4 @@
 $(document).ready(function () {
-    var isEditing = false;
     var rteInitialized = false;
     var initialContent = $('#richtext-editor').val();
 
