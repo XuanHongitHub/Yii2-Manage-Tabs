@@ -76,7 +76,49 @@ $(document).ready(function () {
             }
         });
     });
+    $(document).off('click', '#save-columns-visible').on('click', '#save-columns-visible', function () {
+        let columnsVisibility = [];
 
+        $('#columns-visibility .column-switch').each(function (index) {
+            const columnName = $(this).data('column');
+            const isChecked = $(this).prop('checked');
+
+            if (originalVisibility[columnName] !== isChecked) {
+                columnsVisibility.push({
+                    column_name: columnName,
+                    is_visible: isChecked
+                });
+            }
+        });
+
+        if (columnsVisibility.length > 0) {
+            $.ajax({
+                url: save_column_visibility_url,
+                type: 'POST',
+                headers: {
+                    'X-CSRF-Token': $('meta[name="csrf-token"]').attr('content')
+                },
+                data: {
+                    menuId,
+                    pageId,
+                    columns_visibility: columnsVisibility
+                },
+                success: function (response) {
+                    if (response.success) {
+                        console.log('Cập nhật thành công:', response.message);
+                    } else {
+                        alert('Lỗi cập nhật: ' + response.message);
+                    }
+                },
+                error: function (xhr, status, error) {
+                    console.log('Lỗi AJAX:', error);
+                    alert('Không thể cập nhật cột.');
+                }
+            });
+        } else {
+            console.log('Không có thay đổi để cập nhật.');
+        }
+    });
     $('.column-switch').on('change', function () {
         var column = $(this).data('column');
         var isChecked = $(this).prop('checked');
