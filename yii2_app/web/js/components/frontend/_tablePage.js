@@ -1,21 +1,18 @@
 $(document).ready(function () {
 
     $(document).off('click', '#save-columns-visible').on('click', '#save-columns-visible', function () {
-        let columnsVisibility = []; // Mảng lưu thông tin các cột
+        let columnsVisibility = [];
 
-        // Lặp qua tất cả các cột và kiểm tra trạng thái của chúng
         $('#columns-visibility .column-switch').each(function () {
             const columnName = $(this).data('column');
-            const isChecked = $(this).prop('checked'); // Kiểm tra trạng thái checkbox của cột
+            const isChecked = $(this).prop('checked');
 
-            // Thêm thông tin cột vào mảng columnsVisibility
             columnsVisibility.push({
                 column_name: columnName,
                 is_visible: isChecked
             });
         });
 
-        // Nếu có cột nào thay đổi thì gửi AJAX
         if (columnsVisibility.length > 0) {
             $.ajax({
                 url: save_column_visibility_url,
@@ -24,15 +21,16 @@ $(document).ready(function () {
                     'X-CSRF-Token': $('meta[name="csrf-token"]').attr('content')
                 },
                 data: {
-                    menuId,       // menuId của bạn
-                    pageId,       // pageId của bạn
-                    columns_visibility: columnsVisibility  // Dữ liệu các cột
+                    menuId,
+                    pageId,
+                    columns_visibility: columnsVisibility
                 },
                 success: function (response) {
                     if (response.success) {
                         showToast(response.message);
                         $('#columnsModal').modal('hide');
-                        location.reload(); // Tải lại trang để áp dụng thay đổi
+                        loadData();
+                        // location.reload(); 
                     } else {
                         showToast('Lỗi cập nhật: ' + response.message);
                     }

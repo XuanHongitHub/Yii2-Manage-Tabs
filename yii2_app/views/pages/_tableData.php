@@ -2,7 +2,6 @@
 
 use app\assets\AppAsset;
 use app\models\BaseModel;
-use app\models\Config;
 use app\models\Page;
 use yii\grid\GridView;
 use yii\helpers\Html;
@@ -239,7 +238,7 @@ $this->title = $menu->name;
 
                             <div class="search-bar mb-2">
                                 <?php
-                                echo Html::beginForm(['/pages/load-page-data', 'pageId' => $pageId], 'get', [
+                                echo Html::beginForm(null, 'get', [
                                     'data-pjax' => true,
                                     'class' => 'form-inline',
                                     'id' => 'search-form',
@@ -260,6 +259,7 @@ $this->title = $menu->name;
                                 ]) ?>
                                 <?= Html::endForm(); ?>
                             </div>
+
                         </div>
 
 
