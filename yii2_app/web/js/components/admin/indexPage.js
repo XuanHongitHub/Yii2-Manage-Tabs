@@ -1,7 +1,7 @@
 $(document).ready(function () {
     $(document).off('click', '#edit-richtext').on('click', '#edit-richtext', function () {
         var pageId = $(this).data('id');
-        window.location.href = 'edit?id=' + pageId;
+        window.location.href = 'pages/edit?id=' + pageId;
     });
 
     $(document).off('click', '.edit-btn').on('click', '.edit-btn', function () {
