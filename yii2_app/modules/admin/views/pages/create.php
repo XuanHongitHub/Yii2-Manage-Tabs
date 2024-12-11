@@ -5,9 +5,12 @@ use app\assets\RichtextAsset;
 use yii\helpers\Html;
 use app\assets\Select2Asset;
 use app\models\BaseModel;
+use app\assets\JqueryUiAsset;
 
 /** @var yii\web\View $this */
 
+
+JqueryUiAsset::register($this);
 Select2Asset::register($this);
 RichtextAsset::register($this);
 
@@ -16,7 +19,6 @@ $this->title = 'Thêm mới Page';
 $this->registerJsFile('@web/js/components/admin/createPage.js', ['depends' => [AppAsset::class]]);
 
 ?>
-<link href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css" rel="stylesheet">
 
 <div class="card">
     <div class="card-header card-no-border pb-0">

@@ -28,11 +28,9 @@ $(document).ready(function () {
 
     $(document).on('input change', '#columnsContaine .form-control', function () {
         if ($('#type').val() === 'table' && !isTableFromAutocomplete && tableExists == false) {
-            $('#columnsContainer tr').each(function (index) {
+            $('#columnsContainer tr.new-row').each(function (index) {
                 const columnName = $(this).find(`#column-name-${index}`).val();
-                const dataType = $(this).find(`#data-type-${index}`).val();
-                const dataSize = $(this).find(`#data_size-${index}`).val();
-                validateColumn(index, columnName, dataType, dataSize);
+                validateColumn(index, columnName);
             });
         }
     });
@@ -43,9 +41,9 @@ $(document).ready(function () {
         const fieldName = fieldId === 'pageName' ? 'Page' : 'Table';
 
         if (fieldId === 'pageName') {
-            const pageNamePattern = /^[a-zA-ZÀ-ỹà-ỹ0-9_ ]{1,20}$/;
+            const pageNamePattern = /^[a-zA-ZÀ-ỹà-ỹ0-9_ ]{1,30}$/;
             if (!pageNamePattern.test(fieldValue)) {
-                setFieldValidation(`#${fieldId}`, false, `${fieldName} không nhập ký tự đặc biệt, tối đa 20 ký tự.`);
+                setFieldValidation(`#${fieldId}`, false, `${fieldName} không nhập ký tự đặc biệt, tối đa 30 ký tự.`);
                 return;
             }
         } else {
@@ -144,12 +142,12 @@ $(document).ready(function () {
     function validateColumn(index, columnName, dataType, dataSize) {
         let isValid = true;
         const columnNameErrorSelector = `#column-name-error-${index}`;
-        const dataTypeErrorSelector = `#data-type-error-${index}`;
-        const dataSizeErrorSelector = `#data-size-error-${index}`;
         const restrictedColumns = ['id'];
 
-        // Kiểm tra cột bị cấm và tên cột hợp lệ
-        if (restrictedColumns.includes(columnName.toLowerCase()) || !/^[a-zA-Z0-9_]+$/.test(columnName)) {
+        if (!columnName || columnName.trim() === '') {
+            $(columnNameErrorSelector).text('Tên cột không được để trống.').show();
+            isValid = false;
+        } else if (restrictedColumns.includes(columnName.toLowerCase()) || !/^[a-zA-Z0-9_]+$/.test(columnName)) {
             let errorMessage = '';
             if (restrictedColumns.includes(columnName.toLowerCase())) {
                 errorMessage = `Tên cột '${columnName}' không được phép sử dụng.`;
@@ -159,37 +157,24 @@ $(document).ready(function () {
             $(columnNameErrorSelector).text(errorMessage).show();
             isValid = false;
         } else {
-            $(columnNameErrorSelector).text('').hide();
-        }
-
-        // Kiểm tra kiểu dữ liệu và kích thước
-        const dataTypeConfig = {
-            SERIAL: { requiresSize: false },
-            INT: { requiresSize: false },
-            TEXT: { requiresSize: false }
-        };
-
-        const config = dataTypeConfig[dataType];
-
-        if (config) {
-            if (config.requiresSize) {
-                if (!dataSize || isNaN(dataSize) || dataSize < config.min || dataSize > config.max) {
-                    $(dataSizeErrorSelector).text(`Kích thước phải trong khoảng từ ${config.min} đến ${config.max}.`);
-                    isValid = false;
-                } else {
-                    $(dataSizeErrorSelector).text('');
+            const columnNames = [];
+            $('#columnsContainer tr').each(function (rowIndex) {
+                if (rowIndex !== index) {
+                    const otherColumnName = $(this).find(`#column-name-${rowIndex}`).val();
+                    columnNames.push(otherColumnName);
                 }
-            } else if (dataSize) {
-                $(dataSizeErrorSelector).text('Kiểu dữ liệu này không yêu cầu kích thước.');
+            });
+            if (columnNames.includes(columnName)) {
+                $(columnNameErrorSelector).text(`Tên cột '${columnName}' đã bị trùng.`).show();
                 isValid = false;
+            } else {
+                $(columnNameErrorSelector).text('').hide();
             }
-        } else {
-            $(dataTypeErrorSelector).text('Kiểu dữ liệu không hợp lệ.');
-            isValid = false;
         }
 
         return isValid;
     }
+
 
     $('#tableName').autocomplete({
         source: function (request, response) {
@@ -255,15 +240,15 @@ $(document).ready(function () {
                     }
                 });
 
-                $('#columnsContainer tr').each(function (index) {
-                    const columnName = $(this).find(`#column-name-${index}`).val();
-                    const dataType = $(this).find(`#data-type-${index}`).val();
-                    const dataSize = $(this).find(`#data_size-${index}`).val();
-                    const isValidColumn = validateColumn(index, columnName, dataType, dataSize);
+                $('#columnsContainer tr.new-row').each(function () {
+                    const columnName = $(this).find("input[name='columns[]']").val();
+                    const dataType = $(this).find("select[name='data_types[]']").val();
+                    const isValidColumn = validateColumn($(this).index(), columnName, dataType);
                     if (!isValidColumn) {
-                        errors.push('Có lỗi với các cột!');
+                        errors.push(`Lỗi ở cột ${columnName}`);
                     }
                 });
+
             }
         }
 
@@ -273,7 +258,7 @@ $(document).ready(function () {
 
         if (errors.length > 0) {
             event.preventDefault();
-            showToast('Vui lòng kiểm tra lại các trường bắt buộc!');
+            showToast(`Vui lòng kiểm tra lại các trường bắt buộc!`);
         }
     });
 });

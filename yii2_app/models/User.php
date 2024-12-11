@@ -31,7 +31,11 @@ class User extends ActiveRecord implements IdentityInterface
     const STATUS_ACTIVE = 10;
     const ROLE_USER = 10;
     const ROLE_ADMIN = 20;
+    const SCENARIO_CREATE = 'create';
+    const SCENARIO_UPDATE = 'update';
 
+    public $password;
+    public $repeat_password;
 
     /**
      * {@inheritdoc}
@@ -57,10 +61,50 @@ class User extends ActiveRecord implements IdentityInterface
     public function rules()
     {
         return [
+            [['username', 'email'], 'required'],
+            [['username', 'email'], 'trim'],
+            [['username', 'email'], 'string', 'max' => 255],
+            ['username', 'unique', 'message' => 'Tên người dùng này đã được sử dụng.'],
+            ['email', 'email'],
+            ['email', 'unique', 'message' => 'Địa chỉ email này đã được sử dụng.'],
+
+            ['password', 'required', 'message' => 'Mật khẩu không được để trống.', 'on' => self::SCENARIO_CREATE],
+            ['password', 'string', 'min' => Yii::$app->params['user.passwordMinLength'], 'on' => self::SCENARIO_CREATE],
+            ['repeat_password', 'required', 'message' => 'Xác nhận mật khẩu không được để trống.', 'on' => self::SCENARIO_CREATE],
+            ['repeat_password', 'compare', 'compareAttribute' => 'password', 'message' => 'Mật khẩu không khớp.', 'on' => self::SCENARIO_CREATE],
+
             ['status', 'default', 'value' => self::STATUS_ACTIVE],
             ['status', 'in', 'range' => [self::STATUS_ACTIVE, self::STATUS_INACTIVE, self::STATUS_DELETED]],
             ['role', 'default', 'value' => 10],
             ['role', 'in', 'range' => [self::ROLE_USER, self::ROLE_ADMIN]],
+        ];
+    }
+    public function scenarios()
+    {
+        $scenarios = parent::scenarios();
+        $scenarios[self::SCENARIO_CREATE] = ['username', 'email', 'password', 'repeat_password', 'status', 'role'];
+        $scenarios[self::SCENARIO_UPDATE] = ['username', 'email', 'status', 'role'];
+        return $scenarios;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function attributeLabels()
+    {
+        return [
+            'id' => 'ID',
+            'username' => 'Username',
+            'email' => 'Email',
+            'auth_key' => 'Auth Key',
+            'access_token' => 'Access Token',
+            'verification_token' => 'Verification Token',
+            'password_hash' => 'Password Hash',
+            'status' => 'Trạng Thái',
+            'role' => 'Quyền',
+            'created_at' => 'Created At',
+            'updated_at' => 'Updated At',
+            'password_reset_token' => 'Password Reset Token',
         ];
     }
 

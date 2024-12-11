@@ -2,16 +2,22 @@
 
 namespace app\modules\admin\controllers;
 
-use Yii;
-use app\models\User;
 use app\modules\admin\components\BaseAdminController;
-use yii\web\Response;
-use yii\web\Controller;
-use yii\web\NotFoundHttpException;
+use app\models\User;
+use Yii;
+use yii\data\ActiveDataProvider;
 use yii\filters\AccessControl;
+use yii\web\NotFoundHttpException;
+use yii\filters\VerbFilter;
 
+/**
+ * UsersController implements the CRUD actions for User model.
+ */
 class UsersController extends BaseAdminController
 {
+    /**
+     * @inheritDoc
+     */
     public function behaviors()
     {
         return [
@@ -22,7 +28,7 @@ class UsersController extends BaseAdminController
                         'allow' => true,
                         'roles' => ['@'],
                         'matchCallback' => function ($rule, $action) {
-                            return Yii::$app->user->identity->isUserAdmin();
+                            return Yii::$app->user->identity->role == User::ROLE_ADMIN;
                         }
                     ],
                     [
@@ -34,12 +40,22 @@ class UsersController extends BaseAdminController
         ];
     }
 
+    /**
+     * Lists all User models.
+     *
+     * @return string
+     */
     public function actionIndex()
     {
-        $dataProvider = new \yii\data\ActiveDataProvider([
+        $dataProvider = new ActiveDataProvider([
             'query' => User::find(),
             'pagination' => [
-                'pageSize' => 10,
+                'pageSize' => 10
+            ],
+            'sort' => [
+                'defaultOrder' => [
+                    'id' => SORT_DESC,
+                ]
             ],
         ]);
 
@@ -48,28 +64,105 @@ class UsersController extends BaseAdminController
         ]);
     }
 
-    public function actionUpdateUser($id)
+    /**
+     * Displays a single User model.
+     * @param int $id
+     * @return string
+     * @throws NotFoundHttpException if the model cannot be found
+     */
+    public function actionView($id)
     {
-        $user = User::findOne($id);
+        return $this->render('view', [
+            'model' => $this->findModel($id),
+        ]);
+    }
 
-        if ($user === null) {
-            throw new NotFoundHttpException("Người dùng không tồn tại.");
-        }
+    /**
+     * Creates a new User model.
+     * If creation is successful, the browser will be redirected to the 'view' page.
+     * @return string|\yii\web\Response
+     */
+    public function actionCreate()
+    {
+        $model = new User();
+        $model->scenario = User::SCENARIO_CREATE;
 
-        if (Yii::$app->request->isPost) {
-            $status = Yii::$app->request->post('status') ? 10 : 9;
-            $user->status = $status;
+        if ($this->request->isPost) {
+            if ($model->load($this->request->post())) {
+                $model->setPassword($model->password);
+                $model->generateAuthKey();
+                $model->generateEmailVerificationToken();
 
-            $user->role = Yii::$app->request->post('role');
-
-            if ($user->save()) {
-                Yii::$app->session->setFlash('success', 'Cập nhật thông tin Người dùng thành công!');
-            } else {
-                Yii::error($user->getErrors());
-                Yii::$app->session->setFlash('error', 'Cập nhật thất bại. Vui lòng thử lại.');
+                if ($model->save()) {
+                    return $this->redirect(['view', 'id' => $model->id]);
+                }
             }
         }
 
+        return $this->render('create', [
+            'model' => $model,
+        ]);
+    }
+
+
+    /**
+     * Updates an existing User model.
+     * If update is successful, the browser will be redirected to the 'view' page.
+     * @param int $id
+     * @return string|\yii\web\Response
+     * @throws NotFoundHttpException if the model cannot be found
+     */
+    public function actionUpdate($id)
+    {
+        $model = $this->findModel($id);
+
+        $model->scenario = User::SCENARIO_UPDATE;
+
+        if ($this->request->isPost && $model->load($this->request->post())) {
+            if (!empty($model->password)) {
+                $model->setPassword($model->password);
+            }
+
+            if ($model->save()) {
+                return $this->redirect(['view', 'id' => $model->id]);
+            } else {
+                var_dump($model->errors);
+                exit;
+            }
+        }
+
+        return $this->render('update', [
+            'model' => $model,
+        ]);
+    }
+
+    /**
+     * Deletes an existing User model.
+     * If deletion is successful, the browser will be redirected to the 'index' page.
+     * @param int $id
+     * @return \yii\web\Response
+     * @throws NotFoundHttpException if the model cannot be found
+     */
+    public function actionDelete($id)
+    {
+        $this->findModel($id)->delete();
+
         return $this->redirect(['index']);
+    }
+
+    /**
+     * Finds the User model based on its primary key value.
+     * If the model is not found, a 404 HTTP exception will be thrown.
+     * @param int $id
+     * @return User the loaded model
+     * @throws NotFoundHttpException if the model cannot be found
+     */
+    protected function findModel($id)
+    {
+        if (($model = User::findOne(['id' => $id])) !== null) {
+            return $model;
+        }
+
+        throw new NotFoundHttpException('The requested page does not exist.');
     }
 }

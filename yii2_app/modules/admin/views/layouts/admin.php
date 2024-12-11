@@ -4,11 +4,10 @@
 /** @var string $content */
 
 use app\assets\AppAsset;
+use app\models\User;
 use yii\bootstrap5\Html;
-use yii\helpers\Json;
 use yii\web\JqueryAsset;
 use yii\web\View;
-use app\assets\FontAwesomeAsset;
 
 AppAsset::register($this);
 
@@ -32,6 +31,8 @@ $successMessage = Yii::$app->session->getFlash('success');
 
     <?php
     $this->registerAssetBundle(JqueryAsset::class, View::POS_HEAD);
+    $this->registerJsFile('js/libs/sidebar-admin-menu.js', ['depends' => AppAsset::class]);
+
     ?>
 
 </head>
@@ -88,36 +89,36 @@ $successMessage = Yii::$app->session->getFlash('success');
                                         </p>
 
                                     </div>
-                                </div>
-                                <ul class="profile-dropdown onhover-show-div">
-                                    <li><a href="<?= Yii::$app->urlManager->createUrl(['admin/pages/index']) ?>"><span><i
-                                                    class="fa-solid fa-gear me-2"></i>Cài đặt</span></a></li>
-                                    <li><a href="<?= Yii::$app->urlManager->createUrl(['site/change-password']) ?>"><span><i
-                                                    class="fa-solid fa-key me-2"></i></i>Đổi mật khẩu</span></a></li>
-                                    <li>
-                                        <form
-                                            action="<?= Html::encode(Yii::$app->urlManager->createUrl(['site/logout'])) ?>"
-                                            method="post">
-                                            <input type="hidden" name="_csrf" value="<?= Yii::$app->request->csrfToken; ?>">
-                                            <a class="d-inline" href="#"
-                                                onclick="this.closest('form').submit(); return false;">
-                                                <span><i class="fa-solid fa-right-to-bracket me-2"></i> Đăng xuất</span>
-                                            </a>
-                                        </form>
-                                    </li>
-                                </ul>
-                            <?php else: ?>
-                                <div class="auth-buttons">
-                                    <a href="<?= Yii::$app->urlManager->createUrl(['site/login']) ?>"
-                                        class="btn btn-primary me-1">
-                                        <i class="fa-solid fa-right-to-bracket"></i> Login
-                                    </a>
-                                    <a href="<?= Yii::$app->urlManager->createUrl(['site/signup']) ?>"
-                                        class="btn btn-outline-success">
-                                        <i class="fa-solid fa-user-plus"></i> Sign Up
-                                    </a>
-                                </div>
-                            <?php endif; ?>
+                            </div>
+                            <ul class="profile-dropdown onhover-show-div">
+                                <li><a href="<?= Yii::$app->urlManager->createUrl(['admin/pages/index']) ?>"><span><i
+                                                class="fa-solid fa-gear me-2"></i>Cài đặt</span></a></li>
+                                <li><a href="<?= Yii::$app->urlManager->createUrl(['site/change-password']) ?>"><span><i
+                                                class="fa-solid fa-key me-2"></i></i>Đổi mật khẩu</span></a></li>
+                                <li>
+                                    <form
+                                        action="<?= Html::encode(Yii::$app->urlManager->createUrl(['site/logout'])) ?>"
+                                        method="post">
+                                        <input type="hidden" name="_csrf" value="<?= Yii::$app->request->csrfToken; ?>">
+                                        <a class="d-inline" href="#"
+                                            onclick="this.closest('form').submit(); return false;">
+                                            <span><i class="fa-solid fa-right-to-bracket me-2"></i> Đăng xuất</span>
+                                        </a>
+                                    </form>
+                                </li>
+                            </ul>
+                        <?php else: ?>
+                            <div class="auth-buttons">
+                                <a href="<?= Yii::$app->urlManager->createUrl(['site/login']) ?>"
+                                    class="btn btn-primary me-1">
+                                    <i class="fa-solid fa-right-to-bracket"></i> Login
+                                </a>
+                                <a href="<?= Yii::$app->urlManager->createUrl(['site/signup']) ?>"
+                                    class="btn btn-outline-success">
+                                    <i class="fa-solid fa-user-plus"></i> Sign Up
+                                </a>
+                            </div>
+                        <?php endif; ?>
                         </li>
                     </ul>
                 </div>
@@ -155,10 +156,10 @@ $successMessage = Yii::$app->session->getFlash('success');
                                         'label' => '',
                                         'url' => ['/']
                                     ],
-                                    ['label' => 'Quản lý Page', 'url' => ['pages/index'], 'template' => '<a class="sidebar-link sidebar-title link-nav" href="{url}"><i class="fa-solid fa-table"></i> <span>{label}</span></a>'],
-                                    ['label' => 'Quản lý Menu', 'url' => ['menus/index'], 'template' => '<a class="sidebar-link sidebar-title link-nav" href="{url}"><i class="fa-solid fa-folder-tree"></i> <span>{label}</span></a>'],
-                                    ['label' => 'Quản lý File', 'url' => ['files/index'], 'template' => '<a class="sidebar-link sidebar-title link-nav" href="{url}"><i class="fa-solid fa-file"></i> <span>{label}</span></a>'],
-                                    ['label' => 'Quản lý Người dùng', 'url' => ['users/index'], 'template' => '<a class="sidebar-link sidebar-title link-nav" href="{url}"><i class="fa-solid fa-user"></i> <span>{label}</span></a>', 'visible' => $isAdmin],
+                                    ['label' => 'Quản lý Page', 'url' => ['pages/'], 'template' => '<a class="sidebar-link sidebar-title link-nav" href="{url}"><i class="fa-solid fa-table"></i> <span>{label}</span></a>'],
+                                    ['label' => 'Quản lý Menu', 'url' => ['menus/'], 'template' => '<a class="sidebar-link sidebar-title link-nav" href="{url}"><i class="fa-solid fa-folder-tree"></i> <span>{label}</span></a>'],
+                                    ['label' => 'Quản lý File', 'url' => ['files/'], 'template' => '<a class="sidebar-link sidebar-title link-nav" href="{url}"><i class="fa-solid fa-file"></i> <span>{label}</span></a>'],
+                                    ['label' => 'Quản lý Người dùng', 'url' => ['users/'], 'template' => '<a class="sidebar-link sidebar-title link-nav" href="{url}"><i class="fa-solid fa-user"></i> <span>{label}</span></a>', 'visible' => Yii::$app->user->identity->role == User::ROLE_ADMIN],
                                 ],
                                 'encodeLabels' => false,
                                 'options' => ['class' => 'sidebar-links', 'id' => 'simple-bar'],
