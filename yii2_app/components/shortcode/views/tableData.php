@@ -1,18 +1,21 @@
 <?php
+
 use app\models\BaseModel;
 use yii\grid\GridView;
 use yii\helpers\Html;
 use yii\widgets\Pjax;
 
 
-Pjax::begin(['id' => $pjaxId,
-    'enablePushState' => false]);
+Pjax::begin([
+    'id' => $pjaxId,
+    'enablePushState' => false
+]);
 echo GridView::widget([
     'dataProvider' => $dataProvider,
-    'formatter' => ['class' => 'yii\i18n\Formatter','nullDisplay' => ''],
+    'formatter' => ['class' => 'yii\i18n\Formatter', 'nullDisplay' => ''],
     'headerRowOptions' => ['class' => 'sortable-column'],
-    'columns' =>$columns,
-    'tableOptions' => ['class' => 'table table-bordered table-hover table-responsive'],
+    'columns' => $columns,
+    'tableOptions' => ['id' => 'table-data', 'class' => 'table table-bordered table-hover table-responsive'],
     'layout' => "{items}\n<div class='d-flex justify-content-between align-items-center mt-3'>
                                                 <div class='d-flex justify-content-start'>{summary}</div>
                                                 <div class='d-flex justify-content-end'>{pager}</div>

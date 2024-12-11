@@ -1,4 +1,21 @@
 $(document).ready(function () {
+    const table = $('#table-data');
+    const maxColumns = 10;
+    const minCellWidth = 50;
+
+    const columnCount = table.find('thead th').length;
+
+    let isSmallContent = false;
+    table.find('td').each(function () {
+        if ($(this).width() < minCellWidth) {
+            isSmallContent = true;
+            return false;
+        }
+    });
+
+    if (columnCount > maxColumns || isSmallContent) {
+        table.addClass('custom-td');
+    }
 
     $(document).off('click', '#save-columns-visible').on('click', '#save-columns-visible', function () {
         let columnsVisibility = [];
@@ -257,52 +274,65 @@ $(document).off('click', '#import-data-btn').on('click', '#import-data-btn', fun
 
 // Handle Import Excel Form Submission
 $(document).off('submit', '#importExcelForm').on('submit', '#importExcelForm', function (event) {
-
     event.preventDefault();
-    var formData = new FormData(this);
-    formData.append('pageId', pageId);
 
-    var loadingSpinner = $(` 
-        <div class="loading-overlay">
-            <div class="loading-content">
-                <div class="spinner-border text-primary" role="status">
-                    <span class="sr-only">Loading...</span>
-                </div>
-                <span class="ml-2">Đang nhập dữ liệu, vui lòng đợi...</span>                    
-            </div>
-        </div>
-    `);
-    $('body').append(loadingSpinner);
+    // Hiển thị hộp thoại xác nhận
+    showModal('Xác nhận', 'Bạn có chắc chắn muốn nhập dữ liệu từ tệp Excel này không?');
 
-    $.ajax({
-        url: import_url,
-        type: 'POST',
-        headers: {
-            'X-CSRF-Token': $('meta[name="csrf-token"]').attr('content')
-        },
-        data: formData,
-        processData: false,
-        contentType: false,
-        success: function (response) {
-            loadingSpinner.remove();
+    $('#importStatusModal').off('shown.bs.modal').on('shown.bs.modal', function () {
+        $(this).find('.modal-footer').html(`
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+            <button type="button" class="btn btn-primary" id="confirmImport">Tiếp tục</button>
+        `);
 
-            if (response.success) {
-                loadData(pageId);
-                showToast('Nhập dữ liệu từ Excel thành công!');
+        $('#confirmImport').off('click').on('click', function () {
+            $('#importStatusModal').modal('hide');
+            var formData = new FormData($('#importExcelForm')[0]);
+            formData.append('pageId', pageId);
 
-                $('#importExcelForm')[0].reset();
-                $('#importExelModal').modal('hide');
-            } else {
-                loadingSpinner.remove();
-                showModal('Lỗi', '' + response.message);
-            }
-        },
-        error: function (xhr, status, error) {
-            loadingSpinner.remove();
-            showModal('Lỗi', 'Có lỗi xảy ra khi nhập tệp Excel: ' + error);
-        }
+            var loadingSpinner = $(
+                `<div class="loading-overlay">
+                    <div class="loading-content">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="sr-only">Loading...</span>
+                        </div>
+                        <span class="ml-2">Đang nhập dữ liệu, vui lòng đợi...</span>                    
+                    </div>
+                </div>`
+            );
+            $('body').append(loadingSpinner);
+
+            $.ajax({
+                url: import_url,
+                type: 'POST',
+                headers: {
+                    'X-CSRF-Token': $('meta[name="csrf-token"]').attr('content')
+                },
+                data: formData,
+                processData: false,
+                contentType: false,
+                success: function (response) {
+                    loadingSpinner.remove();
+
+                    if (response.success) {
+                        loadData(pageId);
+                        showToast('Nhập dữ liệu từ Excel thành công!');
+
+                        $('#importExcelForm')[0].reset();
+                        $('#importExelModal').modal('hide');
+                    } else {
+                        showModal('Lỗi', '' + response.message);
+                    }
+                },
+                error: function (xhr, status, error) {
+                    loadingSpinner.remove();
+                    showModal('Lỗi', 'Có lỗi xảy ra khi nhập tệp Excel: ' + error);
+                }
+            });
+        });
     });
 });
+
 
 let lastAjaxUrl = '';
 
@@ -323,7 +353,7 @@ $(document).on('click', '#export-excel-btn', function () {
     $('body').append(loadingSpinner);
 
     var search = '';
-    var sort = $('th.sortable-column a.desc, th.sortable-column a.asc').data('sort');
+    var sort = $('th a.desc, th a.asc').data('sort');
 
     if (!sort) {
         sort = '-id';

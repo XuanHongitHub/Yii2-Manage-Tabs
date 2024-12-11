@@ -21,9 +21,9 @@ $this->title = 'Đổi mật khẩu';
             </div>
             <div class="card-body">
                 <?php $form = ActiveForm::begin([
-                                'id' => 'change-password-form',
-                                'method' => 'post',
-                            ]); ?>
+                    'id' => 'change-password-form',
+                    'method' => 'post',
+                ]); ?>
 
                 <?= $form->field($model, 'old_password')->passwordInput()->label('Mật khẩu cũ') ?>
 

@@ -323,7 +323,7 @@ $this->title = $menu->name;
                                     ],
                                 ]
                             ),
-                            'tableOptions' => ['class' => 'table table-bordered table-hover table-responsive'],
+                            'tableOptions' => ['id' => 'table-data', 'class' => 'table table-bordered table-hover table-responsive'],
                             'layout' => "{items}\n<div class='d-flex justify-content-between align-items-center mt-3'>
                                                 <div class='d-flex justify-content-start'>{summary}</div>
                                                 <div class='d-flex justify-content-end'>{pager}</div>

@@ -23,16 +23,16 @@ $errorMessage = Yii::$app->session->getFlash('error');
 
 $tabMenus = Menu::find()
     ->where(['deleted' => 0])
-    ->orderBy(['parent_id' => SORT_DESC,'position' => SORT_ASC])
+    ->orderBy(['parent_id' => SORT_DESC, 'position' => SORT_ASC])
     ->all();
 
 $menus = [];
 foreach ($tabMenus as $menu) {
     $parentId = $menu->parent_id;
     if ($parentId === null) {
-        $menus[$menu->id] = ['name' => $menu->name,'icon' => $menu->icon, 'id' => $menu->id];
-    }else{
-        $menus[$parentId]['items'][$menu->id] = ['name' => $menu->name,'icon' => $menu->icon, 'id' => $menu->id];
+        $menus[$menu->id] = ['name' => $menu->name, 'icon' => $menu->icon, 'id' => $menu->id];
+    } else {
+        $menus[$parentId]['items'][$menu->id] = ['name' => $menu->name, 'icon' => $menu->icon, 'id' => $menu->id];
     }
 }
 
@@ -165,13 +165,8 @@ foreach ($tabMenus as $menu) {
                                     <div class="mobile-back text-end"><span>Back</span><i class="fa fa-angle-right ps-2"
                                             aria-hidden="true"></i></div>
                                 </li>
-                                <li class="sidebar-main-title pt-4">
-                                    <div>
-                                        <h6 class="lan-1">Menu</h6>
-                                    </div>
-                                </li>
                                 <?php foreach ($menus as $menu) {
-                                        if (!isset($menu['items'])) {?>
+                                    if (!isset($menu['items'])) { ?>
                                 <li class="sidebar-list">
                                     <a class="sidebar-link sidebar-title link-nav"
                                         href="<?= \yii\helpers\Url::to(['/pages', 'menuId' => $menu['id']]) ?>"
@@ -184,7 +179,7 @@ foreach ($tabMenus as $menu) {
                                         <span><?= Html::encode($menu['name']) ?></span>
                                     </a>
                                 </li>
-                                <?php }else{ ?>
+                                <?php } else { ?>
                                 <li class="sidebar-list">
                                     <a class="sidebar-link sidebar-title" href="#">
                                         <svg class="stroke-icon">
@@ -217,7 +212,8 @@ foreach ($tabMenus as $menu) {
                                         <?php } ?>
                                     </ul>
                                 </li>
-                                <?php } } ?>
+                                <?php }
+                                } ?>
                             </ul>
                         </div>
                         <div class="right-arrow" id="right-arrow"><i data-feather="arrow-right"></i></div>

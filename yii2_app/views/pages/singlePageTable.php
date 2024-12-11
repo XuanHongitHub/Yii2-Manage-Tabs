@@ -99,14 +99,14 @@ $this->registerJsFile('js/components/frontend/_tablePage.js', ['depends' => AppA
             <div class="modal-body">
                 <form id="edit-form">
                     <?php foreach ($columns as $index => $column): ?>
-                    <?php if ($index === 0): ?>
-                    <input type="hidden" name="<?= $column ?>" id="edit-<?= $column ?>">
-                    <?php else: ?>
-                    <div class="form-group mb-2">
-                        <label for="edit-<?= $column ?>"><?= ucfirst($column) ?></label>
-                        <input type="text" class="form-control" name="<?= $column ?>" id="edit-<?= $column ?>">
-                    </div>
-                    <?php endif; ?>
+                        <?php if ($index === 0): ?>
+                            <input type="hidden" name="<?= $column ?>" id="edit-<?= $column ?>">
+                        <?php else: ?>
+                            <div class="form-group mb-2">
+                                <label for="edit-<?= $column ?>"><?= ucfirst($column) ?></label>
+                                <input type="text" class="form-control" name="<?= $column ?>" id="edit-<?= $column ?>">
+                            </div>
+                        <?php endif; ?>
                     <?php endforeach; ?>
                 </form>
             </div>
@@ -129,14 +129,14 @@ $this->registerJsFile('js/components/frontend/_tablePage.js', ['depends' => AppA
             <div class="modal-body">
                 <form id="add-data-form">
                     <?php foreach ($columns as $index => $column): ?>
-                    <?php if ($index === 0): ?>
-                    <input type="hidden" name="<?= $column ?>" id="<?= $column ?>">
-                    <?php else: ?>
-                    <div class="form-group mb-2">
-                        <label for="<?= $column ?>"><?= ucfirst($column) ?></label>
-                        <input type="text" class="form-control" name="<?= $column ?>" id="<?= $column ?>">
-                    </div>
-                    <?php endif; ?>
+                        <?php if ($index === 0): ?>
+                            <input type="hidden" name="<?= $column ?>" id="<?= $column ?>">
+                        <?php else: ?>
+                            <div class="form-group mb-2">
+                                <label for="<?= $column ?>"><?= ucfirst($column) ?></label>
+                                <input type="text" class="form-control" name="<?= $column ?>" id="<?= $column ?>">
+                            </div>
+                        <?php endif; ?>
                     <?php endforeach; ?>
                 </form>
             </div>
@@ -169,21 +169,21 @@ $this->registerJsFile('js/components/frontend/_tablePage.js', ['depends' => AppA
                             <td colspan="2">
                                 <div class="list-group">
                                     <?php foreach ($columns as $column): ?>
-                                    <?php
+                                        <?php
                                         if ($column == BaseModel::HIDDEN_ID_KEY) {
                                             continue;
                                         }
                                         $isChecked = isset($hiddenColumns[$column]) ? $hiddenColumns[$column] : true;
                                         ?>
-                                    <div class="list-group-item d-flex justify-content-between align-items-center">
-                                        <span><?= htmlspecialchars($column) ?></span>
-                                        <div class="form-check form-switch">
-                                            <input class="form-check-input column-switch" type="checkbox"
-                                                id="switch-<?= htmlspecialchars($column) ?>"
-                                                data-column="<?= htmlspecialchars($column) ?>"
-                                                <?= $isChecked ? 'checked' : '' ?>>
+                                        <div class="list-group-item d-flex justify-content-between align-items-center">
+                                            <span><?= htmlspecialchars($column) ?></span>
+                                            <div class="form-check form-switch">
+                                                <input class="form-check-input column-switch" type="checkbox"
+                                                    id="switch-<?= htmlspecialchars($column) ?>"
+                                                    data-column="<?= htmlspecialchars($column) ?>"
+                                                    <?= $isChecked ? 'checked' : '' ?>>
+                                            </div>
                                         </div>
-                                    </div>
                                     <?php endforeach; ?>
                                 </div>
                             </td>
@@ -321,7 +321,10 @@ $this->registerJsFile('js/components/frontend/_tablePage.js', ['depends' => AppA
                                     ],
                                 ]
                             ),
-                            'tableOptions' => ['class' => 'table table-bordered table-hover table-responsive'],
+                            'tableOptions' => [
+                                'id' => 'table-data',
+                                'class' => 'table table-bordered table-hover table-responsive'
+                            ],
                             'layout' => "{items}\n<div class='d-flex justify-content-between align-items-center mt-3'>
                         <div class='d-flex justify-content-start'>{summary}</div>
                         <div class='d-flex justify-content-end'>{pager}</div>
@@ -390,14 +393,14 @@ $this->registerJsFile('js/components/frontend/_tablePage.js', ['depends' => AppA
 </div>
 
 <script>
-var menuId = "<?= $menu->id ?>";
-var pageId = "<?= $pageId ?>";
-var loadPageUrl = "<?= Url::to(['pages/?']) ?>";
-var update_data_url = "<?= Url::to(['pages/update-data']) ?>";
-var add_data_url = "<?= Url::to(['pages/add-data']) ?>";
-var delete_data_url = "<?= Url::to(['pages/delete-data']) ?>";
-var delete_all_data_url = "<?= Url::to(['pages/delete-selected-data']) ?>";
-var import_url = "<?= Url::to(['pages/import-excel']) ?>";
-var export_url = "<?= Url::to(['pages/export-excel']) ?>";
-var save_column_visibility_url = "<?= Url::to(['pages/save-columns-visibility']) ?>";
+    var menuId = "<?= $menu->id ?>";
+    var pageId = "<?= $pageId ?>";
+    var loadPageUrl = "<?= Url::to(['pages/?']) ?>";
+    var update_data_url = "<?= Url::to(['pages/update-data']) ?>";
+    var add_data_url = "<?= Url::to(['pages/add-data']) ?>";
+    var delete_data_url = "<?= Url::to(['pages/delete-data']) ?>";
+    var delete_all_data_url = "<?= Url::to(['pages/delete-selected-data']) ?>";
+    var import_url = "<?= Url::to(['pages/import-excel']) ?>";
+    var export_url = "<?= Url::to(['pages/export-excel']) ?>";
+    var save_column_visibility_url = "<?= Url::to(['pages/save-columns-visibility']) ?>";
 </script>

@@ -45411,7 +45411,6 @@ table td[data-column="id"] {
 
 .sortable-column a:after {
   content: '\f0dc';
-  /* FontAwesome icon for unsorted */
   font-family: FontAwesome;
   margin-left: 5px;
 }
@@ -45427,4 +45426,8 @@ table td[data-column="id"] {
 #view-content {
   all: unset !important;
   font-family: inherit !important;
+}
+
+.custom-td td {
+  padding: 5px;
 }

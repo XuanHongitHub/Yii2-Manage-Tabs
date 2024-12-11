@@ -8,6 +8,7 @@ function loadData() {
         type: 'GET',
         data: {
             pageId,
+            menuId,
             page,
             search,
             pageSize,

@@ -13,14 +13,8 @@ $this->title = 'Đăng nhập';
 <?php $this->beginPage() ?>
 <?php
 $this->head();
-$cssFile = [
-    'css/style.css',
-    'css/bootstrap.css',
-];
+AppAsset::register($this);
 
-foreach ($cssFile as $css) {
-    $this->registerCssFile($css, ['depends' => [\yii\web\YiiAsset::class]]);
-}
 ?>
 <title><?= Html::encode($this->title) ?></title>
 
@@ -58,15 +52,14 @@ foreach ($cssFile as $css) {
 
             <div class="form-group">
                 <div>
-                    <?= Html::submitButton('Login', ['class' => 'btn btn-primary btn-block w-100', 'name' => 'login-button']) ?>
+                    <?= Html::submitButton('Đăng nhập', ['class' => 'btn btn-primary btn-block w-100', 'name' => 'login-button']) ?>
                 </div>
             </div>
 
             <?php ActiveForm::end(); ?>
 
 
-            <p class="mt-4 mb-0 text-center">Không có tài khoản?<a class="ms-2"
-                    href="<?= Yii::$app->urlManager->createUrl(['site/signup']) ?>">Tạo tài khoản</a></p>
+
         </div>
     </div>
 </div>
