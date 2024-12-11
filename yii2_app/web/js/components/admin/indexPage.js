@@ -1,8 +1,10 @@
 $(document).ready(function () {
     $(document).off('click', '#edit-richtext').on('click', '#edit-richtext', function () {
         var pageId = $(this).data('id');
-        window.location.href = 'pages/edit?id=' + pageId;
+        var baseUrl = window.location.origin + '/admin/';
+        window.location.href = baseUrl + 'pages/edit?id=' + pageId;
     });
+
 
     $(document).off('click', '.edit-btn').on('click', '.edit-btn', function () {
         var pageId = $(this).data('page-id');

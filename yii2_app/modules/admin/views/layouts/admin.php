@@ -72,26 +72,26 @@ $successMessage = Yii::$app->session->getFlash('success');
                         <li class="profile-nav onhover-dropdown p-0">
                             <div class="d-flex align-items-center profile-media">
                                 <?php if (!Yii::$app->user->isGuest): ?>
-                                    <svg style="margin-bottom: -5px; width: 30px !important; height: 30px !important;">
-                                        <use href="<?= Yii::getAlias('@web') ?>/images/icon-sprite.svg#fill-user"></use>
-                                    </svg>
-                                    <div class="flex-grow-1">
-                                        <span><?= Html::encode(Yii::$app->user->identity->username) ?></span>
-                                        <p class="mb-0">
-                                            <?php if (Yii::$app->user->identity->role == 10): ?>
-                                                User
-                                            <?php elseif (Yii::$app->user->identity->role == 20): ?>
-                                                Admin
-                                            <?php else: ?>
-                                                <?= Html::encode(Yii::$app->user->identity->role) ?>
-                                            <?php endif; ?>
-                                            <i class="middle fa fa-angle-down"></i>
-                                        </p>
+                                <svg style="margin-bottom: -5px; width: 30px !important; height: 30px !important;">
+                                    <use href="<?= Yii::getAlias('@web') ?>/images/icon-sprite.svg#fill-user"></use>
+                                </svg>
+                                <div class="flex-grow-1">
+                                    <span><?= Html::encode(Yii::$app->user->identity->username) ?></span>
+                                    <p class="mb-0">
+                                        <?php if (Yii::$app->user->identity->role == 10): ?>
+                                        User
+                                        <?php elseif (Yii::$app->user->identity->role == 20): ?>
+                                        Admin
+                                        <?php else: ?>
+                                        <?= Html::encode(Yii::$app->user->identity->role) ?>
+                                        <?php endif; ?>
+                                        <i class="middle fa fa-angle-down"></i>
+                                    </p>
 
-                                    </div>
+                                </div>
                             </div>
                             <ul class="profile-dropdown onhover-show-div">
-                                <li><a href="<?= Yii::$app->urlManager->createUrl(['admin/pages/index']) ?>"><span><i
+                                <li><a href="<?= Yii::$app->urlManager->createUrl(['admin/pages/']) ?>"><span><i
                                                 class="fa-solid fa-gear me-2"></i>Cài đặt</span></a></li>
                                 <li><a href="<?= Yii::$app->urlManager->createUrl(['site/change-password']) ?>"><span><i
                                                 class="fa-solid fa-key me-2"></i></i>Đổi mật khẩu</span></a></li>
@@ -107,7 +107,7 @@ $successMessage = Yii::$app->session->getFlash('success');
                                     </form>
                                 </li>
                             </ul>
-                        <?php else: ?>
+                            <?php else: ?>
                             <div class="auth-buttons">
                                 <a href="<?= Yii::$app->urlManager->createUrl(['site/login']) ?>"
                                     class="btn btn-primary me-1">
@@ -118,7 +118,7 @@ $successMessage = Yii::$app->session->getFlash('success');
                                     <i class="fa-solid fa-user-plus"></i> Sign Up
                                 </a>
                             </div>
-                        <?php endif; ?>
+                            <?php endif; ?>
                         </li>
                     </ul>
                 </div>
@@ -219,8 +219,8 @@ $successMessage = Yii::$app->session->getFlash('success');
 </div>
 
 <script>
-    var successMessage = <?= json_encode($successMessage) ?>;
-    var errorMessage = <?= json_encode($errorMessage) ?>;
+var successMessage = <?= json_encode($successMessage) ?>;
+var errorMessage = <?= json_encode($errorMessage) ?>;
 </script>
 
 </html>

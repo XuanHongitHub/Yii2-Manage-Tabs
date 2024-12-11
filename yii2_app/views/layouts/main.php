@@ -105,7 +105,7 @@ foreach ($tabMenus as $menu) {
                                 </div>
                             </div>
                             <ul class="profile-dropdown onhover-show-div">
-                                <li><a href="<?= Yii::$app->urlManager->createUrl(['admin/pages/index']) ?>"><span><i
+                                <li><a href="<?= Yii::$app->urlManager->createUrl(['admin/pages/']) ?>"><span><i
                                                 class="fa-solid fa-gear me-2"></i>Cài đặt</span></a></li>
                                 <li><a href="<?= Yii::$app->urlManager->createUrl(['site/change-password']) ?>"><span><i
                                                 class="fa-solid fa-key me-2"></i></i>Đổi mật khẩu</span></a></li>

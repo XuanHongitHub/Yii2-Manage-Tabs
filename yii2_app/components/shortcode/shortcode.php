@@ -14,9 +14,9 @@ function tableDataShortcode($attributes)
         return '<h2>Table not found!!</h2>';
     }
     $pageSize = $attributes['page_size'] ?? 10;
-    if (isset($attributes['columns'])){
+    if (isset($attributes['columns'])) {
         $columnNames = explode(',', $attributes['columns']);
-    }else{
+    } else {
         $columns = Yii::$app->db->schema->getTableSchema($table)->columns;
         $columnNames = array_keys($columns);
     }
@@ -51,6 +51,5 @@ function tableDataShortcode($attributes)
         ],
     ]);
 
-    return Yii::$app->shortcode->renderTemplatePart('tableData' , ['dataProvider' => $dataProvider,'pjaxId' => $pjaxId,'columns' => $columnNames,]);
-
+    return Yii::$app->shortcode->renderTemplatePart('tableData', ['dataProvider' => $dataProvider, 'pjaxId' => $pjaxId, 'columns' => $columnNames,]);
 }
