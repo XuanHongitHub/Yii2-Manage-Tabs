@@ -14917,13 +14917,27 @@ input:focus-visible {
 /**=====================
     2.30 Table CSS Start
 ==========================**/
-thead,
-tbody,
+thead {
+  background-color: #eee;
+}
+
+.table>tbody>tr>td,
+.table>tbody>tr>th,
+.table>tfoot>tr>td,
+.table>tfoot>tr>th,
+.table>thead>tr>td,
+.table>thead>tr>th {
+  padding: 8px;
+  line-height: 1.42857143;
+  vertical-align: top;
+  border-top: 1px solid #ddd;
+}
+
 tfoot,
 tr,
 td,
 th {
-  border-color: #dee2e6;
+  border: 1px solid #ddd;
 }
 
 .pills-component {

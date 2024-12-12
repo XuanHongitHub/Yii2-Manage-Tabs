@@ -4,15 +4,17 @@ $(document).ready(function () {
 
     $('#content-display').hide();
     $('#edit-content').show();
-    $('#save-button').show();
+    $('.rte_command_savert').show();
 
     if (!rteInitialized) {
-        editor1 = new RichTextEditor("#richtext-editor");
+        editor1 = new RichTextEditor("#richtext-editor", {
+            height: '50vh' // Nếu thư viện hỗ trợ thiết lập chiều cao
+        });
         rteInitialized = true;
     }
 
     if (editor1 && typeof editor1.getHTMLCode === 'function') {
-        $('#save-button').on('click', function () {
+        $('.rte_command_savert').on('click', function () {
             var updatedContent = editor1.getHTMLCode();
 
             if (updatedContent !== initialContent) {

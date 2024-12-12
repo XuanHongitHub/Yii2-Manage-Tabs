@@ -20,12 +20,6 @@ $this->title = $page->name;
         <div class="d-flex flex-column flex-md-row align-items-md-center">
             <div class="me-auto mb-md-0 text-center text-md-start">
             </div>
-            <div class="d-flex flex-wrap justify-content-end align-items-center me-3 my-1">
-                <button class="btn btn-success" id="save-button">
-                    <i class="fa fa-save me-1"></i> Lưu
-                </button>
-            </div>
-
         </div>
     </div>
     <div class="card-body pt-0">
