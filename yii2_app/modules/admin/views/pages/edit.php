@@ -30,8 +30,8 @@ $this->title = $page->name;
     </div>
     <div class="card-body pt-0">
         <div class="page-content">
-            <div class="form-group my-1" id="edit-content" style="display:none;">
-                <textarea id="richtext-editor"><?= Html::encode($content) ?></textarea>
+            <div class="form-group my-1" id="edit-content">
+                <textarea id="richtext-editor" name="richtext-editor"><?= Html::encode($content) ?></textarea>
             </div>
         </div>
 

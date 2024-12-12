@@ -187,19 +187,6 @@ $successMessage = Yii::$app->session->getFlash('success');
                 </div>
                 <!-- Container-fluid Ends-->
             </div>
-            <!-- footer start-->
-            <footer class="footer">
-                <div class="container-fluid">
-                    <div class="row">
-                        <div class="col-md-6 p-0 footer-copyright">
-                            <p class="mb-0">Copyright 2024 © Cominit.</p>
-                        </div>
-                        <div class="col-md-6 p-0">
-
-                        </div>
-                    </div>
-                </div>
-            </footer>
         </div>
     </div>
 

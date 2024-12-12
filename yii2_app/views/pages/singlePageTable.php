@@ -326,9 +326,9 @@ $this->registerJsFile('js/components/frontend/_tablePage.js', ['depends' => AppA
                                 'class' => 'table table-bordered table-hover table-responsive'
                             ],
                             'layout' => "{items}\n<div class='d-flex justify-content-between align-items-center mt-3'>
-                        <div class='d-flex justify-content-start'>{summary}</div>
-                        <div class='d-flex justify-content-end'>{pager}</div>
-                    </div>",
+                                        <div class='d-flex justify-content-start'>{summary}</div>
+                                        <div class='d-flex justify-content-end'>{pager}</div>
+                                    </div>",
                             'summary' => '<span class="text-muted">Hiển thị <b>{begin}-{end}</b> trên tổng số <b>{totalCount}</b> dòng.</span>',
                             'pager' => [
                                 'class' => 'yii\widgets\LinkPager',
@@ -366,9 +366,9 @@ $this->registerJsFile('js/components/frontend/_tablePage.js', ['depends' => AppA
                                 <?php
                                 $pageSizes = [10 => 10, 25 => 25, 50 => 50, 100 => 100, 200 => 200, 500 => 500, 1000 => 1000];
                                 echo Html::beginForm(['/pages', 'menuId' => $menu->id], 'get', [
-                                    'data-pjax' => true,  // Dùng PJAX cho form này
+                                    'data-pjax' => true,
                                     'class' => 'form-inline',
-                                    'id' => 'pageSize-form', // Đảm bảo id cho form
+                                    'id' => 'pageSize-form',
                                 ]);
                                 echo Html::dropDownList(
                                     'pageSize',

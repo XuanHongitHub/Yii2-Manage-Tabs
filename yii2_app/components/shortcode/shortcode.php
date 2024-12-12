@@ -8,7 +8,7 @@ function tableDataShortcode($attributes)
 {
     $table = $attributes['table'] ?? 'default_table';
     $excludedTables = ['manager_page', 'manager_user', 'manager_menu', 'manager_menu_page', 'manager_config', 'migration'];
-
+    Yii::error("Table: " . $attributes['table']);
 
     if (in_array($table, $excludedTables)) {
         return '<h2>Table not found!!</h2>';
