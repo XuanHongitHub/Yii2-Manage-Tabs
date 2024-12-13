@@ -11,8 +11,8 @@ use yii\helpers\Url;
 
 ?>
 
-<div class="page-content">
-    <div class="form-group my-1" id="view-content">
+<div class="page-content my-2">
+    <div class="form-group" id="view-content">
         <div id="content-display"><?= $content ?></div>
     </div>
 </div>

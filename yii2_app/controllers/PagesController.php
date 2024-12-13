@@ -121,28 +121,28 @@ class PagesController extends Controller
                         'attributes' => $columnNames,
                     ],
                 ]);
-                $configColumns = Config::find()
+                $configs = Config::find()
                     ->where(['page_id' => $page->id])
                     ->andFilterWhere(['!=', 'menu_id', null])
                     ->andFilterWhere(['menu_id' => $menuId])
                     ->orWhere(['menu_id' => null])
                     ->all();
 
-                $hiddenColumns = [];
+                $configColumns = [];
 
-                if ($configColumns) {
-                    foreach ($configColumns as $config) {
-                        $hiddenColumns[$config->column_name] = $config->is_visible;
+                if ($configs) {
+                    foreach ($configs as $config) {
+                        $configColumns[$config->column_name] = $config->is_visible;
                     }
                 } else {
-                    $hiddenColumns = [];
+                    $configColumns = [];
                 }
                 return $this->render('singlePageTable', [
                     'dataProvider' => $dataProvider,
                     'columns' => $columnNames,
                     'menu' => $menu,
                     'pageId' => $page->id,
-                    'hiddenColumns' => $hiddenColumns,
+                    'configColumns' => $configColumns,
                 ]);
             } elseif ($page->type === 'richtext') {
                 $content = $page->content;
@@ -210,29 +210,47 @@ class PagesController extends Controller
                     'attributes' => $columnNames,
                 ],
             ]);
-            $configColumns = Config::find()
-                ->where(['page_id' => $pageId])
+            $configsWithMenuId = Config::find()
+                ->select(['column_name', 'is_visible', 'display_name', 'column_width', 'column_position', 'menu_id'])
+                ->where(['page_id' => $page->id])
                 ->andFilterWhere(['!=', 'menu_id', null])
-                ->andFilterWhere(['menu_id' => $menuId])
-                ->orWhere(['menu_id' => null])
                 ->all();
 
-            $hiddenColumns = [];
-
-            if ($configColumns) {
-                foreach ($configColumns as $config) {
-                    $hiddenColumns[$config->column_name] = $config->is_visible;
-                }
-            } else {
-                $hiddenColumns = [];
+            $configColumns = [];
+            foreach ($configsWithMenuId as $config) {
+                $configColumns[$config->column_name] = [
+                    'column_name' => $config->column_name,
+                    'is_visible' => $config->is_visible,
+                    'display_name' => $config->display_name,
+                    'column_width' => $config->column_width,
+                    'column_position' => $config->column_position,
+                ];
             }
+
+            $nullMenuConfigs = Config::find()
+                ->select(['column_name', 'display_name'])
+                ->where(['page_id' => $page->id])
+                ->andFilterWhere(['menu_id' => null])
+                ->all();
+
+            foreach ($nullMenuConfigs as $config) {
+                if (isset($configColumns[$config->column_name]) && $configColumns[$config->column_name]['display_name'] === null) {
+                    $configColumns[$config->column_name]['display_name'] = $config->display_name;
+                }
+            }
+
+            $configColumns = array_values($configColumns);
+
+            usort($configColumns, function ($a, $b) {
+                return $a['column_position'] <=> $b['column_position'];
+            });
 
             return $this->renderAjax('_tableData', [
                 'dataProvider' => $dataProvider,
                 'columns' => $columnNames,
                 'pageId' => $pageId,
                 'menuId' => $menuId,
-                'hiddenColumns' => $hiddenColumns,
+                'configColumns' => $configColumns,
             ]);
         } elseif ($page->type === 'richtext') {
             $content = $page->content;
@@ -768,19 +786,19 @@ class PagesController extends Controller
         }, $tempFilePath);
     }
 
-    public function actionSaveColumnsVisibility()
+    public function actionSaveColumnsConfig()
     {
         Yii::$app->response->format = Response::FORMAT_JSON;
 
-        $columnsVisibility = Yii::$app->request->post('columns_visibility');
+        $columnsConfig = Yii::$app->request->post('columns_config');
         $menuId = Yii::$app->request->post('menuId');
         $pageId = Yii::$app->request->post('pageId');
 
-        if (!$columnsVisibility || (!$menuId && !$pageId)) {
+        if (!$columnsConfig || (!$menuId && !$pageId)) {
             return ['success' => false, 'message' => 'Dữ liệu không hợp lệ.'];
         }
 
-        foreach ($columnsVisibility as $columnVisibility) {
+        foreach ($columnsConfig as $columnVisibility) {
             $columnName = $columnVisibility['column_name'];
             $isVisible = in_array($columnVisibility['is_visible'], ['true', '1'], true) ? 1 : 0;
 

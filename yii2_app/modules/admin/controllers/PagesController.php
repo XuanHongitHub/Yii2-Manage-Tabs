@@ -76,7 +76,6 @@ class PagesController extends BaseAdminController
         }
 
         $tableName = $page->table_name;
-
         $model = BaseModel::withTable($tableName);
 
         $tableSchema = Yii::$app->db->schema->getTableSchema($model::tableName());
@@ -85,40 +84,68 @@ class PagesController extends BaseAdminController
         }
 
         $allColumns = array_keys($tableSchema->columns);
-
         $allColumns = array_filter($allColumns, function ($column) {
             return $column !== BaseModel::HIDDEN_ID_KEY;
         });
 
         $configColumns = Config::find()
             ->where(['page_id' => $pageId, 'menu_id' => null])
+            ->orderBy(['column_position' => SORT_ASC])
             ->all();
 
-        $hiddenColumns = [];
+        $columns = [];
+        $configuredColumns = [];
+
         foreach ($configColumns as $config) {
-            $hiddenColumns[$config->column_name] = $config->is_visible;
+            $configuredColumns[$config->column_name] = [
+                'column_name' => $config->column_name,
+                'display_name' => $config->display_name ?? $config->column_name,
+                'is_visible' => $config->is_visible,
+                'column_position' => $config->column_position,
+            ];
         }
 
+        foreach ($configuredColumns as $column) {
+            $columns[] = $column;
+        }
+
+        foreach ($allColumns as $column) {
+            if (!isset($configuredColumns[$column])) {
+                $columns[] = [
+                    'column_name' => $column,
+                    'display_name' => $column,
+                    'is_visible' => true,
+                    'column_position' => null,
+                ];
+            }
+        }
+
+        usort($columns, function ($a, $b) {
+            return $a['column_position'] <=> $b['column_position'];
+        });
+
         return $this->asJson([
-            'columns' => array_values($allColumns),
-            'hiddenColumns' => $hiddenColumns
+            'success' => true,
+            'columns' => $columns,
         ]);
     }
 
-    public function actionSaveColumnsVisibility()
+    public function actionSaveColumnsConfig()
     {
         Yii::$app->response->format = Response::FORMAT_JSON;
 
-        $columnsVisibility = Yii::$app->request->post('columns_visibility');
+        $columnsConfig = Yii::$app->request->post('columns_config');
         $pageId = Yii::$app->request->post('pageId');
 
-        if (!$columnsVisibility || (!$pageId)) {
+        if (!$columnsConfig || !$pageId) {
             return ['success' => false, 'message' => 'Dữ liệu không hợp lệ.'];
         }
 
-        foreach ($columnsVisibility as $columnVisibility) {
-            $columnName = $columnVisibility['column_name'];
-            $isVisible = in_array($columnVisibility['is_visible'], ['true', '1'], true) ? 1 : 0;
+        foreach ($columnsConfig as $index => $columnConfig) {
+            $columnName = $columnConfig['column_name'];
+            $isVisible = filter_var($columnConfig['is_visible'], FILTER_VALIDATE_BOOLEAN);
+            $displayName = $columnConfig['display_name'];
+            $columnPosition = $index;
 
             $config = Config::findOne([
                 'column_name' => $columnName,
@@ -130,6 +157,8 @@ class PagesController extends BaseAdminController
             $config->menu_id = null;
             $config->page_id = $pageId;
             $config->is_visible = $isVisible;
+            $config->display_name = $displayName;
+            $config->column_position = $columnPosition;
 
             if (!$config->save()) {
                 return [
@@ -142,8 +171,6 @@ class PagesController extends BaseAdminController
 
         return ['success' => true, 'message' => 'Cập nhật trạng thái hiển thị thành công.'];
     }
-
-
     public function actionGetTableName()
     {
         $allTables = Yii::$app->db->createCommand("SELECT table_name FROM information_schema.tables WHERE table_schema = 'public'")->queryAll();
@@ -504,6 +531,19 @@ class PagesController extends BaseAdminController
         }
 
         return $this->render('edit', [
+            'page' => $page,
+            'content' => $page->content,
+        ]);
+    }
+    public function actionView()
+    {
+        $id = Yii::$app->request->get('id');
+        $page = Page::findOne(['id' => $id]);
+        if (!$page) {
+            throw new NotFoundHttpException('Page không tồn tại.');
+        }
+
+        return $this->render('view', [
             'page' => $page,
             'content' => $page->content,
         ]);

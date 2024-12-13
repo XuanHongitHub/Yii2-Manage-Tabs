@@ -219,38 +219,34 @@ $this->title = 'Danh sách Page';
 
 <!-- Modal setting -->
 <div class="modal fade" id="settingModal" tabindex="-1" aria-labelledby="settingModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
+    <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="editTableModalLabel">Tùy chỉnh cột</h5>
+                <h4 class="modal-title" id="settingModalLabel">Tùy chỉnh cột</h4>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                <table class="table table-borderless" id="columns-visibility">
+                <table class="table table-bordered table-hover custom-td">
                     <thead>
                         <tr>
-                            <th>Cột</th>
-                            <th class="text-end">Ẩn/Hiện</th>
+                            <th scope="col"></th>
+                            <th scope="col">Tên Cột</th>
+                            <th scope="col">Tên Hiển Thị</th>
+                            <th scope="col">Ẩn/Hiện</th>
                         </tr>
                     </thead>
-                    <tbody>
-                        <tr>
-                            <td colspan="2">
-                                <div class="list-group">
-                                </div>
-                            </td>
-                        </tr>
+                    <tbody class="sortable-columns">
+                        <!-- Ajax Data -->
                     </tbody>
                 </table>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
-                <button type="button" id="save-columns-visible" class="btn btn-primary">Lưu thay đổi</button>
+                <button type="button" id="save-columns-config" class="btn btn-primary">Lưu thay đổi</button>
             </div>
         </div>
     </div>
 </div>
-
 
 <!-- Modal Thùng Rác -->
 <div class="modal fade" id="trashBinModal" tabindex="-1" aria-labelledby="trashBinModalLabel" aria-hidden="true">
@@ -399,5 +395,5 @@ var save_sub_page_url = "<?= Url::to(['pages/save-sub-page']) ?>";
 var yiiWebAlias = "<?= Yii::getAlias('@web') ?>";
 var update_page_url = "<?= Url::to(['pages/update-page']) ?>";
 var get_table_page_url = "<?= Url::to(['pages/get-table-page']) ?>";
-var save_column_visibility_url = "<?= Url::to(['pages/save-columns-visibility']) ?>";
+var save_column_config_url = "<?= Url::to(['pages/save-columns-config']) ?>";
 </script>

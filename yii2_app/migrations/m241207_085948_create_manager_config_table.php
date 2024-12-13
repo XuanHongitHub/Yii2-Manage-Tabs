@@ -18,6 +18,9 @@ class m241207_085948_create_manager_config_table extends Migration
             'page_id' => $this->integer()->notNull(),
             'menu_id' => $this->integer(),
             'column_name' => $this->string(255)->notNull(),
+            'display_name' => $this->string(255)->null(),
+            'column_width' => $this->integer()->null(),
+            'column_position' => $this->integer()->defaultValue(0),
             'is_visible' => $this->boolean()->notNull()->defaultValue(true),
         ]);
 

@@ -8,7 +8,7 @@ $(document).ready(function () {
 
     if (!rteInitialized) {
         editor1 = new RichTextEditor("#richtext-editor", {
-            height: '50vh' // Nếu thư viện hỗ trợ thiết lập chiều cao
+            language: "vi",
         });
         rteInitialized = true;
     }
@@ -40,7 +40,7 @@ $(document).ready(function () {
                                 icon: "success",
                             });
                             $('#confirmationModal').modal('hide');
-                            window.location.href = list_page_url;
+                            window.location.href = view_richtext_url;
                         },
                         error: function () {
                             swal({

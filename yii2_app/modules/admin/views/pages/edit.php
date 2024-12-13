@@ -16,13 +16,7 @@ $this->title = $page->name;
 ?>
 
 <div class="card">
-    <div class="card-header card-no-border pb-0">
-        <div class="d-flex flex-column flex-md-row align-items-md-center">
-            <div class="me-auto mb-md-0 text-center text-md-start">
-            </div>
-        </div>
-    </div>
-    <div class="card-body pt-0">
+    <div class="card-body">
         <div class="page-content">
             <div class="form-group my-1" id="edit-content">
                 <textarea id="richtext-editor" name="richtext-editor"><?= Html::encode($content) ?></textarea>
@@ -55,5 +49,5 @@ $this->title = $page->name;
 var urlParams = new URLSearchParams(window.location.search);
 var id = urlParams.get('id');
 var save_richtext_url = "<?= Url::to(['pages/save-rich-text']) ?>";
-var list_page_url = "<?= Url::to(['pages/index']) ?>";
+var view_richtext_url = "<?= Url::to(['pages/view/', 'id' => $_GET['id']]) ?>";
 </script>

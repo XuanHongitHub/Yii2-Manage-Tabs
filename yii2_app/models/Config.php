@@ -9,9 +9,12 @@ use Yii;
  *
  * @property int $id
  * @property int $page_id
- * @property int $menu_id
+ * @property int|null $menu_id
  * @property string $column_name
  * @property bool $is_visible
+ * @property string|null $display_name
+ * @property int|null $column_width
+ * @property int $column_position
  *
  * @property Menu $menu
  * @property Page $page
@@ -33,10 +36,12 @@ class Config extends \yii\db\ActiveRecord
     {
         return [
             [['page_id', 'column_name'], 'required'],
-            [['page_id', 'menu_id'], 'default', 'value' => null],
-            [['page_id', 'menu_id'], 'integer'],
+            [['page_id', 'menu_id', 'column_width', 'column_position'], 'default', 'value' => null],
+            [['page_id', 'menu_id', 'column_width', 'column_position'], 'integer'],
             [['is_visible'], 'boolean'],
-            [['column_name'], 'string', 'max' => 255],
+            [['column_position'], 'default', 'value' => 0],
+            [['column_position'], 'integer', 'min' => 0],
+            [['column_name', 'display_name'], 'string', 'max' => 255],
             [['column_name'], 'unique', 'targetAttribute' => ['menu_id', 'page_id', 'column_name'], 'message' => 'Cột này đã tồn tại trong cấu hình.'],
             [['menu_id'], 'exist', 'skipOnError' => true, 'targetClass' => Menu::class, 'targetAttribute' => ['menu_id' => 'id']],
             [['page_id'], 'exist', 'skipOnError' => true, 'targetClass' => Page::class, 'targetAttribute' => ['page_id' => 'id']],
@@ -54,6 +59,9 @@ class Config extends \yii\db\ActiveRecord
             'menu_id' => 'Menu ID',
             'column_name' => 'Column Name',
             'is_visible' => 'Is Visible',
+            'display_name' => 'Display Name',
+            'column_width' => 'Column Width',
+            'column_position' => 'Column Position',
         ];
     }
 

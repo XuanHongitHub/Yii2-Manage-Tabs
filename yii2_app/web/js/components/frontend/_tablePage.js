@@ -17,22 +17,22 @@ $(document).ready(function () {
         table.addClass('custom-td');
     }
 
-    $(document).off('click', '#save-columns-visible').on('click', '#save-columns-visible', function () {
-        let columnsVisibility = [];
+    $(document).off('click', '#save-columns-config').on('click', '#save-columns-config', function () {
+        let columnsConfig = [];
 
-        $('#columns-visibility .column-switch').each(function () {
+        $('#columns-config .column-switch').each(function () {
             const columnName = $(this).data('column');
             const isChecked = $(this).prop('checked');
 
-            columnsVisibility.push({
+            columnsConfig.push({
                 column_name: columnName,
                 is_visible: isChecked
             });
         });
 
-        if (columnsVisibility.length > 0) {
+        if (columnsConfig.length > 0) {
             $.ajax({
-                url: save_column_visibility_url,
+                url: save_column_config_url,
                 type: 'POST',
                 headers: {
                     'X-CSRF-Token': $('meta[name="csrf-token"]').attr('content')
@@ -40,7 +40,7 @@ $(document).ready(function () {
                 data: {
                     menuId,
                     pageId,
-                    columns_visibility: columnsVisibility
+                    columns_config: columnsConfig
                 },
                 success: function (response) {
                     if (response.success) {

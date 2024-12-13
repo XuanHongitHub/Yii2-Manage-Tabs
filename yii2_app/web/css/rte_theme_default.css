@@ -152,12 +152,13 @@ rte-codebox textarea {
 
 
 .rte-modern.rte-desktop.rte-toolbar-default {
-    min-width: 820px;
+    min-width: 80vh !important;
     width: 99% !important;
+    max-height: 80vh !important;
 }
 
 .rte-modern.rte-desktop.rte-toolbar-full {
-    min-width: 820px;
+    min-width: 80vh !important;
 }
 
 
@@ -1768,8 +1769,8 @@ rte-toast {
 }
 
 rte-content::-webkit-scrollbar {
-    height: 5px;
-    width: 5px;
+    height: 10px;
+    width: 10px;
     overflow: visible;
     background-color: rgba(0, 0, 0, .05);
     box-shadow: inset 1px 1px 0 rgba(0, 0, 0, .1)

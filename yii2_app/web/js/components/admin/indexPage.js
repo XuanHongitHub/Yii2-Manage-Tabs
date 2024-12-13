@@ -5,7 +5,6 @@ $(document).ready(function () {
         window.location.href = baseUrl + 'pages/edit?id=' + pageId;
     });
 
-
     $(document).off('click', '.edit-btn').on('click', '.edit-btn', function () {
         var pageId = $(this).data('page-id');
         var pageName = $(this).data('page-name');
@@ -71,29 +70,43 @@ $(document).ready(function () {
             data: { pageId: pageId },
             success: function (response) {
                 var columns = response.columns;
-                var hiddenColumns = response.hiddenColumns;
-
-                var columnsList = $('#columns-visibility tbody tr td .list-group');
-                columnsList.empty();
+                var columnsTable = $('.sortable-columns');
+                columnsTable.empty();
 
                 columns.forEach(function (column) {
-                    var isChecked = hiddenColumns[column] === undefined || hiddenColumns[column] ? 'checked' : '';
+                    var displayName = column.display_name || column.column_name;
+                    var isChecked = (column.is_visible === true) ? 'checked' : '';
 
                     var columnRow = `
-                        <div class="list-group-item d-flex justify-content-between align-items-center">
-                            <span>${column}</span>
-                            <div class="form-check form-switch">
-                                <input class="form-check-input column-switch"
-                                    type="checkbox"
-                                    id="switch-${column}"
-                                    data-column="${column}" ${isChecked}>
-                            </div>
-                        </div>
+                       <tr data-column="${column.column_name}">
+                            <td class="text-nowrap" style="width: 4%; text-align: center; vertical-align: middle;" >
+                                <span class="drag-handle" style="cursor: grab; font-size: 20px;">&#9776;</span>
+                            </td>
+                            <td class="column-name text-nowrap" style="width: 30%; vertical-align: middle;">${column.column_name}</td>
+                            <td class="text-nowrap" style="width: 30%; vertical-align: middle;" >
+                                <input type="text" class="form-control display-name-input" 
+                                    data-column-name="${column.column_name}" 
+                                    value="${displayName}" placeholder="Tên hiển thị">
+                            </td>
+                            <td class="text-nowrap" style="width: 6%; text-align: center; vertical-align: middle;" >
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input column-switch text-center" 
+                                        type="checkbox" 
+                                        id="switch-${column.column_name}" 
+                                        data-column="${column.column_name}" ${isChecked}>
+                                </div>
+                            </td>
+                        </tr>
                     `;
-                    columnsList.append(columnRow);
+                    columnsTable.append(columnRow);
                 });
 
-                $('#save-columns-visible').data('page-id', pageId);
+                columnsTable.sortable({
+                    handle: '.drag-handle',
+                    animation: 150
+                });
+
+                $('#save-columns-config').data('page-id', pageId);
 
                 $('#settingModal').modal('show');
             },
@@ -106,34 +119,37 @@ $(document).ready(function () {
         });
     });
 
-    $(document).off('click', '#save-columns-visible').on('click', '#save-columns-visible', function () {
+    $(document).off('click', '#save-columns-config').on('click', '#save-columns-config', function () {
         var pageId = $(this).data('page-id');
         if (!pageId) {
             alert('Page ID không hợp lệ.');
             return;
         }
 
-        let columnsVisibility = [];
+        let columnsConfig = [];
 
-        $('#columns-visibility .column-switch').each(function (index) {
+        $('.sortable-columns tr').each(function () {
             const columnName = $(this).data('column');
-            const isChecked = $(this).prop('checked');
+            const isChecked = $(this).find('.column-switch').prop('checked');
+            console.log("🚀 ~ isChecked:", isChecked);
+            const displayName = $(this).find('.display-name-input').val();
 
-            columnsVisibility.push({
+            columnsConfig.push({
                 column_name: columnName,
-                is_visible: isChecked
+                is_visible: isChecked,
+                display_name: displayName
             });
         });
 
         $.ajax({
-            url: save_column_visibility_url,
+            url: save_column_config_url,
             type: 'POST',
             headers: {
                 'X-CSRF-Token': $('meta[name="csrf-token"]').attr('content')
             },
             data: {
                 pageId: pageId,
-                columns_visibility: columnsVisibility
+                columns_config: columnsConfig
             },
             success: function (response) {
                 if (response.success) {
@@ -148,7 +164,6 @@ $(document).ready(function () {
             }
         });
     });
-
 
     $('#confirm-hide-btn').click(function () {
         let hideStatus = {};
