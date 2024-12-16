@@ -229,7 +229,7 @@ $this->title = 'Danh sách Page';
                 <table class="table table-bordered table-hover custom-td">
                     <thead>
                         <tr>
-                            <th scope="col"></th>
+                            <th scope="col"><i class="fa-solid fa-arrow-down-wide-short"></i></th>
                             <th scope="col">Tên Cột</th>
                             <th scope="col">Tên Hiển Thị</th>
                             <th scope="col">Ẩn/Hiện</th>

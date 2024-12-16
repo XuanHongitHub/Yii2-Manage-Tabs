@@ -45485,3 +45485,42 @@ table td[data-column="id"] {
   background-color: rgba(0, 0, 0, .4);
   box-shadow: inset 1px 1px 1px rgba(0, 0, 0, .25)
 }
+
+#table-data {
+  border-collapse: collapse;
+}
+
+#table-data th {
+  position: relative;
+}
+
+.resizer {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 8px;
+  height: 100%;
+  cursor: col-resize;
+  user-select: none;
+}
+
+.resizer:hover,
+.resizing {
+  border-right: 2px solid blue;
+}
+
+.resizable {
+  border: 1px solid gray;
+  height: 100px;
+  width: 100px;
+  position: relative;
+}
+
+#page-list.expand {
+  max-height: none;
+  overflow: visible;
+}
+
+#page-list .nav-item {
+  flex-shrink: 0;
+}

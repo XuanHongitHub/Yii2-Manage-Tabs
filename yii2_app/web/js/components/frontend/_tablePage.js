@@ -1,4 +1,5 @@
 $(document).ready(function () {
+
     const table = $('#table-data');
     const maxColumns = 10;
     const minCellWidth = 50;
@@ -17,53 +18,145 @@ $(document).ready(function () {
         table.addClass('custom-td');
     }
 
-    $(document).off('click', '#save-columns-config').on('click', '#save-columns-config', function () {
-        let columnsConfig = [];
+    function debounce(func, wait) {
+        let timeout;
+        return function (...args) {
+            const context = this;
+            clearTimeout(timeout);
+            timeout = setTimeout(() => func.apply(context, args), wait);
+        };
+    }
+    function initResizableColumns() {
+        const table = $('#table-data');
+        const cols = table.find('th.rs-col');
 
-        $('#columns-config .column-switch').each(function () {
-            const columnName = $(this).data('column');
-            const isChecked = $(this).prop('checked');
+        cols.each(function (index) {
+            const col = $(this);
+            const resizer = $('<div class="resizer"></div>').appendTo(col);
+            const colIndex = col.index();
 
-            columnsConfig.push({
+            resizer.on('mousedown', function (e) {
+                let startX = e.clientX;
+                let startWidth = col[0].getBoundingClientRect().width;
+                let startTableWidth = table[0].getBoundingClientRect().width;
+
+                $(document).on('mousemove', function (e) {
+                    let newWidth = startWidth + (e.clientX - startX);
+
+                    col.css('width', newWidth);
+
+                    if (newWidth > 0) {
+                        table.css('width', startTableWidth);
+                    }
+                });
+
+                $(document).on('mouseup', function () {
+                    $(document).off('mousemove');
+                    $(document).off('mouseup');
+
+                    debounceSaveColumnWidth();
+                });
+            });
+        });
+    }
+
+    const debounceSaveColumnWidth = debounce(function () {
+        let columnWidths = [];
+
+        $('#table-data').find('th.rs-col').each(function () {
+            const columnName = $(this).data('column-name');
+            if (!columnName) {
+                console.error('Không tìm thấy column_name cho một cột.');
+                return;
+            }
+
+            columnWidths.push({
                 column_name: columnName,
-                is_visible: isChecked
+                column_width: $(this).outerWidth()
             });
         });
 
-        if (columnsConfig.length > 0) {
-            $.ajax({
-                url: save_column_config_url,
-                type: 'POST',
-                headers: {
-                    'X-CSRF-Token': $('meta[name="csrf-token"]').attr('content')
-                },
-                data: {
-                    menuId,
-                    pageId,
-                    columns_config: columnsConfig
-                },
-                success: function (response) {
-                    if (response.success) {
-                        showToast(response.message);
-                        $('#columnsModal').modal('hide');
-                        loadData();
-                        // location.reload(); 
-                    } else {
-                        showToast('Lỗi cập nhật: ' + response.message);
-                    }
-                },
-                error: function (xhr, status, error) {
-                    console.log('Lỗi AJAX:', error);
-                    showToast('Không thể cập nhật cột.');
+        $.ajax({
+            url: save_column_width_url,
+            type: 'POST',
+            headers: {
+                'X-CSRF-Token': $('meta[name="csrf-token"]').attr('content')
+            },
+            data: {
+                menuId,
+                pageId,
+                columns_config: columnWidths
+            },
+            success: function (response) {
+                if (!response.success) {
+                    showToast('Lỗi: ' + response.message);
                 }
+            },
+            error: function (xhr, status, error) {
+                console.error('Lỗi AJAX:', error);
+                showToast('Không thể cập nhật độ rộng cột.');
+            }
+        });
+    }, 500);
+
+    initResizableColumns();
+
+
+
+    $(document).off('click', '#btn-config').on('click', '#btn-config', function () {
+        $('#sortable-config').sortable({
+            handle: '.drag-handle',
+            update: function (event, ui) {
+                $('#sortable-config tr').each(function (index) {
+                    $(this).attr('data-position', index);
+                });
+            }
+        });
+
+        $('#columnsModal').modal('show');
+    });
+
+
+    $(document).off('click', '#save-columns-config').on('click', '#save-columns-config', function () {
+        let columnsConfig = [];
+
+        $('#sortable-config .column-switch').each(function () {
+            const columnName = $(this).data('column');
+            const isChecked = $(this).prop('checked');
+            const columnPosition = $(this).closest('tr').index();
+
+            columnsConfig.push({
+                column_name: columnName,
+                is_visible: isChecked,
+                column_position: columnPosition
             });
-        } else {
-            swal({
-                title: "Thông báo!",
-                text: "Không có gì thay đổi để cập nhật.",
-                icon: "warning",
-            });
-        }
+        });
+
+        $.ajax({
+            url: save_column_config_url,
+            type: 'POST',
+            headers: {
+                'X-CSRF-Token': $('meta[name="csrf-token"]').attr('content')
+            },
+            data: {
+                menuId,
+                pageId,
+                columns_config: columnsConfig
+            },
+            success: function (response) {
+                if (response.success) {
+                    showToast(response.message);
+                    $('#columnsModal').modal('hide');
+                    loadData();
+                } else {
+                    showToast('Lỗi cập nhật: ' + response.message);
+                }
+            },
+            error: function (xhr, status, error) {
+                console.log('Lỗi AJAX:', error);
+                showToast('Không thể cập nhật cột.');
+            }
+        });
     });
 
 
@@ -78,6 +171,8 @@ $(document).ready(function () {
 
     $(document).off('pjax:complete').on('pjax:complete', function () {
         $('.spinner-fixed').remove();
+        initResizableColumns();
+
     });
 
     $(document).off('click', '#add-row-btn').on('click', '#add-row-btn', function (e) {

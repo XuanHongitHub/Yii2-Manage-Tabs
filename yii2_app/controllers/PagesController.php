@@ -266,6 +266,108 @@ class PagesController extends Controller
 
         return 'No data';
     }
+    /**
+     * Update Config Table Page
+     * 
+     */
+    public function actionSaveColumnsConfig()
+    {
+        Yii::$app->response->format = Response::FORMAT_JSON;
+
+        $columnsConfig = Yii::$app->request->post('columns_config');
+        $menuId = Yii::$app->request->post('menuId');
+        $pageId = Yii::$app->request->post('pageId');
+
+        if (!$columnsConfig || (!$menuId && !$pageId)) {
+            return ['success' => false, 'message' => 'Dữ liệu không hợp lệ.'];
+        }
+
+        foreach ($columnsConfig as $columnVisibility) {
+            $columnName = $columnVisibility['column_name'];
+            $isVisible = in_array($columnVisibility['is_visible'], ['true', '1'], true) ? 1 : 0;
+            $columnPosition = (int) $columnVisibility['column_position'];
+
+            if ($menuId === null) {
+                $config = new Config();
+                $config->column_name = $columnName;
+                $config->menu_id = null;
+                $config->page_id = null;
+                $config->is_visible = $isVisible;
+                $config->column_position = $columnPosition;
+            } else {
+                $config = Config::findOne([
+                    'column_name' => $columnName,
+                    'menu_id' => $menuId,
+                    'page_id' => $pageId
+                ]) ?? new Config();
+
+                $config->column_name = $columnName;
+                $config->menu_id = $menuId;
+                $config->page_id = $pageId;
+                $config->is_visible = $isVisible;
+                $config->column_position = $columnPosition;
+            }
+
+            if (!$config->save()) {
+                return [
+                    'success' => false,
+                    'message' => 'Không thể lưu tùy chỉnh.',
+                    'errors' => $config->getErrors()
+                ];
+            }
+        }
+
+        return ['success' => true, 'message' => 'Cập nhật tùy chỉnh cột thành công.'];
+    }
+    /**
+     * Update Column Width
+     * 
+     */
+    public function actionSaveColumnsWidth()
+    {
+        Yii::$app->response->format = Response::FORMAT_JSON;
+
+        $columnsConfig = Yii::$app->request->post('columns_config');
+        $menuId = Yii::$app->request->post('menuId');
+        $pageId = Yii::$app->request->post('pageId');
+
+        if (!$columnsConfig || (!$menuId && !$pageId)) {
+            return ['success' => false, 'message' => 'Dữ liệu không hợp lệ.'];
+        }
+
+        foreach ($columnsConfig as $columnData) {
+            $columnName = $columnData['column_name'] ?? null;
+            $columnWidth = isset($columnData['column_width']) ? (int)$columnData['column_width'] : null;
+
+            if (!$columnName || $columnWidth === null) {
+                return [
+                    'success' => false,
+                    'message' => 'Dữ liệu không đầy đủ cho cột.'
+                ];
+            }
+
+            $config = Config::findOne([
+                'column_name' => $columnName,
+                'menu_id' => $menuId,
+                'page_id' => $pageId
+            ]) ?? new Config();
+
+            $config->column_name = $columnName;
+            $config->menu_id = $menuId;
+            $config->page_id = $pageId;
+            $config->column_width = $columnWidth;
+
+            if (!$config->save()) {
+                return [
+                    'success' => false,
+                    'message' => 'Không thể lưu thông tin cột.',
+                    'errors' => $config->getErrors()
+                ];
+            }
+        }
+
+        return ['success' => true, 'message' => 'Cập nhật độ rộng cột thành công.'];
+    }
 
     /** 
      * Update RichtextData Action.
@@ -784,47 +886,5 @@ class PagesController extends Controller
         Yii::$app->response->sendFile($tempFilePath, $fileName)->on(Response::EVENT_AFTER_SEND, function ($event) {
             unlink($event->data);
         }, $tempFilePath);
-    }
-
-    public function actionSaveColumnsConfig()
-    {
-        Yii::$app->response->format = Response::FORMAT_JSON;
-
-        $columnsConfig = Yii::$app->request->post('columns_config');
-        $menuId = Yii::$app->request->post('menuId');
-        $pageId = Yii::$app->request->post('pageId');
-
-        if (!$columnsConfig || (!$menuId && !$pageId)) {
-            return ['success' => false, 'message' => 'Dữ liệu không hợp lệ.'];
-        }
-
-        foreach ($columnsConfig as $columnVisibility) {
-            $columnName = $columnVisibility['column_name'];
-            $isVisible = in_array($columnVisibility['is_visible'], ['true', '1'], true) ? 1 : 0;
-
-            if ($menuId === null || $pageId === null) {
-                $config = new Config();
-                $config->column_name = $columnName;
-                $config->menu_id = null;
-                $config->page_id = null;
-                $config->is_visible = $isVisible;
-            } else {
-                $config = Config::findOne([
-                    'column_name' => $columnName,
-                    'menu_id' => $menuId,
-                    'page_id' => $pageId
-                ]) ?? new Config();
-                $config->column_name = $columnName;
-                $config->menu_id = $menuId;
-                $config->page_id = $pageId;
-                $config->is_visible = $isVisible;
-            }
-
-            if (!$config->save()) {
-                return ['success' => false, 'message' => 'Không thể lưu trạng thái hiển thị.', 'errors' => $config->getErrors()];
-            }
-        }
-
-        return ['success' => true, 'message' => 'Cập nhật trạng thái hiển thị thành công.'];
     }
 }

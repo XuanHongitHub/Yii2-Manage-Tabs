@@ -12,8 +12,9 @@ use yii\widgets\Pjax;
 /** @var yii\web\View $this */
 $this->registerJsFile('js/components/frontend/multiTablePage.js', ['depends' => AppAsset::class]);
 $this->registerJsFile('js/components/frontend/_tablePage.js', ['depends' => AppAsset::class]);
-var_dump($configColumns);
 $this->title = $menu->name;
+// var_dump($configColumns);
+
 ?>
 <!-- Modal Nhập Excel -->
 <div class="modal fade" id="importExelModal" tabindex="-1" aria-labelledby="importExelModalLabel" aria-hidden="true">
@@ -98,14 +99,14 @@ $this->title = $menu->name;
             <div class="modal-body">
                 <form id="edit-form">
                     <?php foreach ($columns as $index => $column): ?>
-                    <?php if ($index === 0): ?>
-                    <input type="hidden" name="<?= $column ?>" id="edit-<?= $column ?>">
-                    <?php else: ?>
-                    <div class="form-group mb-2">
-                        <label for="edit-<?= $column ?>"><?= ucfirst($column) ?></label>
-                        <input type="text" class="form-control" name="<?= $column ?>" id="edit-<?= $column ?>">
-                    </div>
-                    <?php endif; ?>
+                        <?php if ($index === 0): ?>
+                            <input type="hidden" name="<?= $column ?>" id="edit-<?= $column ?>">
+                        <?php else: ?>
+                            <div class="form-group mb-2">
+                                <label for="edit-<?= $column ?>"><?= ucfirst($column) ?></label>
+                                <input type="text" class="form-control" name="<?= $column ?>" id="edit-<?= $column ?>">
+                            </div>
+                        <?php endif; ?>
                     <?php endforeach; ?>
                 </form>
             </div>
@@ -128,14 +129,14 @@ $this->title = $menu->name;
             <div class="modal-body">
                 <form id="add-data-form">
                     <?php foreach ($columns as $index => $column): ?>
-                    <?php if ($index === 0): ?>
-                    <input type="hidden" name="<?= $column ?>" id="<?= $column ?>">
-                    <?php else: ?>
-                    <div class="form-group mb-2">
-                        <label for="<?= $column ?>"><?= ucfirst($column) ?></label>
-                        <input type="text" class="form-control" name="<?= $column ?>" id="<?= $column ?>">
-                    </div>
-                    <?php endif; ?>
+                        <?php if ($index === 0): ?>
+                            <input type="hidden" name="<?= $column ?>" id="<?= $column ?>">
+                        <?php else: ?>
+                            <div class="form-group mb-2">
+                                <label for="<?= $column ?>"><?= ucfirst($column) ?></label>
+                                <input type="text" class="form-control" name="<?= $column ?>" id="<?= $column ?>">
+                            </div>
+                        <?php endif; ?>
                     <?php endforeach; ?>
                 </form>
             </div>
@@ -159,34 +160,55 @@ $this->title = $menu->name;
                 <table class="table table-borderless" id="columns-config">
                     <thead>
                         <tr>
-                            <th style="width: 4%; text-align: center;">Di chuyển</th>
+                            <th style="width: 4%; text-align: center;"><i class="fa-solid fa-arrow-down-wide-short"></i>
+                            </th>
                             <th style="width: 30%;">Tên cột</th>
                             <th style="width: 30%;">Tên hiển thị</th>
                             <th style="width: 6%; text-align: center;">Ẩn/Hiện</th>
                         </tr>
                     </thead>
-                    <tbody>
-                        <?php foreach ($configColumns as $column): ?>
-                        <tr data-column="<?= htmlspecialchars($column['column_name']) ?>">
-                            <td class="text-nowrap" style="text-align: center; vertical-align: middle;">
-                                <span class="drag-handle" style="cursor: grab; font-size: 20px;">&#9776;</span>
-                            </td>
-                            <td class="column-name text-nowrap" style="vertical-align: middle;">
-                                <?= htmlspecialchars($column['column_name']) ?>
-                            </td>
-                            <td class="text-nowrap" style="vertical-align: middle;">
-                                <?= htmlspecialchars($column['display_name']) ?>
-                            </td>
-                            <td class="text-nowrap" style="text-align: center; vertical-align: middle;">
-                                <div class="form-check form-switch">
-                                    <input class="form-check-input column-switch text-center" type="checkbox"
-                                        id="switch-<?= htmlspecialchars($column['column_name']) ?>"
-                                        data-column="<?= htmlspecialchars($column['column_name']) ?>"
-                                        <?= $column['is_visible'] ? 'checked' : '' ?>>
-                                </div>
-                            </td>
-                        </tr>
+                    <tbody id="sortable-config">
+                        <?php
+                        $columnPositions = [];
+                        foreach ($configColumns as $config) {
+                            $columnPositions[$config['column_name']] = $config;
+                        }
+
+                        $columns = array_merge(
+                            array_column($configColumns, 'column_name'),
+                            array_diff($columns, array_column($configColumns, 'column_name'))
+                        );
+                        ?>
+
+                        <?php foreach ($columns as $column): ?>
+                            <?php
+                            if ($column === BaseModel::HIDDEN_ID_KEY) continue;
+
+                            $config = $columnPositions[$column] ?? null;
+                            $displayName = $config['display_name'] ?? $column;
+                            $isVisible = isset($config['is_visible']) ? $config['is_visible'] : true;
+                            ?>
+                            <tr data-column="<?= htmlspecialchars($column) ?>">
+                                <td class="text-nowrap" style="width: 4%; text-align: center; vertical-align: middle;">
+                                    <span class="drag-handle" style="cursor: grab; font-size: 20px;">&#9776;</span>
+                                </td>
+                                <td class="column-name text-nowrap" style="width: 30%; vertical-align: middle;">
+                                    <?= htmlspecialchars($column) ?>
+                                </td>
+                                <td class="text-nowrap" style="width: 30%; vertical-align: middle;">
+                                    <?= htmlspecialchars($displayName) ?>
+                                </td>
+                                <td class="text-nowrap" style="width: 4%; text-align: center; vertical-align: middle;">
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input column-switch text-center" type="checkbox"
+                                            id="switch-<?= htmlspecialchars($column) ?>"
+                                            data-column="<?= htmlspecialchars($column) ?>"
+                                            <?= $isVisible ? 'checked' : '' ?>>
+                                    </div>
+                                </td>
+                            </tr>
                         <?php endforeach; ?>
+
                     </tbody>
                 </table>
             </div>
@@ -197,7 +219,6 @@ $this->title = $menu->name;
         </div>
     </div>
 </div>
-
 
 <div class="d-flex flex-wrap justify-content-between align-items-center my-2">
     <div class="d-flex flex-wrap justify-content-start">
@@ -225,7 +246,7 @@ $this->title = $menu->name;
 
     <!-- Nút Tùy chỉnh -->
     <div class="btn-group ms-auto me-2 mb-2">
-        <button class="btn btn-primary" type="button" data-bs-toggle="modal" data-bs-target="#columnsModal">
+        <button class="btn btn-primary" type="button" id="btn-config">
             <i class="fa-solid fa-border-all"></i> Tùy Chỉnh
         </button>
     </div>
@@ -269,31 +290,52 @@ echo GridView::widget([
     'dataProvider' => $dataProvider,
     'formatter' => ['class' => 'yii\i18n\Formatter', 'nullDisplay' => ''],
     'headerRowOptions' => ['class' => 'sortable-column'],
-    'columns' =>
-    array_merge(
+    'columns' => array_merge(
         [
             [
                 'class' => 'yii\grid\CheckboxColumn',
                 'name' => BaseModel::HIDDEN_ID_KEY,
-                'headerOptions' => ['style' => 'text-align:center; width: 3%;'],
-                'contentOptions' => ['style' => 'text-align:center;'],
+                'headerOptions' => ['style' => 'text-align:center; width: 40px;'],
+                'contentOptions' => ['style' => 'text-align:center; width: 40px;'],
                 'checkboxOptions' => function ($data, $key, $index, $column) {
                     return ['value' => $data[BaseModel::HIDDEN_ID_KEY], 'data-hidden_id' => $data[BaseModel::HIDDEN_ID_KEY], 'class' => 'checkbox-row'];
                 }
             ],
         ],
-        array_map(function ($column, $index) use ($configColumns) {
+        array_map(function ($column) use ($configColumns) {
+            $config = null;
+            foreach ($configColumns as $columnConfig) {
+                if ($columnConfig['column_name'] === $column) {
+                    $config = $columnConfig;
+                    break;
+                }
+            }
+
+            $displayName = $config['display_name'] ?? $column;
+            $isVisible = isset($config['is_visible']) ? $config['is_visible'] : true;
+            $columnWidth = $config['column_width'] ?? null;
+
             return [
                 'attribute' => $column,
-                'enableSorting' => $index !== 0,
-                'visible' => ($column !== BaseModel::HIDDEN_ID_KEY) && (!isset($configColumns[$column]) || $configColumns[$column] !== false)
+                'label' => $displayName,
+                'enableSorting' => true,
+                'visible' => (
+                    ($column !== BaseModel::HIDDEN_ID_KEY) &&
+                    $isVisible
+                ),
+                'contentOptions' => [],
+                'headerOptions' => [
+                    'class' => 'rs-col text-nowrap text-center',
+                    'style' => $columnWidth ? 'width:' . $columnWidth . 'px' : 'min-width: fit-content;',
+                    'data-column-name' => $column,
+                ]
             ];
-        }, $columns, array_keys($columns)),
+        }, $columns),
         [
             [
                 'class' => 'yii\grid\ActionColumn',
                 'header' => 'Thao tác',
-                'headerOptions' => ['style' => 'width: 10%; text-align:center; white-space: nowrap;'],
+                'headerOptions' => ['style' => 'width: 120px; text-align:center; white-space: nowrap;'],
                 'contentOptions' => ['style' => 'text-align:center; white-space: nowrap;'],
                 'template' => '{update} {delete}',
                 'buttons' => [
@@ -314,7 +356,7 @@ echo GridView::widget([
             ],
         ]
     ),
-    'tableOptions' => ['id' => 'table-data', 'class' => 'table table-bordered table-hover'],
+    'tableOptions' => ['id' => 'table-data', 'class' => 'table table-bordered table-hover', 'style' => 'table-layout: fixed; min-width: 100%'],
     'layout' => "<div class='table-responsive' id='tableData' style='max-height: 65vh;'>{items}</div>\n<div class='d-flex flex-wrap justify-content-between align-items-center mt-3'>
                 <div class='d-flex flex-column flex-md-row justify-content-start mb-2 mb-md-0'>{summary}</div>
                 <div class='d-flex flex-column flex-md-row justify-content-start mb-2 mb-md-0'>{gopage}</div>
@@ -343,13 +385,14 @@ Pjax::end();
 ?>
 
 <script>
-var pageId = "<?= $pageId ?>";
-var add_data_url = "<?= Url::to(['pages/add-data']) ?>";
-var update_data_url = "<?= Url::to(['pages/update-data']) ?>";
-var delete_data_url = "<?= Url::to(['pages/delete-data']) ?>";
-var tableName = "<?= $dataProvider->query->from[0] ?>";
-var delete_all_data_url = "<?= Url::to(['pages/delete-selected-data']) ?>";
-var import_url = "<?= Url::to(['pages/import-excel']) ?>";
-var export_url = "<?= Url::to(['pages/export-excel']) ?>";
-var save_column_config_url = "<?= Url::to(['pages/save-columns-config']) ?>";
+    var pageId = "<?= $pageId ?>";
+    var add_data_url = "<?= Url::to(['pages/add-data']) ?>";
+    var update_data_url = "<?= Url::to(['pages/update-data']) ?>";
+    var delete_data_url = "<?= Url::to(['pages/delete-data']) ?>";
+    var tableName = "<?= $dataProvider->query->from[0] ?>";
+    var delete_all_data_url = "<?= Url::to(['pages/delete-selected-data']) ?>";
+    var import_url = "<?= Url::to(['pages/import-excel']) ?>";
+    var export_url = "<?= Url::to(['pages/export-excel']) ?>";
+    var save_column_config_url = "<?= Url::to(['pages/save-columns-config']) ?>";
+    var save_column_width_url = "<?= Url::to(['pages/save-columns-width']) ?>";
 </script>

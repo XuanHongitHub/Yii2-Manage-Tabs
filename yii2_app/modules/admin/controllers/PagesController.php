@@ -163,13 +163,13 @@ class PagesController extends BaseAdminController
             if (!$config->save()) {
                 return [
                     'success' => false,
-                    'message' => 'Không thể lưu trạng thái hiển thị.',
+                    'message' => 'Không thể lưu tùy chỉnh.',
                     'errors' => $config->getErrors()
                 ];
             }
         }
 
-        return ['success' => true, 'message' => 'Cập nhật trạng thái hiển thị thành công.'];
+        return ['success' => true, 'message' => 'Cập nhật tùy chỉnh cột thành công.'];
     }
     public function actionGetTableName()
     {
@@ -177,12 +177,12 @@ class PagesController extends BaseAdminController
 
         $excludedTables = ['manager_page', 'manager_user', 'manager_menu', 'manager_menu_page', 'manager_config', 'migration'];
 
-        $usedTablesInManagerPage = Yii::$app->db->createCommand("SELECT DISTINCT table_name FROM manager_page")->queryColumn();
+        // $usedTablesInManagerPage = Yii::$app->db->createCommand("SELECT DISTINCT table_name FROM manager_page")->queryColumn();
 
-        $allExcludedTables = array_merge($excludedTables, $usedTablesInManagerPage);
+        // $allExcludedTables = array_merge($excludedTables, $usedTablesInManagerPage);
 
-        $validTables = array_filter($allTables, function ($table) use ($allExcludedTables) {
-            return !in_array(strtolower($table['table_name']), $allExcludedTables);
+        $validTables = array_filter($allTables, function ($table) use ($excludedTables) {
+            return !in_array(strtolower($table['table_name']), $excludedTables);
         });
 
         $tables = array_map(function ($table) {

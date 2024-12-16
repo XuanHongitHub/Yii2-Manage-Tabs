@@ -194,7 +194,7 @@ $(document).ready(function () {
                 }
             });
         },
-        minLength: 1,
+        minLength: 0,
         select: function (event, ui) {
             console.log("Bạn đã chọn bảng: " + ui.item.value);
             $('#tableInputs').hide();
@@ -212,8 +212,9 @@ $(document).ready(function () {
                 $('#tableNameSuccess').text('').hide();
             }
         }
+    }).on("focus", function () {
+        $(this).autocomplete("search", "");
     });
-
 
     $(document).on('input', '#tableName', function () {
         isTableFromAutocomplete = false;
