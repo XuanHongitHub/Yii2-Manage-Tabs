@@ -13,12 +13,23 @@ use yii\widgets\Pjax;
 $this->registerJsFile('js/components/frontend/multiTablePage.js', ['depends' => AppAsset::class]);
 $this->registerJsFile('js/components/frontend/_tablePage.js', ['depends' => AppAsset::class]);
 $this->title = $menu->name;
+var_dump($configColumns);
+$configs = [];
+
+foreach ($configColumns as $config) {
+    $configs[$config['column_name']] = $config;
+}
+$columns = array_merge(
+    array_column($configColumns, 'column_name'),
+    array_diff($columns, array_column($configColumns, 'column_name'))
+);
 // var_dump($configColumns);
+// var_dump($configs);
 
 ?>
 <!-- Modal Nhập Excel -->
 <div class="modal fade" id="importExelModal" tabindex="-1" aria-labelledby="importExelModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title" id="importExelModalLabel">Nhập Excel</h5>
@@ -55,7 +66,7 @@ $this->title = $menu->name;
 <!-- Model Báo lỗi Import -->
 <div class="modal fade" id="importStatusModal" tabindex="-1" aria-labelledby="importStatusModalLabel"
     aria-hidden="true">
-    <div class="modal-dialog modal-dialog-scrollable modal-lg">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title" id="importStatusModalLabel">Báo lỗi Import</h5>
@@ -73,7 +84,7 @@ $this->title = $menu->name;
 <!-- Trạng Thái Nhập -->
 <div class="modal fade" id="importStatusModal" tabindex="-1" aria-labelledby="importStatusModalLabel"
     aria-hidden="true">
-    <div class="modal-dialog modal-dialog-scrollable modal-lg">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title" id="importStatusModalLabel">Trạng Thái Nhập</h5>
@@ -90,7 +101,7 @@ $this->title = $menu->name;
 
 <!-- Modal Sửa Dữ Liệu -->
 <div class="modal fade" id="editModal" tabindex="-1" aria-labelledby="editModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
         <div class="modal-content">
             <div class="modal-header">
                 <h4 class="modal-title" id="editModalLabel">Sửa Dữ Liệu</h4>
@@ -98,15 +109,19 @@ $this->title = $menu->name;
             </div>
             <div class="modal-body">
                 <form id="edit-form">
-                    <?php foreach ($columns as $index => $column): ?>
-                        <?php if ($index === 0): ?>
-                            <input type="hidden" name="<?= $column ?>" id="edit-<?= $column ?>">
-                        <?php else: ?>
-                            <div class="form-group mb-2">
-                                <label for="edit-<?= $column ?>"><?= ucfirst($column) ?></label>
-                                <input type="text" class="form-control" name="<?= $column ?>" id="edit-<?= $column ?>">
-                            </div>
-                        <?php endif; ?>
+                    <?php foreach ($columns as $column): ?>
+
+                    <?php
+                        $config = $configs[$column] ?? null;
+                        if ($column === BaseModel::HIDDEN_ID_KEY): ?>
+                    <input type="hidden" name="<?= $column ?>" id="edit-<?= $column ?>">
+                    <?php else: ?>
+                    <div class="form-group mb-2">
+                        <label
+                            for="edit-<?= $column ?>"><?= htmlspecialchars($config['display_name'] ?? $column) ?></label>
+                        <input type="text" class="form-control" name="<?= $column ?>" id="edit-<?= $column ?>">
+                    </div>
+                    <?php endif; ?>
                     <?php endforeach; ?>
                 </form>
             </div>
@@ -120,7 +135,7 @@ $this->title = $menu->name;
 
 <!-- Modal Thêm Dữ Liệu -->
 <div class="modal fade" id="addDataModal" tabindex="-1" aria-labelledby="addDataModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
         <div class="modal-content">
             <div class="modal-header">
                 <h4 class="modal-title" id="addDataModalLabel">Nhập dữ liệu</h4>
@@ -128,15 +143,17 @@ $this->title = $menu->name;
             </div>
             <div class="modal-body">
                 <form id="add-data-form">
-                    <?php foreach ($columns as $index => $column): ?>
-                        <?php if ($index === 0): ?>
-                            <input type="hidden" name="<?= $column ?>" id="<?= $column ?>">
-                        <?php else: ?>
-                            <div class="form-group mb-2">
-                                <label for="<?= $column ?>"><?= ucfirst($column) ?></label>
-                                <input type="text" class="form-control" name="<?= $column ?>" id="<?= $column ?>">
-                            </div>
-                        <?php endif; ?>
+                    <?php foreach ($columns as $column): ?>
+                    <?php
+                        if ($column === BaseModel::HIDDEN_ID_KEY) continue;
+                        $config = $configs[$column] ?? null;
+                        ?>
+                    <div class="form-group mb-2">
+                        <label
+                            for="<?= htmlspecialchars($column) ?>"><?= htmlspecialchars($config['display_name'] ?? $column) ?></label>
+                        <input type="text" class="form-control" name="<?= htmlspecialchars($column) ?>"
+                            id="<?= htmlspecialchars($column) ?>">
+                    </div>
                     <?php endforeach; ?>
                 </form>
             </div>
@@ -150,7 +167,7 @@ $this->title = $menu->name;
 
 <!-- Modal Config -->
 <div class="modal fade" id="columnsModal" tabindex="-1" aria-labelledby="columnsModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
+    <div class="modal-dialog modal-dialog-scrollable">
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title" id="columnsModalLabel">Tùy Chỉnh Cột</h5>
@@ -168,45 +185,31 @@ $this->title = $menu->name;
                         </tr>
                     </thead>
                     <tbody id="sortable-config">
-                        <?php
-                        $columnPositions = [];
-                        foreach ($configColumns as $config) {
-                            $columnPositions[$config['column_name']] = $config;
-                        }
-
-                        $columns = array_merge(
-                            array_column($configColumns, 'column_name'),
-                            array_diff($columns, array_column($configColumns, 'column_name'))
-                        );
-                        ?>
-
                         <?php foreach ($columns as $column): ?>
-                            <?php
+                        <?php
                             if ($column === BaseModel::HIDDEN_ID_KEY) continue;
+                            $config = $configs[$column] ?? null;
 
-                            $config = $columnPositions[$column] ?? null;
-                            $displayName = $config['display_name'] ?? $column;
-                            $isVisible = isset($config['is_visible']) ? $config['is_visible'] : true;
                             ?>
-                            <tr data-column="<?= htmlspecialchars($column) ?>">
-                                <td class="text-nowrap" style="width: 4%; text-align: center; vertical-align: middle;">
-                                    <span class="drag-handle" style="cursor: grab; font-size: 20px;">&#9776;</span>
-                                </td>
-                                <td class="column-name text-nowrap" style="width: 30%; vertical-align: middle;">
-                                    <?= htmlspecialchars($column) ?>
-                                </td>
-                                <td class="text-nowrap" style="width: 30%; vertical-align: middle;">
-                                    <?= htmlspecialchars($displayName) ?>
-                                </td>
-                                <td class="text-nowrap" style="width: 4%; text-align: center; vertical-align: middle;">
-                                    <div class="form-check form-switch">
-                                        <input class="form-check-input column-switch text-center" type="checkbox"
-                                            id="switch-<?= htmlspecialchars($column) ?>"
-                                            data-column="<?= htmlspecialchars($column) ?>"
-                                            <?= $isVisible ? 'checked' : '' ?>>
-                                    </div>
-                                </td>
-                            </tr>
+                        <tr data-column="<?= htmlspecialchars($column) ?>">
+                            <td class="text-nowrap" style="width: 4%; text-align: center; vertical-align: middle;">
+                                <span class="drag-handle" style="cursor: grab; font-size: 20px;">&#9776;</span>
+                            </td>
+                            <td class="column-name text-nowrap" style="width: 30%; vertical-align: middle;">
+                                <?= htmlspecialchars($column) ?>
+                            </td>
+                            <td class="text-nowrap" style="width: 30%; vertical-align: middle;">
+                                <?= htmlspecialchars($config['display_name'] ?? $column) ?>
+                            </td>
+                            <td class="text-nowrap" style="width: 4%; text-align: center; vertical-align: middle;">
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input column-switch text-center" type="checkbox"
+                                        id="switch-<?= htmlspecialchars($column) ?>"
+                                        data-column="<?= htmlspecialchars($column) ?>"
+                                        <?= (isset($config['is_visible']) ? $config['is_visible'] : true) ? 'checked' : '' ?>>
+                                </div>
+                            </td>
+                        </tr>
                         <?php endforeach; ?>
 
                     </tbody>
@@ -310,23 +313,18 @@ echo GridView::widget([
                     break;
                 }
             }
-
-            $displayName = $config['display_name'] ?? $column;
-            $isVisible = isset($config['is_visible']) ? $config['is_visible'] : true;
-            $columnWidth = $config['column_width'] ?? null;
-
             return [
                 'attribute' => $column,
-                'label' => $displayName,
+                'label' => $config['display_name'] ?? $column,
                 'enableSorting' => true,
                 'visible' => (
                     ($column !== BaseModel::HIDDEN_ID_KEY) &&
-                    $isVisible
+                    (isset($config['is_visible']) ? $config['is_visible'] : true)
                 ),
                 'contentOptions' => [],
                 'headerOptions' => [
                     'class' => 'rs-col text-nowrap text-center',
-                    'style' => $columnWidth ? 'width:' . $columnWidth . 'px' : 'min-width: fit-content;',
+                    'style' => ($config['column_width'] ?? null) ? 'width:' . ($config['column_width'] ?? null) . 'px' : 'width: 150px; min-width: fit-content;',
                     'data-column-name' => $column,
                 ]
             ];
@@ -385,14 +383,14 @@ Pjax::end();
 ?>
 
 <script>
-    var pageId = "<?= $pageId ?>";
-    var add_data_url = "<?= Url::to(['pages/add-data']) ?>";
-    var update_data_url = "<?= Url::to(['pages/update-data']) ?>";
-    var delete_data_url = "<?= Url::to(['pages/delete-data']) ?>";
-    var tableName = "<?= $dataProvider->query->from[0] ?>";
-    var delete_all_data_url = "<?= Url::to(['pages/delete-selected-data']) ?>";
-    var import_url = "<?= Url::to(['pages/import-excel']) ?>";
-    var export_url = "<?= Url::to(['pages/export-excel']) ?>";
-    var save_column_config_url = "<?= Url::to(['pages/save-columns-config']) ?>";
-    var save_column_width_url = "<?= Url::to(['pages/save-columns-width']) ?>";
+var pageId = "<?= $pageId ?>";
+var add_data_url = "<?= Url::to(['pages/add-data']) ?>";
+var update_data_url = "<?= Url::to(['pages/update-data']) ?>";
+var delete_data_url = "<?= Url::to(['pages/delete-data']) ?>";
+var tableName = "<?= $dataProvider->query->from[0] ?>";
+var delete_all_data_url = "<?= Url::to(['pages/delete-selected-data']) ?>";
+var import_url = "<?= Url::to(['pages/import-excel']) ?>";
+var export_url = "<?= Url::to(['pages/export-excel']) ?>";
+var save_column_config_url = "<?= Url::to(['pages/save-columns-config']) ?>";
+var save_column_width_url = "<?= Url::to(['pages/save-columns-width']) ?>";
 </script>

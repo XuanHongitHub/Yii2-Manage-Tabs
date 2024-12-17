@@ -19,7 +19,7 @@ $this->registerJsFile('js/components/frontend/_tablePage.js', ['depends' => AppA
 ?>
 <!-- Modal Nhập Excel -->
 <div class="modal fade" id="importExelModal" tabindex="-1" aria-labelledby="importExelModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title" id="importExelModalLabel">Nhập Excel</h5>
@@ -55,7 +55,7 @@ $this->registerJsFile('js/components/frontend/_tablePage.js', ['depends' => AppA
 
 <!-- Modal Xác Nhận Nhập-->
 <div class="modal fade" id="confirmModal" tabindex="-1" aria-labelledby="confirmModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-scrollable modal-lg">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title" id="confirmModalLabel">Vấn Đề</h5>
@@ -73,7 +73,7 @@ $this->registerJsFile('js/components/frontend/_tablePage.js', ['depends' => AppA
 <!-- Model Báo lỗi Import -->
 <div class="modal fade" id="importStatusModal" tabindex="-1" aria-labelledby="importStatusModalLabel"
     aria-hidden="true">
-    <div class="modal-dialog modal-dialog-scrollable modal-lg">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title" id="importStatusModalLabel">Báo lỗi Import</h5>
@@ -90,7 +90,7 @@ $this->registerJsFile('js/components/frontend/_tablePage.js', ['depends' => AppA
 
 <!-- Modal Sửa Dữ Liệu -->
 <div class="modal fade" id="editModal" tabindex="-1" aria-labelledby="editModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
         <div class="modal-content">
             <div class="modal-header">
                 <h4 class="modal-title" id="editModalLabel">Sửa Dữ Liệu</h4>
@@ -120,7 +120,7 @@ $this->registerJsFile('js/components/frontend/_tablePage.js', ['depends' => AppA
 
 <!-- Modal Thêm Dữ Liệu -->
 <div class="modal fade" id="addDataModal" tabindex="-1" aria-labelledby="addDataModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
         <div class="modal-content">
             <div class="modal-header">
                 <h4 class="modal-title" id="addDataModalLabel">Nhập dữ liệu</h4>
@@ -150,7 +150,7 @@ $this->registerJsFile('js/components/frontend/_tablePage.js', ['depends' => AppA
 
 <!-- Modal Config -->
 <div class="modal fade" id="columnsModal" tabindex="-1" aria-labelledby="columnsModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
+    <div class="modal-dialog modal-dialog-scrollable">
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title" id="columnsModalLabel">Tùy Chỉnh Cột</h5>

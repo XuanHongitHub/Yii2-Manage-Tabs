@@ -441,7 +441,7 @@ class PagesController extends BaseAdminController
     }
 
     /** 
-     * Update Postion Action.
+     * Update Position Action.
      *
      */
     public function actionUpdateSortOrder()

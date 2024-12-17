@@ -9,7 +9,7 @@ class RichtextAsset extends AssetBundle
     public $basePath = '@webroot';
     public $baseUrl = '@web';
     public $css = [
-        'css/rte_theme_default.css',
+        'js/libs/richtext/richtexteditor/rte_theme_default.css',
     ];
     public $js = [
         'js/libs/richtext/richtexteditor/rte.js',

@@ -186,7 +186,7 @@ $this->title = 'Danh sách Page';
 
 <!-- Modal sửa -->
 <div class="modal fade" id="editModal" tabindex="-1" aria-labelledby="editModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
+    <div class="modal-dialog modal-dialog-scrollable">
         <div class="modal-content">
             <div class="modal-header">
                 <h4 class="modal-title" id="editModalLabel">Sửa Page</h4>
@@ -219,7 +219,7 @@ $this->title = 'Danh sách Page';
 
 <!-- Modal setting -->
 <div class="modal fade" id="settingModal" tabindex="-1" aria-labelledby="settingModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
         <div class="modal-content">
             <div class="modal-header">
                 <h4 class="modal-title" id="settingModalLabel">Tùy chỉnh cột</h4>
@@ -250,7 +250,7 @@ $this->title = 'Danh sách Page';
 
 <!-- Modal Thùng Rác -->
 <div class="modal fade" id="trashBinModal" tabindex="-1" aria-labelledby="trashBinModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
         <div class="modal-content">
             <div class="modal-header">
                 <h4 class="modal-title" id="trashBinModalLabel">Thùng Rác</h4>
@@ -363,7 +363,7 @@ $this->title = 'Danh sách Page';
 
 <!-- Modal Confirm Delete -->
 <div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
+    <div class="modal-dialog modal-dialog-scrollable">
         <div class="modal-content">
             <div class="modal-header">
                 <h4 class="modal-title" id="deleteModalLabel">Xác nhận xóa page</h5>

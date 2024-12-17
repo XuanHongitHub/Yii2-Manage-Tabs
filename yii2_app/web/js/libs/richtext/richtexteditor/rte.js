@@ -157,19 +157,19 @@ RTE_DefaultConfig.linkStyles = [["Margin10", "margin:10px"], ["Padding:10", "pad
 
 
 
-RTE_DefaultConfig.toolbar_default = "{savert,bold,italic,underline,forecolor,backcolor}|{justifyleft,justifycenter,justifyright,justifyfull}|{insertorderedlist,insertunorderedlist,indent,outdent,insertblockquote,insertemoji}"
+RTE_DefaultConfig.toolbar_default = "{savert,cancelrt,bold,italic,underline,forecolor,backcolor}|{justifyleft,justifycenter,justifyright,justifyfull}|{insertorderedlist,insertunorderedlist,indent,outdent,insertblockquote,insertemoji}"
 	+ " #{paragraphs:toggle,fontname:toggle,fontsize:toggle,inlinestyle,lineheight}"
 	+ " / {removeformat,cut,copy,paste,delete,find}|{insertlink,insertchars,inserttable,insertimage,insertvideo,insertdocument,inserttemplate,insertcode}|{preview,code,selectall}"
 	+ "#{toggleborder,fullscreenenter,fullscreenexit,undo,redo,togglemore}"; // Default set of buttons that appears in the rich text editor's toolbar on desktop.
 
-RTE_DefaultConfig.toolbar_mobile = "{savert,bold,italic,underline|fontname:toggle,fontsize:toggle,menu_paragraphop|forecolor,backcolor}"
+RTE_DefaultConfig.toolbar_mobile = "{savert,cancelrt,bold,italic,underline|fontname:toggle,fontsize:toggle,menu_paragraphop|forecolor,backcolor}"
 	+ "{insertlink,insertemoji,inserttable,insertimage,removeformat}"
 	+ "#{toggleborder,fullscreenenter,fullscreenexit,undo,redo,togglemore}";  // Default set of buttons that appears in the rich text editor's toolbar on mobile.
 
-RTE_DefaultConfig.toolbar_basic = "{savert,bold,italic,underline}|{fontname,fontsize}|{insertlink,insertemoji,insertimage,insertvideo}|removeformat|code"
+RTE_DefaultConfig.toolbar_basic = "{savert,cancelrt,bold,italic,underline}|{fontname,fontsize}|{insertlink,insertemoji,insertimage,insertvideo}|removeformat|code"
 	+ "#{toggleborder,fullscreenenter,fullscreenexit,undo,redo,togglemore}"; // Basic set of buttons that appears in the rich text editor's toolbar.
 
-RTE_DefaultConfig.toolbar_full = "{savert,bold,italic,underline,forecolor,backcolor}|{justifyleft,justifycenter,justifyright,justifyfull}|{insertorderedlist,insertunorderedlist,indent,outdent}{superscript,subscript}"
+RTE_DefaultConfig.toolbar_full = "{savert,cancelrt,bold,italic,underline,forecolor,backcolor}|{justifyleft,justifycenter,justifyright,justifyfull}|{insertorderedlist,insertunorderedlist,indent,outdent}{superscript,subscript}"
 	+ " #{paragraphs:toggle,fontname:toggle,fontsize:toggle,inlinestyle,lineheight}"
 	+ " / {removeformat,cut,copy,paste,delete,find}|{insertlink,unlink,insertblockquote,insertemoji,insertchars,inserttable,insertimage,insertgallery,insertvideo,insertdocument,inserttemplate,insertcode}"
 	+ "#{preview,code,selectall}"
@@ -213,6 +213,7 @@ RTE_DefaultConfig.svgCode_close = '<svg width="24" height="24"><path d="M17.953 
 RTE_DefaultConfig.svgCode_DialogClose = '<svg viewBox="0 0 18 18"><path fill="currentColor" d="M11.5,9.5l5-5c0.2-0.2,0.2-0.6-0.1-0.9l-1-1c-0.3-0.3-0.7-0.3-0.9-0.1l-5,5l-5-5C4.3,2.3,3.9,2.4,3.6,2.6l-1,1 C2.4,3.9,2.3,4.3,2.5,4.5l5,5l-5,5c-0.2,0.2-0.2,0.6,0.1,0.9l1,1c0.3,0.3,0.7,0.3,0.9,0.1l5-5l5,5c0.2,0.2,0.6,0.2,0.9-0.1l1-1 c0.3-0.3,0.3-0.7,0.1-0.9L11.5,9.5z"/></svg>';
 
 RTE_DefaultConfig.svgCode_savert = '<svg viewBox="-2 -2 36 36" fill="#5F6368" style="width: 100%; height: 100%; margin: 0px; border: 0px; align-self: self-start;"><path d="M27.71,9.29l-5-5A1,1,0,0,0,22,4H6A2,2,0,0,0,4,6V26a2,2,0,0,0,2,2H26a2,2,0,0,0,2-2V10A1,1,0,0,0,27.71,9.29ZM12,6h8v4H12Zm8,20H12V18h8Zm2,0V18a2,2,0,0,0-2-2H12a2,2,0,0,0-2,2v8H6V6h4v4a2,2,0,0,0,2,2h8a2,2,0,0,0,2-2V6.41l4,4V26Z"></path></svg>';
+RTE_DefaultConfig.svgCode_cancelrt = '<svg xmlns="http://www.w3.org/2000/svg" width="800px" height="800px" viewBox="-2 -4 30 30" fill="#5F6368"><path fill-rule="evenodd" clip-rule="evenodd" d="M19 23H11C10.4477 23 10 22.5523 10 22C10 21.4477 10.4477 21 11 21H19C19.5523 21 20 20.5523 20 20V4C20 3.44772 19.5523 3 19 3L11 3C10.4477 3 10 2.55229 10 2C10 1.44772 10.4477 1 11 1L19 1C20.6569 1 22 2.34315 22 4V20C22 21.6569 20.6569 23 19 23Z"/><path fill-rule="evenodd" clip-rule="evenodd" d="M2.48861 13.3099C1.83712 12.5581 1.83712 11.4419 2.48862 10.6902L6.66532 5.87088C7.87786 4.47179 10.1767 5.32933 10.1767 7.18074L10.1767 9.00001H16.1767C17.2813 9.00001 18.1767 9.89544 18.1767 11V13C18.1767 14.1046 17.2813 15 16.1767 15L10.1767 15V16.8193C10.1767 18.6707 7.87786 19.5282 6.66532 18.1291L2.48861 13.3099ZM4.5676 11.3451C4.24185 11.7209 4.24185 12.2791 4.5676 12.6549L8.1767 16.8193V14.5C8.1767 13.6716 8.84827 13 9.6767 13L16.1767 13V11L9.6767 11C8.84827 11 8.1767 10.3284 8.1767 9.50001L8.1767 7.18074L4.5676 11.3451Z"/></svg>';
 
 RTE_DefaultConfig.svgCode_bold = '<svg viewBox="-2 -2 20 20" fill="#5F6368"><path d="M8.21 13c2.106 0 3.412-1.087 3.412-2.823 0-1.306-.984-2.283-2.324-2.386v-.055a2.176 2.176 0 001.852-2.14c0-1.51-1.162-2.46-3.014-2.46H3.843V13H8.21zM5.908 4.674h1.696c.963 0 1.517.451 1.517 1.244 0 .834-.629 1.32-1.73 1.32H5.908V4.673zm0 6.788V8.598h1.73c1.217 0 1.88.492 1.88 1.415 0 .943-.643 1.449-1.832 1.449H5.907z"/></svg>';
 RTE_DefaultConfig.svgCode_italic = '<svg viewBox="-2 -2 20 20" fill="#5F6368"><path d="M7.991 11.674L9.53 4.455c.123-.595.246-.71 1.347-.807l.11-.52H7.211l-.11.52c1.06.096 1.128.212 1.005.807L6.57 11.674c-.123.595-.246.71-1.346.806l-.11.52h3.774l.11-.52c-1.06-.095-1.129-.211-1.006-.806z"/></svg>';
@@ -355,7 +356,10 @@ RTE_DefaultConfig.text_h7 = "Headline 7"
 
 RTE_DefaultConfig.text_close = "Close";
 
+//Custom Button
 RTE_DefaultConfig.text_savert = "Lưu";
+RTE_DefaultConfig.text_cancelrt = "Thoát";
+
 RTE_DefaultConfig.text_bold = "Bold";
 RTE_DefaultConfig.text_italic = "Italic";
 RTE_DefaultConfig.text_underline = "Underline";

@@ -12,7 +12,7 @@ $this->title = '';
     <div class="card-body">
         <div class="page-content">
             <div class="page-pane fade show active" id="page-data-current">
-                <div class="table-responsive" id="table-data-current">
+                <div class="table-responsive" id="page-data-current">
                     <!-- Data Loading -->
                 </div>
             </div>

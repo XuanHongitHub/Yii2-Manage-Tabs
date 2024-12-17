@@ -29,50 +29,56 @@ $(document).ready(function () {
     function initResizableColumns() {
         const table = $('#table-data');
         const cols = table.find('th.rs-col');
+        let startX, startWidth, startTableWidth;
 
-        cols.each(function (index) {
+        cols.each(function () {
             const col = $(this);
             const resizer = $('<div class="resizer"></div>').appendTo(col);
-            const colIndex = col.index();
 
             resizer.on('mousedown', function (e) {
-                let startX = e.clientX;
-                let startWidth = col[0].getBoundingClientRect().width;
-                let startTableWidth = table[0].getBoundingClientRect().width;
+                startX = e.clientX;
+                startWidth = col[0].getBoundingClientRect().width;
+                startTableWidth = table[0].getBoundingClientRect().width;
 
-                $(document).on('mousemove', function (e) {
-                    let newWidth = startWidth + (e.clientX - startX);
+                $(document).on('mousemove', resizeColumn);
+                $(document).on('mouseup', stopResizing);
 
-                    col.css('width', newWidth);
-
-                    if (newWidth > 0) {
-                        table.css('width', startTableWidth);
-                    }
-                });
-
-                $(document).on('mouseup', function () {
-                    $(document).off('mousemove');
-                    $(document).off('mouseup');
-
-                    debounceSaveColumnWidth();
-                });
+                e.preventDefault();  // Prevent text selection during resize
             });
+
+            function resizeColumn(e) {
+                let newWidth = startWidth + (e.clientX - startX);
+
+                if (newWidth > 0) {
+                    col.css('width', newWidth);
+                    table.css('width', startTableWidth + (newWidth - startWidth));
+                }
+            }
+
+            function stopResizing() {
+                $(document).off('mousemove', resizeColumn);
+                $(document).off('mouseup', stopResizing);
+                debounceSaveColumnWidth();
+            }
         });
     }
+
+    initResizableColumns();
 
     const debounceSaveColumnWidth = debounce(function () {
         let columnWidths = [];
 
-        $('#table-data').find('th.rs-col').each(function () {
+        $('#table-data').find('th.rs-col').each(function (index) {
             const columnName = $(this).data('column-name');
             if (!columnName) {
                 console.error('Không tìm thấy column_name cho một cột.');
                 return;
             }
-
+            const columnPosition = index;
             columnWidths.push({
                 column_name: columnName,
-                column_width: $(this).outerWidth()
+                column_width: $(this).outerWidth(),
+                column_position: columnPosition
             });
         });
 

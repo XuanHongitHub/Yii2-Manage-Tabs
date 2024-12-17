@@ -14,7 +14,7 @@ use Yii;
  * @property bool $is_visible
  * @property string|null $display_name
  * @property int|null $column_width
- * @property int $column_position
+ * @property int|null $column_position
  *
  * @property Menu $menu
  * @property Page $page
@@ -39,7 +39,6 @@ class Config extends \yii\db\ActiveRecord
             [['page_id', 'menu_id', 'column_width', 'column_position'], 'default', 'value' => null],
             [['page_id', 'menu_id', 'column_width', 'column_position'], 'integer'],
             [['is_visible'], 'boolean'],
-            [['column_position'], 'default', 'value' => 0],
             [['column_position'], 'integer', 'min' => 0],
             [['column_name', 'display_name'], 'string', 'max' => 255],
             [['column_name'], 'unique', 'targetAttribute' => ['menu_id', 'page_id', 'column_name'], 'message' => 'Cột này đã tồn tại trong cấu hình.'],
