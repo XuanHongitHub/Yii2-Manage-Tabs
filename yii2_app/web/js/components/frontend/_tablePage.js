@@ -29,7 +29,7 @@ $(document).ready(function () {
     function initResizableColumns() {
         const table = $('#table-data');
         const cols = table.find('th.rs-col');
-        let startX, startWidth, startTableWidth;
+        let startX, startWidth, startTableWidth, nextCol, nextStartWidth;
 
         cols.each(function () {
             const col = $(this);
@@ -40,18 +40,37 @@ $(document).ready(function () {
                 startWidth = col[0].getBoundingClientRect().width;
                 startTableWidth = table[0].getBoundingClientRect().width;
 
+                // Lấy cột bên phải
+                nextCol = col.next('th.rs-col');
+                nextStartWidth = nextCol.length ? nextCol[0].getBoundingClientRect().width : 0;
+
                 $(document).on('mousemove', resizeColumn);
                 $(document).on('mouseup', stopResizing);
 
-                e.preventDefault();  // Prevent text selection during resize
+                e.preventDefault(); // Ngăn chọn văn bản trong khi kéo
             });
 
             function resizeColumn(e) {
                 let newWidth = startWidth + (e.clientX - startX);
-
                 if (newWidth > 0) {
+                    let widthDelta = newWidth - startWidth;
+
+                    // Cập nhật độ rộng cột hiện tại
                     col.css('width', newWidth);
-                    table.css('width', startTableWidth + (newWidth - startWidth));
+
+                    // Kiểm tra xem bảng có bị quá rộng không (có thanh cuộn ngang)
+                    const isOverflowing = table[0].scrollWidth > table.parent()[0].clientWidth;
+
+                    if (isOverflowing) {
+                        // Nếu bảng bị quá rộng, điều chỉnh độ rộng toàn bộ bảng
+                        let newTableWidth = startTableWidth + widthDelta;
+                        table.css('width', newTableWidth);
+                    } else {
+                        // Nếu bảng không bị quá rộng, điều chỉnh độ rộng cột bên phải
+                        if (nextCol.length && nextStartWidth - widthDelta > 0) {
+                            nextCol.css('width', nextStartWidth - widthDelta);
+                        }
+                    }
                 }
             }
 

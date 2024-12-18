@@ -13,7 +13,7 @@ use yii\widgets\Pjax;
 $this->registerJsFile('js/components/frontend/multiTablePage.js', ['depends' => AppAsset::class]);
 $this->registerJsFile('js/components/frontend/_tablePage.js', ['depends' => AppAsset::class]);
 $this->title = $menu->name;
-var_dump($configColumns);
+// var_dump($configColumns);
 $configs = [];
 
 foreach ($configColumns as $config) {
