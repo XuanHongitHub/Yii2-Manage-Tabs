@@ -13,19 +13,18 @@ use yii\widgets\Pjax;
 $this->registerJsFile('js/components/frontend/multiTablePage.js', ['depends' => AppAsset::class]);
 $this->registerJsFile('js/components/frontend/_tablePage.js', ['depends' => AppAsset::class]);
 $this->title = $menu->name;
-// var_dump($configColumns);
 $configs = [];
 
 foreach ($configColumns as $config) {
     $configs[$config['column_name']] = $config;
 }
+// var_dump($configs);
+// var_dump($configColumns);
+
 $columns = array_merge(
     array_column($configColumns, 'column_name'),
     array_diff($columns, array_column($configColumns, 'column_name'))
 );
-// var_dump($configColumns);
-// var_dump($configs);
-
 ?>
 <!-- Modal Nhập Excel -->
 <div class="modal fade" id="importExelModal" tabindex="-1" aria-labelledby="importExelModalLabel" aria-hidden="true">
@@ -324,7 +323,7 @@ echo GridView::widget([
                 'contentOptions' => [],
                 'headerOptions' => [
                     'class' => 'rs-col text-nowrap text-center',
-                    'style' => ($config['column_width'] ?? null) ? 'width:' . ($config['column_width'] ?? null) . 'px' : 'width: 150px; min-width: fit-content;',
+                    'style' => ($config['column_width'] ?? null) ? 'width:' . ($config['column_width'] ?? null) . 'px' : 'width: 250px; min-width: fit-content;',
                     'data-column-name' => $column,
                 ]
             ];
@@ -342,19 +341,21 @@ echo GridView::widget([
                             'class' => 'btn btn-secondary btn-m btn-edit',
                             'data-row' => json_encode($data),
                             'data-pjax' => 0,
+                            'title' => 'Chỉnh sửa',
                         ]);
                     },
                     'delete' => function ($url, $data, $key) {
                         return Html::a('<i class="fa-regular fa-trash-can"></i>', '#', [
                             'class' => 'btn btn-danger btn-m btn-delete',
                             'data-hidden_id' => $data[BaseModel::HIDDEN_ID_KEY],
+                            'title' => 'Xóa',
                         ]);
                     },
                 ],
             ],
         ]
     ),
-    'tableOptions' => ['id' => 'table-data', 'class' => 'table table-bordered table-hover', 'style' => 'table-layout: fixed; min-width: 100%'],
+    'tableOptions' => ['id' => 'table-data', 'class' => 'table table-bordered table-hover custom-td', 'style' => 'table-layout: fixed; min-width: 100%'],
     'layout' => "<div class='table-responsive' id='tableData' style='max-height: 65vh;'>{items}</div>\n<div class='d-flex flex-wrap justify-content-between align-items-center mt-3'>
                 <div class='d-flex flex-column flex-md-row justify-content-start mb-2 mb-md-0'>{summary}</div>
                 <div class='d-flex flex-column flex-md-row justify-content-start mb-2 mb-md-0'>{gopage}</div>

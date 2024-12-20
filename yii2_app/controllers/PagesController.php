@@ -113,22 +113,41 @@ class PagesController extends Controller
                         'attributes' => $columnNames,
                     ],
                 ]);
-                $configs = Config::find()
+                $configColumns = Config::find()
+                    ->select(['column_name', 'is_visible', 'display_name', 'column_width', 'column_position', 'menu_id'])
                     ->where(['page_id' => $page->id])
-                    ->andFilterWhere(['!=', 'menu_id', null])
-                    ->andFilterWhere(['menu_id' => $menuId])
-                    ->orWhere(['menu_id' => null])
+                    ->andFilterWhere(['=', 'menu_id', $menuId])
+                    ->indexBy('column_name')
+                    ->asArray()
                     ->all();
 
-                $configColumns = [];
+                $nullMenuConfigs = Config::find()
+                    ->select(['column_name', 'display_name'])
+                    ->where(['page_id' => $page->id])
+                    ->andFilterWhere(['menu_id' => null])
+                    ->indexBy('column_name')
+                    ->asArray()
+                    ->all();
 
-                if ($configs) {
-                    foreach ($configs as $config) {
-                        $configColumns[$config->column_name] = $config->is_visible;
+                foreach ($nullMenuConfigs as $config) {
+                    if (isset($configColumns[$config['column_name']])) {
+                        if ($configColumns[$config['column_name']]['display_name'] === null) {
+                            $configColumns[$config['column_name']]['display_name'] = $config['display_name'];
+                        }
+                    } else {
+                        $configColumns[$config['column_name']] = [
+                            'column_name' => $config['column_name'],
+                            'display_name' => $config['display_name'],
+                            'is_visible' => null,
+                            'column_width' => null,
+                            'column_position' => null,
+                        ];
                     }
-                } else {
-                    $configColumns = [];
                 }
+                usort($configColumns, function ($a, $b) {
+                    return $a['column_position'] <=> $b['column_position'];
+                });
+                $configColumns = array_values($configColumns);
                 return $this->render('singlePageTable', [
                     'dataProvider' => $dataProvider,
                     'columns' => $columnNames,
@@ -201,40 +220,29 @@ class PagesController extends Controller
                     'attributes' => $columnNames,
                 ],
             ]);
-            $configsWithMenuId = Config::find()
-                ->select(['column_name', 'is_visible', 'display_name', 'column_width', 'column_position', 'menu_id'])
+
+            // Fetch all configurations in a single query
+            $configs = Config::find()
                 ->where(['page_id' => $page->id])
-                ->andFilterWhere(['!=', 'menu_id', null])
+                ->andFilterWhere(['=', 'menu_id', $menuId])
+                ->orWhere(['menu_id' => null])
+                ->asArray()
                 ->all();
 
             $configColumns = [];
-            foreach ($configsWithMenuId as $config) {
-                $configColumns[$config->column_name] = [
-                    'column_name' => $config->column_name,
-                    'is_visible' => $config->is_visible,
-                    'display_name' => $config->display_name,
-                    'column_width' => $config->column_width,
-                    'column_position' => $config->column_position,
-                ];
-            }
 
-            $nullMenuConfigs = Config::find()
-                ->select(['column_name', 'display_name'])
-                ->where(['page_id' => $page->id])
-                ->andFilterWhere(['menu_id' => null])
-                ->all();
-
-            foreach ($nullMenuConfigs as $config) {
-                if (isset($configColumns[$config->column_name]) && $configColumns[$config->column_name]['display_name'] === null) {
-                    $configColumns[$config->column_name]['display_name'] = $config->display_name;
+            foreach ($configs as $config) {
+                if (isset($configColumns[$config['column_name']])) {
+                    $configColumns[$config['column_name']]['display_name'] ??= $config['display_name'];
+                } else {
+                    $configColumns[$config['column_name']] = $config;
                 }
             }
 
+            usort($configColumns, fn($a, $b) => $a['column_position'] <=> $b['column_position']);
+
             $configColumns = array_values($configColumns);
 
-            // usort($configColumns, function ($a, $b) {
-            //     return $a['column_position'] <=> $b['column_position'];
-            // });
 
             return $this->renderAjax('_tableData', [
                 'dataProvider' => $dataProvider,
@@ -347,8 +355,11 @@ class PagesController extends Controller
             $config->menu_id = $menuId;
             $config->page_id = $pageId;
             $config->column_width = $columnWidth;
-            $config->column_position = $columnPosition;
 
+            // Kiểm tra nếu column_position đã có giá trị thì không cập nhật
+            if ($config->column_position === null) {
+                $config->column_position = $columnPosition;
+            }
 
             if (!$config->save()) {
                 return [

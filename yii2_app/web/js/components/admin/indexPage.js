@@ -9,7 +9,6 @@ $(document).ready(function () {
         var pageId = $(this).data('page-id');
         var pageName = $(this).data('page-name');
         var status = $(this).data('page-status');
-        console.log("🚀 ~ status:", status);
 
         $('#editName').val(pageName);
         $('#editStatus').val(status);
@@ -52,8 +51,12 @@ $(document).ready(function () {
                     $('#editModal').modal('hide');
                     location.reload();
                 },
-                error: function () {
-                    alert('Có lỗi xảy ra, vui lòng thử lại.');
+                error: function (xhr) {
+                    if (xhr.status === 403) {
+                        swal("#403 Forbidden", "Bạn không được phép thực hiện thao tác này.", "error");
+                    } else {
+                        swal("Lỗi", "Có lỗi xảy ra khi xóa page.", "error");
+                    }
                 }
             });
         }
@@ -103,7 +106,12 @@ $(document).ready(function () {
 
                 columnsTable.sortable({
                     handle: '.drag-handle',
-                    animation: 150
+                    animation: 150,
+                    update: function () {
+                        $('.sortable-columns tr').each(function (index) {
+                            $(this).data('position', index);
+                        });
+                    }
                 });
 
                 $('#save-columns-config').data('page-id', pageId);
@@ -131,13 +139,14 @@ $(document).ready(function () {
         $('.sortable-columns tr').each(function () {
             const columnName = $(this).data('column');
             const isChecked = $(this).find('.column-switch').prop('checked');
-            console.log("🚀 ~ isChecked:", isChecked);
             const displayName = $(this).find('.display-name-input').val();
+            const position = $(this).data('position'); // Lấy position từ data
 
             columnsConfig.push({
                 column_name: columnName,
                 is_visible: isChecked,
-                display_name: displayName
+                display_name: displayName,
+                column_position: position // Thêm position vào cấu hình
             });
         });
 
@@ -189,11 +198,15 @@ $(document).ready(function () {
                     if (response.success) {
                         location.reload();
                     } else {
-                        alert(response.message || "Có lỗi xảy ra khi lưu thay đổi.");
+                        swal("Lỗi", response.message || "Có lỗi xảy ra khi lưu thay đổi.", "error");
                     }
                 },
-                error: function () {
-                    alert("Có lỗi xảy ra khi lưu thay đổi.");
+                error: function (xhr) {
+                    if (xhr.status === 403) {
+                        swal("#403 Forbidden", "Bạn không được phép thực hiện thao tác này.", "error");
+                    } else {
+                        swal("Lỗi", "Có lỗi xảy ra khi xóa page.", "error");
+                    }
                 }
             });
         }
@@ -227,11 +240,15 @@ $(document).ready(function () {
                         location.reload();
                         $('#trashBinModal').modal('hide');
                     } else {
-                        alert(response.message || "Khôi phục thất bại.");
+                        swal("Lỗi", response.message || "Khôi phục thất bại.", "error");
                     }
                 },
-                error: function () {
-                    alert("Có lỗi xảy ra khi khôi phục.");
+                error: function (xhr) {
+                    if (xhr.status === 403) {
+                        swal("#403 Forbidden", "Bạn không được phép thực hiện thao tác này.", "error");
+                    } else {
+                        swal("Lỗi", "Có lỗi xảy ra khi xóa page.", "error");
+                    }
                 }
             });
         }
@@ -253,12 +270,17 @@ $(document).ready(function () {
                 success: function (response) {
                     if (response.success) {
                         location.reload();
+                        $('#deleteModal').modal('hide');
                     } else {
-                        alert(response.message || "Xóa thất bại.");
+                        swal("Lỗi", response.message || "Xóa page thất bại.", "error");
                     }
                 },
-                error: function () {
-                    alert("Có lỗi xảy ra khi xóa page.");
+                error: function (xhr) {
+                    if (xhr.status === 403) {
+                        swal("#403 Forbidden", "Bạn không được phép thực hiện thao tác này.", "error");
+                    } else {
+                        swal("Lỗi", "Có lỗi xảy ra khi xóa page.", "error");
+                    }
                 }
             });
         }
@@ -281,11 +303,15 @@ $(document).ready(function () {
                     location.reload();
                     $('#deleteModal').modal('hide');
                 } else {
-                    alert(response.message || "Xóa page thất bại.");
+                    swal("Lỗi", response.message || "Xóa page thất bại.", "error");
                 }
             },
-            error: function () {
-                alert("Có lỗi xảy ra khi xóa page.");
+            error: function (xhr) {
+                if (xhr.status === 403) {
+                    swal("#403 Forbidden", "Bạn không được phép thực hiện thao tác này.", "error");
+                } else {
+                    swal("Lỗi", "Có lỗi xảy ra khi xóa page.", "error");
+                }
             }
         });
     });
@@ -307,27 +333,26 @@ $(document).ready(function () {
                         location.reload();
                         $('#deleteModal').modal('hide');
                     } else {
-                        alert(response.message || "Xóa page thất bại.");
+                        swal("Lỗi", response.message || "Xóa page thất bại.", "error");
                     }
                 },
-                error: function () {
-                    alert("Có lỗi xảy ra khi xóa page.");
+                error: function (xhr) {
+                    if (xhr.status === 403) {
+                        swal("#403 Forbidden", "Bạn không được phép thực hiện thao tác này.", "error");
+                    } else {
+                        swal("Lỗi", "Có lỗi xảy ra khi xóa page.", "error");
+                    }
                 }
             });
         }
     });
-});
 
-document.addEventListener("DOMContentLoaded", function () {
-    const deleteButtons = document.querySelectorAll(".delete-btn");
-    const confirmDeleteBtn = document.getElementById("confirm-delete-btn");
-    const confirmDeletePermanentlyBtn = document.getElementById("confirm-delete-permanently-btn");
+    $(document).off('click', '.delete-btn').on('click', '.delete-btn', function () {
+        var pageId = $(this).data('page-id');
+        console.log("🚀 ~ pageId:", pageId);
 
-    deleteButtons.forEach(button => {
-        button.addEventListener("click", function () {
-            const pageId = this.getAttribute("data-page-id");
-            confirmDeleteBtn.setAttribute("data-page-id", pageId);
-            confirmDeletePermanentlyBtn.setAttribute("data-page-id", pageId);
-        });
+        $('#confirm-delete-btn').attr('data-page-id', pageId);
+        $('#confirm-delete-permanently-btn').attr('data-page-id', pageId);
     });
+
 });

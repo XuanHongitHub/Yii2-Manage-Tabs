@@ -21,13 +21,13 @@ $this->registerLinkTag(['rel' => 'icon', 'type' => 'image/x-icon', 'href' => Yii
 $successMessage = Yii::$app->session->getFlash('success');
 $errorMessage = Yii::$app->session->getFlash('error');
 
-$tabMenus = Menu::find()
+$pageMenus = Menu::find()
     ->where(['deleted' => 0])
-    ->orderBy(['parent_id' => SORT_DESC, 'position' => SORT_ASC])
+    ->orderBy(['parent_id' => SORT_DESC, 'position' => SORT_ASC, 'id' => SORT_ASC])
     ->all();
 
 $menus = [];
-foreach ($tabMenus as $menu) {
+foreach ($pageMenus as $menu) {
     $parentId = $menu->parent_id;
     if ($parentId === null) {
         $menus[$menu->id] = ['name' => $menu->name, 'icon' => $menu->icon, 'id' => $menu->id];

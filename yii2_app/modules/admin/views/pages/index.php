@@ -10,6 +10,7 @@ use yii\grid\GridView;
 use yii\helpers\Url;
 use yii\widgets\Pjax;
 use app\assets\Select2Asset;
+use app\models\User;
 
 /** @var yii\web\View $this */
 
@@ -30,7 +31,7 @@ $this->title = 'Danh sách Page';
             <div class="d-flex flex-wrap justify-content-center align-items-center me-md-2 mb-3 mb-md-0">
                 <a class="btn btn-outline-warning me-2 mb-2" href="#" data-bs-toggle="modal"
                     data-bs-target="#hideModal">
-                    <i class="fas fa-eye me-1"></i> Hiện/Ẩn
+                    <i class="fas fa-eye me-1"></i> Ẩn/Hiện
                 </a>
                 <a class="btn btn-danger me-2 mb-2" href="#" data-bs-toggle="modal" data-bs-target="#trashBinModal">
                     <i class="fas fa-trash me-1"></i> Thùng Rác
@@ -280,14 +281,16 @@ $this->title = 'Danh sách Page';
                                 <?php endif; ?>
                             </td>
                             <td class="text-nowrap">
-                                <button type="button" class="btn btn-warning restore-page-btn"
+                                <button type="button" class="btn btn-warning restore-page-btn" title="Khôi phục"
                                     data-page-id="<?= htmlspecialchars($page->id) ?>">
                                     <i class="fa-solid fa-rotate-left"></i>
                                 </button>
-                                <button type="button" class="btn btn-danger delete-page-btn"
+                                <?php if (Yii::$app->user->identity->role === User::ROLE_ADMIN): ?>
+                                <button type="button" class="btn btn-danger delete-page-btn" title="Xóa hoàn toàn"
                                     data-page-id="<?= htmlspecialchars($page->id) ?>">
                                     <i class="fa-regular fa-trash-can"></i>
                                 </button>
+                                <?php endif; ?>
                             </td>
                         </tr>
                         <?php endforeach; ?>
@@ -309,12 +312,13 @@ $this->title = 'Danh sách Page';
 </div>
 
 
+
 <!-- Modal Hide page -->
 <div class="modal fade" id="hideModal" tabindex="-1" aria-labelledby="hideModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg modal-dialog-scrollable">
         <div class="modal-content">
             <div class="modal-header">
-                <h4 class="modal-title" id="hideModalLabel">Hiện/Ẩn Page</h5>
+                <h4 class="modal-title" id="hideModalLabel">Ẩn/Hiện Page</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cancel"></button>
             </div>
             <div class="modal-body">
@@ -366,19 +370,20 @@ $this->title = 'Danh sách Page';
     <div class="modal-dialog modal-dialog-scrollable">
         <div class="modal-content">
             <div class="modal-header">
-                <h4 class="modal-title" id="deleteModalLabel">Xác nhận xóa page</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                <h4 class="modal-title" id="deleteModalLabel">Xác nhận xóa page</h4>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                Bạn có chắc chắn muốn xóa page này không? Không thể hoàn tác hành động này.
+                Bạn có chắc chắn muốn xóa page này không?
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
-                <button type="button" class="btn btn-danger" id="confirm-delete-btn"
-                    data-page-id="<?= htmlspecialchars($pageId) ?>">Xóa</button>
-                <button type="button" class="btn btn-danger" id="confirm-delete-permanently-btn"
-                    data-page-name="<?= htmlspecialchars($page->name) ?>"
-                    data-page-id="<?= htmlspecialchars($pageId) ?>">Xóa Vĩnh Viễn</button>
+                <button type="button" class="btn btn-danger" id="confirm-delete-btn" data-page-id="">Xóa</button>
+
+                <?php if (Yii::$app->user->identity->role === User::ROLE_ADMIN): ?>
+                <button type="button" class="btn btn-danger" id="confirm-delete-permanently-btn" data-page-id="">Xóa
+                    Vĩnh Viễn</button>
+                <?php endif; ?>
             </div>
         </div>
     </div>

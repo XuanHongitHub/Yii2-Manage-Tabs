@@ -36,16 +36,18 @@ $this->title = $name;
     font-family: 'Righteous', cursive !important;
     color: #363e49;
     text-align: center;
-    height: 100vh;
+    height: 85vh;
+}
+
+.error .error__description {
+    font-family: "Poppins", sans-serif !important;
+    font-weight: 600;
 }
 
 .error-image {
     width: 150px;
-    /* Kích thước hình ảnh */
     margin-bottom: 20px;
-    /* Khoảng cách dưới hình ảnh */
     animation: shimmer 1.5s infinite alternate;
-    /* Thêm hiệu ứng hoạt ảnh */
 }
 
 .error__title {

@@ -12,12 +12,10 @@ use app\models\User;
 use yii\web\Response;
 use app\models\Page;
 use app\models\Menu;
+use app\models\MenuPage;
 use app\modules\admin\components\BaseAdminController;
 use yii\data\ActiveDataProvider;
 use yii\web\NotFoundHttpException;
-use Exception;
-use yii\filters\AccessControl;
-
 
 class PagesController extends BaseAdminController
 {
@@ -401,44 +399,46 @@ class PagesController extends BaseAdminController
             Yii::$app->session->setFlash('error', 'Page không tồn tại.');
             return $this->asJson(['success' => false, 'message' => 'Page không tồn tại.']);
         }
-        if ($page->type == 'table') {
-            $tableName = $page->table_name;
 
-            if (!preg_match('/^[a-zA-Z_][a-zA-Z0-9_]*$/', $tableName)) {
-                Yii::$app->session->setFlash('error', 'Tên bảng không hợp lệ.');
-                return $this->asJson(['success' => false, 'message' => 'Tên bảng không hợp lệ.']);
+        $transaction = Yii::$app->db->beginTransaction();
+
+        try {
+            $menuPages = MenuPage::find()->where(['page_id' => $page->id])->all();
+            foreach ($menuPages as $menuPage) {
+                $menuPage->delete();
             }
 
+            if ($page->type == 'table') {
+                $tableName = $page->table_name;
 
-            $transaction = Yii::$app->db->beginTransaction();
+                if (!preg_match('/^[a-zA-Z_][a-zA-Z0-9_]*$/', $tableName)) {
+                    Yii::$app->session->setFlash('error', 'Tên bảng không hợp lệ.');
+                    return $this->asJson(['success' => false, 'message' => 'Tên bảng không hợp lệ.']);
+                }
 
-            try {
-                Yii::$app->db->createCommand()->dropTable($tableName)->execute();
+                $otherPages = Page::find()->where(['table_name' => $tableName])->andWhere(['!=', 'id', $page->id])->count();
+                if ($otherPages == 0) {
+                    Yii::$app->db->createCommand()->dropTable($tableName)->execute();
+                }
 
                 $page->delete();
-
-                Yii::$app->session->setFlash('success', 'Bảng và dữ liệu đã được xóa thành công.');
-                $transaction->commit();
-                return $this->asJson(['success' => true, 'message' => 'Bảng và dữ liệu đã được xóa thành công.']);
-            } catch (\Exception $e) {
-                Yii::$app->session->setFlash('error', $e->getMessage());
-                $transaction->rollBack();
-                return $this->asJson(['success' => false, 'message' => $e->getMessage()]);
-            }
-        } elseif ($page->type == 'richtext') {
-            try {
+            } elseif ($page->type == 'richtext') {
                 $page->delete();
-
-                Yii::$app->session->setFlash('success', 'Dữ liệu richtext đã được xóa thành công.');
-                return $this->asJson(['success' => true, 'message' => 'Dữ liệu richtext đã được xóa thành công.']);
-            } catch (\Exception $e) {
-                Yii::$app->session->setFlash('error', $e->getMessage());
-                return $this->asJson(['success' => false, 'message' => $e->getMessage()]);
+            } else {
+                Yii::$app->session->setFlash('error', 'Loại page không hợp lệ.');
+                return $this->asJson(['success' => false, 'message' => 'Loại page không hợp lệ.']);
             }
+
+            Yii::$app->session->setFlash('success', 'Dữ liệu đã được xóa thành công.');
+            $transaction->commit();
+            return $this->asJson(['success' => true, 'message' => 'Dữ liệu đã được xóa thành công.']);
+        } catch (\Exception $e) {
+            Yii::$app->session->setFlash('error', $e->getMessage());
+            $transaction->rollBack();
+            return $this->asJson(['success' => false, 'message' => $e->getMessage()]);
         }
-        Yii::$app->session->setFlash('error', 'Loại page không hợp lệ.');
-        return $this->asJson(['success' => false, 'message' => 'Loại page không hợp lệ.']);
     }
+
 
     /** 
      * Update Position Action.

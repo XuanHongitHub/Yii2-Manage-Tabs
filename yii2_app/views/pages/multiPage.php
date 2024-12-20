@@ -32,10 +32,9 @@ $this->title = $menu->name;
                         <i class="fa-solid fa-list me-0"></i>
                     </a>
                     <ul class="dropdown-menu profile-dropdown border" aria-labelledby="btn-list-page">
-                        <li><a class="dropdown-item" href="#" id="expand-option"><i
+                        <li><a class="dropdown-item border-bottom" href="#" id="expand-option"><i
                                     class="fa-solid fa-expand me-2"></i>Mở rộng</a></li>
-                        <li><a class="dropdown-item border-top" href="#" data-bs-toggle="modal"
-                                data-bs-target="#listPageModal">
+                        <li><a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#listPageModal">
                                 <i class="fa-solid fa-book me-2"></i>Danh Sách</a></li>
                     </ul>
                 </li>
@@ -86,7 +85,6 @@ $this->title = $menu->name;
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
-                <button type="button" class="btn btn-primary" id="save-columns-config">Lưu</button>
             </div>
         </div>
     </div>

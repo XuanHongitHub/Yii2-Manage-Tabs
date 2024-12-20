@@ -14941,7 +14941,7 @@ table>thead>tr>th {
 .table>thead>tr>th {
   padding: 8px;
   line-height: 1.42857143;
-  vertical-align: top;
+  vertical-align: middle;
   border-top: 0px;
   background-color: #FFF;
 }
@@ -45360,7 +45360,7 @@ footer p .footer-icon {
   border-radius: 8px;
 }
 
-.hidden-tab {
+.hidden-page {
   display: none !important;
 }
 
@@ -45460,7 +45460,7 @@ table td[data-column="id"] {
 }
 
 .custom-td td {
-  padding: 5px;
+  padding: 5px !important;
 }
 
 .table-responsive::-webkit-scrollbar {
@@ -45499,7 +45499,6 @@ table td[data-column="id"] {
   top: 0;
   right: 0;
   width: 8px;
-  height: 100%;
   cursor: col-resize;
   user-select: none;
 }
@@ -45543,4 +45542,8 @@ table td[data-column="id"] {
   box-shadow: 0 0 10px var(--theme-default);
   -webkit-transition: all 0.3s ease;
   transition: all 0.3s ease;
+}
+
+.rs-col {
+  min-width: 150px !important;
 }

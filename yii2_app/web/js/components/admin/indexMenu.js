@@ -110,38 +110,27 @@ $(document).ready(function () {
                 position: index + 1
             });
         });
-        if (confirm("Xác nhận sắp xếp?")) {
 
-            $.ajax({
-                url: update_sortOrder_url,
-                method: 'POST',
-                headers: {
-                    'X-CSRF-Token': $('meta[name="csrf-token"]').attr('content')
-                },
-                data: {
-                    menus: sortedData
-                },
-                success: function (response) {
-                    if (response.success) {
-                        swal({
-                            title: "Thành công!",
-                            text: response.message || "Dữ liệu đã được cập nhật.",
-                            icon: "success",
-                        }).then(() => {
-                            $('#sortModal').modal('hide');
-                            location.reload();
-                        });
-                    } else {
-                        swal({
-                            title: "Thất bại!",
-                            text: response.message ||
-                                "Có lỗi xảy ra, vui lòng thử lại.",
-                            icon: "error",
-                        });
-                    }
-                },
-                error: function (xhr, status, error) {
-                    console.log('Lỗi AJAX: ', error);
+        $.ajax({
+            url: update_sortOrder_url,
+            method: 'POST',
+            headers: {
+                'X-CSRF-Token': $('meta[name="csrf-token"]').attr('content')
+            },
+            data: {
+                menus: sortedData
+            },
+            success: function (response) {
+                if (response.success) {
+                    swal({
+                        title: "Thành công!",
+                        text: response.message || "Dữ liệu đã được cập nhật.",
+                        icon: "success",
+                    }).then(() => {
+                        $('#sortModal').modal('hide');
+                        location.reload();
+                    });
+                } else {
                     swal({
                         title: "Thất bại!",
                         text: response.message ||
@@ -149,8 +138,17 @@ $(document).ready(function () {
                         icon: "error",
                     });
                 }
-            });
-        }
+            },
+            error: function (xhr, status, error) {
+                console.log('Lỗi AJAX: ', error);
+                swal({
+                    title: "Thất bại!",
+                    text: response.message ||
+                        "Có lỗi xảy ra, vui lòng thử lại.",
+                    icon: "error",
+                });
+            }
+        });
     });
     // Lọc danh sách page khi bật/tắt switch
     $('#toggleStatusMenus').on('change', function () {

@@ -1,23 +1,5 @@
 $(document).ready(function () {
 
-    const table = $('#table-data');
-    const maxColumns = 10;
-    const minCellWidth = 50;
-
-    const columnCount = table.find('thead th').length;
-
-    let isSmallContent = false;
-    table.find('td').each(function () {
-        if ($(this).width() < minCellWidth) {
-            isSmallContent = true;
-            return false;
-        }
-    });
-
-    if (columnCount > maxColumns || isSmallContent) {
-        table.addClass('custom-td');
-    }
-
     function debounce(func, wait) {
         let timeout;
         return function (...args) {
@@ -26,47 +8,65 @@ $(document).ready(function () {
             timeout = setTimeout(() => func.apply(context, args), wait);
         };
     }
+
     function initResizableColumns() {
         const table = $('#table-data');
         const cols = table.find('th.rs-col');
         let startX, startWidth, startTableWidth, nextCol, nextStartWidth;
 
+        // Cập nhật chiều cao của resizer để nó bằng chiều cao của bảng
+        function updateResizerHeight() {
+            const tableHeight = table[0].getBoundingClientRect().height;
+            table.find('.resizer').css('height', tableHeight); // Cập nhật chiều cao của tất cả các resizer
+        }
+
+        // Cập nhật chiều cao của resizer khi cửa sổ thay đổi kích thước
+        $(window).on('resize', function () {
+            updateResizerHeight();
+        });
+
         cols.each(function () {
             const col = $(this);
             const resizer = $('<div class="resizer"></div>').appendTo(col);
 
+            updateResizerHeight();
+
+            // Sự kiện kéo chuột để thay đổi độ rộng cột
             resizer.on('mousedown', function (e) {
                 startX = e.clientX;
                 startWidth = col[0].getBoundingClientRect().width;
                 startTableWidth = table[0].getBoundingClientRect().width;
 
-                // Lấy cột bên phải
                 nextCol = col.next('th.rs-col');
                 nextStartWidth = nextCol.length ? nextCol[0].getBoundingClientRect().width : 0;
 
+                // Thêm các sự kiện di chuyển chuột và thả chuột
                 $(document).on('mousemove', resizeColumn);
                 $(document).on('mouseup', stopResizing);
 
                 e.preventDefault(); // Ngăn chọn văn bản trong khi kéo
             });
 
+            // Hàm thay đổi kích thước cột khi kéo chuột
             function resizeColumn(e) {
                 let newWidth = startWidth + (e.clientX - startX);
-                if (newWidth > 0) {
+                if (newWidth > 100) { // Đảm bảo cột không nhỏ hơn 100px
+
                     let widthDelta = newWidth - startWidth;
 
                     // Cập nhật độ rộng cột hiện tại
                     col.css('width', newWidth);
 
-                    // Kiểm tra xem bảng có bị quá rộng không (có thanh cuộn ngang)
+                    // Kiểm tra xem bảng có bị tràn không
+                    const totalCols = table.find('th.rs-col').length;
                     const isOverflowing = table[0].scrollWidth > table.parent()[0].clientWidth;
 
-                    if (isOverflowing) {
-                        // Nếu bảng bị quá rộng, điều chỉnh độ rộng toàn bộ bảng
+                    if (totalCols > 5 && isOverflowing) {
+                        // Nếu có đủ cột và bảng bị tràn, điều chỉnh độ rộng toàn bộ bảng
                         let newTableWidth = startTableWidth + widthDelta;
                         table.css('width', newTableWidth);
                     } else {
-                        // Nếu bảng không bị quá rộng, điều chỉnh độ rộng cột bên phải
+                        // Nếu ít cột, chỉ thay đổi độ rộng của cột bên phải
                         if (nextCol.length && nextStartWidth - widthDelta > 0) {
                             nextCol.css('width', nextStartWidth - widthDelta);
                         }
@@ -74,11 +74,18 @@ $(document).ready(function () {
                 }
             }
 
+            // Hàm dừng thay đổi kích thước và xóa các sự kiện
             function stopResizing() {
                 $(document).off('mousemove', resizeColumn);
                 $(document).off('mouseup', stopResizing);
                 debounceSaveColumnWidth();
             }
+
+            // Thêm sự kiện nhấn đúp để resize cột về 100px
+            col.on('dblclick', function () {
+                col.css('width', '100px');
+                debounceSaveColumnWidth(); // Lưu lại độ rộng mới của cột
+            });
         });
     }
 
@@ -123,9 +130,6 @@ $(document).ready(function () {
             }
         });
     }, 500);
-
-    initResizableColumns();
-
 
 
     $(document).off('click', '#btn-config').on('click', '#btn-config', function () {
@@ -196,8 +200,11 @@ $(document).ready(function () {
 
     $(document).off('pjax:complete').on('pjax:complete', function () {
         $('.spinner-fixed').remove();
-        initResizableColumns();
+        // initResizableColumns();
 
+    });
+    $(document).ajaxComplete(function (event, xhr, settings) {
+        initResizableColumns();
     });
 
     $(document).off('click', '#add-row-btn').on('click', '#add-row-btn', function (e) {

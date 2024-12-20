@@ -32,11 +32,9 @@ $this->registerJsFile('js/components/admin/createMenu.js', ['depends' => AppAsse
                 <label for="icon-select" class="form-label">Chọn icon</label>
                 <div id="icon-select-wrapper" class="d-flex align-items-center justify-content-between"
                     style="cursor: pointer; border: 1px solid #ccc; padding: 8px; border-radius: 8px;">
-                    <span
-                        id="selected-icon-label"><?= isset($selectedIconLabel) ? Html::encode($selectedIconLabel) : 'Chọn icon' ?></span>
+                    <span id="selected-icon-label">stroke-board</span>
                     <svg id="selected-icon" class="stroke-icon mx-2" width="24" height="24">
-                        <use
-                            href="<?= isset($selectedIcon) ? Yii::getAlias('@web') . "/images/icon-sprite.svg#{$selectedIcon}" : '' ?>">
+                        <use href="<?= Yii::getAlias('@web') . "/images/icon-sprite.svg#stroke-board" ?>">
                         </use>
                     </svg>
                 </div>
@@ -45,18 +43,19 @@ $this->registerJsFile('js/components/admin/createMenu.js', ['depends' => AppAsse
                 <div id="icon-list" class="d-flex flex-wrap mt-2"
                     style="display: none; overflow-y: auto; max-height: 200px; border: 1px solid #ccc; border-radius: 8px;">
                     <?php foreach ($iconOptions as $iconValue => $iconLabel): ?>
-                        <div class="icon-item col-2 col-md-2 col-lg-1 me-2 mb-2 text-center"
-                            data-icon="<?= Html::encode($iconValue) ?>" style="cursor: pointer; padding: 4px">
-                            <svg class="stroke-icon" width="40" height="40">
-                                <use
-                                    href="<?= Yii::getAlias('@web') ?>/images/icon-sprite.svg#<?= Html::encode($iconValue) ?>">
-                                </use>
-                            </svg>
-                        </div>
+                    <div class="icon-item col-2 col-md-2 col-lg-1 me-2 mb-2 text-center"
+                        data-icon="<?= Html::encode($iconValue) ?>" style="cursor: pointer; padding: 4px">
+                        <svg class="stroke-icon" width="40" height="40">
+                            <use
+                                href="<?= Yii::getAlias('@web') ?>/images/icon-sprite.svg#<?= Html::encode($iconValue) ?>">
+                            </use>
+                        </svg>
+                    </div>
                     <?php endforeach; ?>
                 </div>
 
-                <input type="hidden" id="icon-selected-value" value="<?= Html::encode($selectedIcon ?? '') ?>">
+                <input type="hidden" id="icon-selected-value"
+                    value="<?= Html::encode($selectedIcon ?? 'stroke-board') ?>">
             </div>
         </div>
 
@@ -78,7 +77,7 @@ $this->registerJsFile('js/components/admin/createMenu.js', ['depends' => AppAsse
                 <label for="pages" class="form-label">Chọn Page con</label>
                 <select id="pages" class="form-select input-air-primary digits form-multi-select" multiple="">
                     <?php foreach ($potentialPages as $page): ?>
-                        <option value="<?= $page->id ?>"><?= $page->name ?></option>
+                    <option value="<?= $page->id ?>"><?= $page->name ?></option>
                     <?php endforeach; ?>
                 </select>
             </div>
@@ -92,6 +91,6 @@ $this->registerJsFile('js/components/admin/createMenu.js', ['depends' => AppAsse
 </div>
 
 <script>
-    var store_menu_url = "<?= \yii\helpers\Url::to(['menus/store']) ?>";
-    var list_menu_url = "<?= \yii\helpers\Url::to(['menus/index']) ?>";
+var store_menu_url = "<?= \yii\helpers\Url::to(['menus/store']) ?>";
+var list_menu_url = "<?= \yii\helpers\Url::to(['menus/index']) ?>";
 </script>

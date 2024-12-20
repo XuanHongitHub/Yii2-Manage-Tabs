@@ -13,14 +13,33 @@ $(document).ready(function () {
         if (pageList.hasClass('expand')) {
             pageList.removeClass('expand');
             pageItems.show();
-            $('#expand-option').html('<i class="fa-solid fa-square-minus"></i>Thu gọn');
+            $('#expand-option').html('<i class="fa-solid fa-square-minus me-2"></i>Thu gọn');
         } else {
             pageList.addClass('expand');
             checkOverflow();
-            $('#expand-option').html('<i class="fa-solid fa-chevron-down me-2"></i>Mở Rộng');
+            $('#expand-option').html('<i class="fa-solid fa-expand me-2"></i>Mở Rộng');
         }
     });
+    function toggleExpandButton() {
+        var isOverflow = checkOverflow();
 
+        if (isOverflow) {
+            $('#expand-option').show();
+            $('#btn-list-page')
+                .attr('data-bs-toggle', 'dropdown')
+                .off('click');
+
+        } else {
+            $('#expand-option').hide();
+            $('#btn-list-page')
+                .removeAttr('data-bs-toggle')
+                .off('click')
+                .on('click', function (e) {
+                    e.preventDefault();
+                    $('#listPageModal').modal('show');
+                });
+        }
+    }
 
     function checkOverflow() {
         var pageList = $('#page-list');
@@ -52,16 +71,22 @@ $(document).ready(function () {
                 $(this).hide();
             }
         });
+
+        // Trả về true nếu có mục bị ẩn
+        return pageItems.length > visibleCount;
     }
 
+
     checkOverflow();
+    toggleExpandButton();
     $(window).resize(function () {
         checkOverflow();
+        toggleExpandButton();
     });
 
     let ascending = true;
 
-    // Sắp xếp danh sách khi nhấn nút
+    // Sort A-Z | Z-A
     $('#sort-toggle').click(function () {
         ascending = !ascending;
         sortPageList(ascending);
@@ -70,20 +95,20 @@ $(document).ready(function () {
         );
     });
 
-    // Tìm kiếm theo từ khóa
+    // Search Page
     $(document).off('input', '#search-page').on('input', '#search-page', function () {
-        var searchQuery = $(this).val().toLowerCase();
+        var searchText = $(this).val().toLowerCase();
         $('#page-list-modal .list-group-item').each(function () {
             var itemText = $(this).text().toLowerCase();
-            if (itemText.indexOf(searchQuery) !== -1) {
-                $(this).show();
+            if (itemText.indexOf(searchText) !== -1) {
+                $(this).removeClass('hidden-page');
             } else {
-                $(this).hide();
+                $(this).addClass('hidden-page');
             }
         });
     });
 
-    // Hàm sắp xếp danh sách
+    // Sort List 
     function sortPageList(ascending) {
         const items = $('#page-list-modal li').get();
         items.sort((a, b) => {
