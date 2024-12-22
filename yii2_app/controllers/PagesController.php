@@ -221,17 +221,24 @@ class PagesController extends Controller
                 ],
             ]);
 
-            // Fetch all configurations in a single query
-            $configs = Config::find()
-                ->where(['page_id' => $page->id])
-                ->andFilterWhere(['=', 'menu_id', $menuId])
-                ->orWhere(['menu_id' => null])
+            $commonSelect = ['column_name', 'is_visible', 'display_name', 'column_width', 'column_position'];
+
+            $configColumns = array_column(
+                Config::find()->select(array_merge($commonSelect, ['menu_id']))
+                    ->where(['page_id' => $page->id])
+                    ->andFilterWhere(['=', 'menu_id', $menuId])
+                    ->asArray()
+                    ->all(),
+                null,
+                'column_name'
+            );
+
+            $nullMenuConfigs = Config::find()->select($commonSelect)
+                ->where(['page_id' => $page->id, 'menu_id' => null])
                 ->asArray()
                 ->all();
 
-            $configColumns = [];
-
-            foreach ($configs as $config) {
+            foreach ($nullMenuConfigs as $config) {
                 if (isset($configColumns[$config['column_name']])) {
                     $configColumns[$config['column_name']]['display_name'] ??= $config['display_name'];
                 } else {
@@ -242,7 +249,6 @@ class PagesController extends Controller
             usort($configColumns, fn($a, $b) => $a['column_position'] <=> $b['column_position']);
 
             $configColumns = array_values($configColumns);
-
 
             return $this->renderAjax('_tableData', [
                 'dataProvider' => $dataProvider,
@@ -335,7 +341,7 @@ class PagesController extends Controller
 
         foreach ($columnsConfig as $columnData) {
             $columnName = $columnData['column_name'] ?? null;
-            $columnWidth = isset($columnData['column_width']) ? (int)$columnData['column_width'] : null;
+            $columnWidth = isset($columnData['column_width']) ? (int) $columnData['column_width'] : null;
             $columnPosition = (int) $columnData['column_position'];
 
             if (!$columnName || $columnWidth === null) {
