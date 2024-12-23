@@ -41673,6 +41673,14 @@ footer p .footer-icon {
     padding: 11px 30px 10px;
   }
 
+  #dropdownMenuAccount {
+    user-select: none !important;
+  }
+
+  .select-none {
+    user-select: none !important;
+  }
+
   .page-wrapper .page-header .header-wrapper .nav-right .profile-dropdown {
     top: 50px;
   }

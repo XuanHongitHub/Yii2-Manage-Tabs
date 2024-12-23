@@ -372,14 +372,14 @@ $(document).ready(function () {
                             loadData();
 
                         } else {
-                            alert('Có lỗi xảy ra: ' + response
-                                .message); // Thông báo lỗi
+                            showToast('Có lỗi xảy ra: ' + response
+                                .message);
                         }
                     },
                     error: function () {
-                        alert(
+                        showToast(
                             'Không thể xóa dữ liệu. Vui lòng thử lại.'
-                        ); // Thông báo lỗi nếu có sự cố
+                        );
                     }
                 });
             }
@@ -491,7 +491,7 @@ $(document).on('click', '#export-excel-btn', function () {
         search = urlParams.get('search');
     }
 
-    const exportUrl = export_url + '?pageId=' + pageId + '&sort=' + sort + '&search=' + search;
+    const exportUrl = export_url + '?pageId=' + pageId + '&menuId=' + menuId + '&sort=' + sort + '&search=' + search;
 
     window.location.href = exportUrl;
     loadingSpinner.remove();

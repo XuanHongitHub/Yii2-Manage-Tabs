@@ -82,7 +82,7 @@ foreach ($pageMenus as $menu) {
                 <div
                     class="nav-right col-xxl-7 col-xl-6 col-auto box-col-6 pull-right right-header p-0 ms-auto d-flex align-items-center me-3">
                     <ul class="nav-menus">
-                        <li class="profile-nav p-0">
+                        <li class="profile-nav p-0" style="user-select: none;">
                             <div class="d-flex align-items-center profile-media" id="dropdownMenuAccount"
                                 data-bs-toggle="dropdown" aria-expanded="false">
                                 <?php if (!Yii::$app->user->isGuest): ?>

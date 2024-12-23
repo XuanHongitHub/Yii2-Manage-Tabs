@@ -216,6 +216,7 @@ $columns = array_merge(
     </div>
 </div>
 
+<!-- Button Table -->
 <div class="d-flex flex-wrap justify-content-between align-items-center my-2">
     <div class="d-flex flex-wrap justify-content-start">
         <button class="btn btn-primary me-2 mb-2" id="add-data-btn" href="#" data-bs-toggle="modal"

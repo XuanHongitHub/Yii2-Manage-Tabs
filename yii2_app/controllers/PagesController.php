@@ -716,7 +716,7 @@ class PagesController extends Controller
 
         return $headers;
     }
-    public function actionExportExcel($pageId)
+    public function actionExportExcel($pageId, $menuId)
     {
         $page = Page::findOne(['id' => $pageId]);
         if (!$page) {
@@ -725,13 +725,48 @@ class PagesController extends Controller
 
         $tableName = $page->table_name;
 
-        $columns = (new Query())
-            ->select('column_name')
-            ->from('information_schema.columns')
-            ->where(['table_name' => $tableName])
-            ->andWhere(['<>', 'column_name', BaseModel::HIDDEN_ID_KEY])
+        $configColumns = Config::find()
+            ->select(array_merge(['column_name', 'is_visible', 'display_name', 'column_position'], ['menu_id']))
+            ->where(['page_id' => $page->id])
+            ->andFilterWhere(['=', 'menu_id', $menuId])
+            ->indexBy('column_name')
+            ->asArray()
             ->all();
-        $columnNames = array_map(fn($column) => $column['column_name'], $columns);
+
+        foreach (
+            Config::find()
+                ->select(['column_name', 'is_visible', 'display_name', 'column_position'])
+                ->where(['page_id' => $page->id, 'menu_id' => null])
+                ->asArray()
+                ->all() as $config
+        ) {
+            $configColumns[$config['column_name']]['display_name'] ??= $config['display_name'] ?? null;
+            $configColumns[$config['column_name']] = $configColumns[$config['column_name']] ?? $config;
+        }
+
+        usort($configColumns, fn($a, $b) => $a['column_position'] <=> $b['column_position']);
+        $configColumns = array_column($configColumns, null, 'column_name');
+        Yii::error($configColumns);
+
+        if (empty($configColumns)) {
+            $columns = (new Query())
+                ->select('column_name')
+                ->from('information_schema.columns')
+                ->where(['table_name' => $tableName])
+                ->andWhere(['<>', 'column_name', BaseModel::HIDDEN_ID_KEY])
+                ->all();
+            $columnNames = array_map(fn($column) => $column['column_name'], $columns);
+
+            $configColumns = [];
+            foreach ($columnNames as $columnName) {
+                $configColumns[$columnName] = [
+                    'column_name' => $columnName,
+                    'is_visible' => true,
+                    'display_name' => ucfirst(str_replace('_', ' ', $columnName)), // Tên cột mặc định (chuyển đổi từ snake_case sang định dạng có dấu cách)
+                    'column_position' => 0,
+                ];
+            }
+        }
 
         $query = BaseModel::withTable($tableName)->find();
 
@@ -751,17 +786,13 @@ class PagesController extends Controller
 
         if ($sort = Yii::$app->request->get('sort')) {
             $direction = 'DESC';
-
             if (substr($sort, 0, 1) === '-') {
                 $direction = 'ASC';
                 $sort = ltrim($sort, '-');
             }
-
             $quotedSortColumn = "\"$sort\"";
-
             $query->orderBy(new \yii\db\Expression("$quotedSortColumn $direction"));
         }
-
 
         $data = $query->all();
 
@@ -769,10 +800,12 @@ class PagesController extends Controller
         $sheet = $spreadsheet->getActiveSheet();
 
         $columnIndex = 1;
-        foreach ($columnNames as $column) {
-            $sheet->setCellValueByColumnAndRow($columnIndex, 1, $column);
-            $sheet->getColumnDimensionByColumn($columnIndex)->setAutoSize(true);
-            $columnIndex++;
+        foreach ($configColumns as $columnName => $config) {
+            if ($config['is_visible']) {
+                $sheet->setCellValueByColumnAndRow($columnIndex, 1, $config['display_name']);
+                $sheet->getColumnDimensionByColumn($columnIndex)->setAutoSize(true);
+                $columnIndex++;
+            }
         }
 
         $headerStyle = [
@@ -785,27 +818,27 @@ class PagesController extends Controller
                 'allBorders' => ['borderStyle' => Border::BORDER_THIN, 'color' => ['rgb' => '000000']],
             ],
         ];
-        $sheet->getStyle('A1:' . chr(64 + count($columnNames)) . '1')->applyFromArray($headerStyle);
+        $sheet->getStyle('A1:' . chr(64 + count($configColumns)) . '1')->applyFromArray($headerStyle);
 
         $rowIndex = 2;
         foreach ($data as $row) {
             $columnIndex = 1;
-            foreach ($columnNames as $column) {
-                if (isset($row->$column)) {
-                    $sheet->setCellValueByColumnAndRow($columnIndex, $rowIndex, $row->$column);
+            foreach ($configColumns as $columnName => $config) {
+                if ($config['is_visible'] && isset($row->$columnName)) {
+                    $sheet->setCellValueByColumnAndRow($columnIndex, $rowIndex, $row->$columnName);
                 }
                 $columnIndex++;
             }
             $rowIndex++;
         }
 
-        $sheet->getStyle('A1:' . chr(64 + count($columnNames)) . ($rowIndex - 1))->applyFromArray([
+        $sheet->getStyle('A1:' . chr(64 + count($configColumns)) . ($rowIndex - 1))->applyFromArray([
             'borders' => [
                 'allBorders' => ['borderStyle' => Border::BORDER_THIN, 'color' => ['rgb' => '000000']],
             ],
         ]);
 
-        foreach (range('A', chr(64 + count($columnNames))) as $columnID) {
+        foreach (range('A', chr(64 + count($configColumns))) as $columnID) {
             $sheet->getColumnDimension($columnID)->setAutoSize(true);
         }
 
@@ -819,11 +852,11 @@ class PagesController extends Controller
         $writer = new Xlsx($spreadsheet);
         $writer->save($tempFilePath);
 
+        // Trả về file Excel
         return Yii::$app->response->sendFile($tempFilePath, $fileName)->on(Response::EVENT_AFTER_SEND, function ($event) {
             unlink($event->data);
         }, $tempFilePath);
     }
-
 
     // Xuất Template
     public function actionExportExcelHeader($pageId)
@@ -865,7 +898,6 @@ class PagesController extends Controller
         ];
         $sheet->getStyle('A1:' . chr(63 + $columnIndex) . '1')->applyFromArray($headerStyle);
 
-        // Tạo file Excel và lưu
         $uploadDir = Yii::getAlias('@runtime/cache');
         if (!is_dir($uploadDir)) {
             mkdir($uploadDir, 0777, true);
