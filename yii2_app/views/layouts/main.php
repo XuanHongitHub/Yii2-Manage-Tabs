@@ -78,13 +78,13 @@ foreach ($pageMenus as $menu) {
                     </div>
                 </div>
                 <div class="left-header col-xxl-5 col-xl-6 col-auto box-col-4 horizontal-wrapper p-0">
-
                 </div>
                 <div
                     class="nav-right col-xxl-7 col-xl-6 col-auto box-col-6 pull-right right-header p-0 ms-auto d-flex align-items-center me-3">
                     <ul class="nav-menus">
-                        <li class="profile-nav onhover-dropdown p-0">
-                            <div class="d-flex align-items-center profile-media">
+                        <li class="profile-nav p-0">
+                            <div class="d-flex align-items-center profile-media" id="dropdownMenuAccount"
+                                data-bs-toggle="dropdown" aria-expanded="false">
                                 <?php if (!Yii::$app->user->isGuest): ?>
                                 <svg style="margin-bottom: -5px; width: 30px !important; height: 30px !important;">
                                     <use href="<?= Yii::getAlias('@web') ?>/images/icon-sprite.svg#fill-user"></use>
@@ -104,7 +104,8 @@ foreach ($pageMenus as $menu) {
 
                                 </div>
                             </div>
-                            <ul class="profile-dropdown onhover-show-div">
+                            <ul class="profile-dropdown dropdown-menu dropdown-block" data-bs-auto-close="false"
+                                aria-labelledby="dropdownMenuAccount">
                                 <li><a href="<?= Yii::$app->urlManager->createUrl(['admin/pages/']) ?>"><span><i
                                                 class="fa-solid fa-gear me-2"></i>Cài đặt</span></a></li>
                                 <li><a href="<?= Yii::$app->urlManager->createUrl(['site/change-password']) ?>"><span><i
@@ -134,6 +135,7 @@ foreach ($pageMenus as $menu) {
                             </div>
                             <?php endif; ?>
                         </li>
+                    </ul>
                 </div>
             </div>
         </div>
@@ -185,11 +187,6 @@ foreach ($pageMenus as $menu) {
                                         <svg class="stroke-icon">
                                             <use
                                                 href="<?= Yii::getAlias('@web') ?>/images/icon-sprite.svg#<?= $menu['icon'] ?>">
-                                            </use>
-                                        </svg>
-                                        <svg class="fill-icon">
-                                            <use
-                                                href="<?= Yii::getAlias('@web') ?>/images/icon-sprite.svg#fill-editors">
                                             </use>
                                         </svg>
                                         <span><?= Html::encode($menu['name']) ?></span>

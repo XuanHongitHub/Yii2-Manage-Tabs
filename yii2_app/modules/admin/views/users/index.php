@@ -5,6 +5,8 @@ use yii\helpers\Html;
 use yii\helpers\Url;
 use yii\grid\ActionColumn;
 use yii\grid\GridView;
+use yii\widgets\ActiveForm;
+use yii\widgets\Pjax;
 
 /** @var yii\web\View $this */
 /** @var yii\data\ActiveDataProvider $dataProvider */
@@ -29,16 +31,41 @@ $this->title = 'Quản Lý Người Dùng';
     </div>
     <div class="card-body">
 
+        <div class="d-flex">
+            <div class="search-bar ms-auto">
+                <?php
+                $form = ActiveForm::begin([
+                    'method' => 'get',
+                    'action' => Yii::$app->request->url,
+                    'options' => ['data-pjax' => true, 'class' => 'form-inline'],
+                ]);
+                ?>
+                <div class="form-inline search-tab mb-2 me-2">
+                    <div class="form-group d-flex align-items-center mb-0">
+                        <i class="fa fa-search"></i>
+                        <?= $form->field($searchModel, 'searchQuery', [
+                            'template' => "{input}",
+                            'inputOptions' => [
+                                'class' => 'form-control-plaintext mb-0',
+                                'placeholder' => 'Tìm kiếm... ',
+                            ],
+                            'options' => ['class' => 'mb-0'],
+                        ])->label(false) ?>
+                    </div>
+                </div>
+
+                <?= Html::submitButton('Tìm', ['class' => 'btn btn-primary mb-2']) ?>
+
+                <?php ActiveForm::end(); ?>
+            </div>
+        </div>
+
         <?= GridView::widget([
             'dataProvider' => $dataProvider,
             'columns' => [
                 'id',
                 'username',
                 'email:email',
-                // 'auth_key',
-                // 'access_token',
-                //'verification_token',
-                //'password_hash',
                 [
                     'attribute' => 'status',
                     'label' => 'Trạng thái',
@@ -59,9 +86,6 @@ $this->title = 'Quản Lý Người Dùng';
                     },
                     'format' => 'raw',
                 ],
-                //'created_at',
-                //'updated_at',
-                //'password_reset_token',
                 [
                     'class' => ActionColumn::className(),
                     'header' => 'Hành động',
@@ -97,6 +121,27 @@ $this->title = 'Quản Lý Người Dùng';
                     },
                 ],
             ],
+            'tableOptions' => ['id' => 'table-data', 'class' => 'table table-bordered table-hover custom-td', 'style' => 'table-layout: fixed; min-width: 100%'],
+            'layout' => "<div class='table-responsive' id='tableData' style='max-height: 65vh;'>{items}</div>\n<div class='d-flex flex-wrap justify-content-between align-items-center mt-3'>
+                        <div class='d-flex flex-column flex-md-row justify-content-start mb-2 mb-md-0'>{summary}</div>
+                        <div class='d-flex justify-content-end'>{pager}</div>
+                    </div>",
+            'summary' => '<span class="text-muted">Hiển thị <b>{begin}-{end}</b> trên tổng số <b>{totalCount}</b> dòng.</span>',
+            'pager' => [
+                'class' => 'yii\widgets\LinkPager',
+                'options' => ['class' => 'pagination justify-content-end align-items-center'],
+                'linkContainerOptions' => ['tag' => 'span'],
+                'linkOptions' => [
+                    'class' => 'paginate_button',
+                ],
+                'activePageCssClass' => 'current',
+                'disabledPageCssClass' => 'disabled',
+                'disabledListItemSubTagOptions' => ['tag' => 'span', 'class' => 'paginate_button'],
+                'prevPageLabel' => 'Trước',
+                'nextPageLabel' => 'Tiếp',
+                'maxButtonCount' => 5,
+            ],
         ]); ?>
+
     </div>
 </div>

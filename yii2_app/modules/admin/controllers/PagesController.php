@@ -28,8 +28,6 @@ class PagesController extends BaseAdminController
             'pageSize' => 10,
         ];
 
-        $dataProvider->query->orderBy(['id' => SORT_ASC]);
-
         $trashQuery = clone $dataProvider->query;
         $trashQuery->andWhere(['deleted' => 1]);
 

@@ -112,13 +112,12 @@ $(document).ready(function () {
     function sortPageList(ascending) {
         const items = $('#page-list-modal li').get();
         items.sort((a, b) => {
-            const textA = $(a).find('a').text().toLowerCase();
-            const textB = $(b).find('a').text().toLowerCase();
-            return ascending ? textA.localeCompare(textB) : textB.localeCompare(textA);
+            const textA = $(a).find('a').text().trim();
+            const textB = $(b).find('a').text().trim();
+            return ascending ? textA.localeCompare(textB, 'vi', { sensitivity: 'base' }) : textB.localeCompare(textA, 'vi', { sensitivity: 'base' });
         });
         $('#page-list-modal').append(items);
     }
-
 });
 
 function loadPageData(pageId) {

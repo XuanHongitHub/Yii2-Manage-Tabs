@@ -113,41 +113,30 @@ class PagesController extends Controller
                         'attributes' => $columnNames,
                     ],
                 ]);
+                $commonSelect = ['column_name', 'is_visible', 'display_name', 'column_width', 'column_position'];
+
                 $configColumns = Config::find()
-                    ->select(['column_name', 'is_visible', 'display_name', 'column_width', 'column_position', 'menu_id'])
+                    ->select(array_merge($commonSelect, ['menu_id']))
                     ->where(['page_id' => $page->id])
                     ->andFilterWhere(['=', 'menu_id', $menuId])
                     ->indexBy('column_name')
                     ->asArray()
                     ->all();
 
-                $nullMenuConfigs = Config::find()
-                    ->select(['column_name', 'display_name'])
-                    ->where(['page_id' => $page->id])
-                    ->andFilterWhere(['menu_id' => null])
-                    ->indexBy('column_name')
-                    ->asArray()
-                    ->all();
-
-                foreach ($nullMenuConfigs as $config) {
-                    if (isset($configColumns[$config['column_name']])) {
-                        if ($configColumns[$config['column_name']]['display_name'] === null) {
-                            $configColumns[$config['column_name']]['display_name'] = $config['display_name'];
-                        }
-                    } else {
-                        $configColumns[$config['column_name']] = [
-                            'column_name' => $config['column_name'],
-                            'display_name' => $config['display_name'],
-                            'is_visible' => null,
-                            'column_width' => null,
-                            'column_position' => null,
-                        ];
-                    }
+                foreach (
+                    Config::find()
+                        ->select($commonSelect)
+                        ->where(['page_id' => $page->id, 'menu_id' => null])
+                        ->asArray()
+                        ->all() as $config
+                ) {
+                    $configColumns[$config['column_name']]['display_name'] ??= $config['display_name'] ?? null;
+                    $configColumns[$config['column_name']] = $configColumns[$config['column_name']] ?? $config;
                 }
-                usort($configColumns, function ($a, $b) {
-                    return $a['column_position'] <=> $b['column_position'];
-                });
-                $configColumns = array_values($configColumns);
+
+                usort($configColumns, fn($a, $b) => $a['column_position'] <=> $b['column_position']);
+                $configColumns = array_column($configColumns, null, 'column_name');
+
                 return $this->render('singlePageTable', [
                     'dataProvider' => $dataProvider,
                     'columns' => $columnNames,
@@ -223,32 +212,27 @@ class PagesController extends Controller
 
             $commonSelect = ['column_name', 'is_visible', 'display_name', 'column_width', 'column_position'];
 
-            $configColumns = array_column(
-                Config::find()->select(array_merge($commonSelect, ['menu_id']))
-                    ->where(['page_id' => $page->id])
-                    ->andFilterWhere(['=', 'menu_id', $menuId])
-                    ->asArray()
-                    ->all(),
-                null,
-                'column_name'
-            );
-
-            $nullMenuConfigs = Config::find()->select($commonSelect)
-                ->where(['page_id' => $page->id, 'menu_id' => null])
+            $configColumns = Config::find()
+                ->select(array_merge($commonSelect, ['menu_id']))
+                ->where(['page_id' => $page->id])
+                ->andFilterWhere(['=', 'menu_id', $menuId])
+                ->indexBy('column_name')
                 ->asArray()
                 ->all();
 
-            foreach ($nullMenuConfigs as $config) {
-                if (isset($configColumns[$config['column_name']])) {
-                    $configColumns[$config['column_name']]['display_name'] ??= $config['display_name'];
-                } else {
-                    $configColumns[$config['column_name']] = $config;
-                }
+            foreach (
+                Config::find()
+                    ->select($commonSelect)
+                    ->where(['page_id' => $page->id, 'menu_id' => null])
+                    ->asArray()
+                    ->all() as $config
+            ) {
+                $configColumns[$config['column_name']]['display_name'] ??= $config['display_name'] ?? null;
+                $configColumns[$config['column_name']] = $configColumns[$config['column_name']] ?? $config;
             }
 
             usort($configColumns, fn($a, $b) => $a['column_position'] <=> $b['column_position']);
-
-            $configColumns = array_values($configColumns);
+            $configColumns = array_column($configColumns, null, 'column_name');
 
             return $this->renderAjax('_tableData', [
                 'dataProvider' => $dataProvider,

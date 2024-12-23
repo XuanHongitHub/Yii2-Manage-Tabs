@@ -40,51 +40,51 @@ $(document).ready(function () {
                 nextCol = col.next('th.rs-col');
                 nextStartWidth = nextCol.length ? nextCol[0].getBoundingClientRect().width : 0;
 
-                // Thêm các sự kiện di chuyển chuột và thả chuột
                 $(document).on('mousemove', resizeColumn);
                 $(document).on('mouseup', stopResizing);
 
-                e.preventDefault(); // Ngăn chọn văn bản trong khi kéo
+                e.preventDefault();
             });
 
-            // Hàm thay đổi kích thước cột khi kéo chuột
             function resizeColumn(e) {
                 let newWidth = startWidth + (e.clientX - startX);
-                if (newWidth > 100) { // Đảm bảo cột không nhỏ hơn 100px
-
+                if (newWidth > 100) {
                     let widthDelta = newWidth - startWidth;
 
                     // Cập nhật độ rộng cột hiện tại
                     col.css('width', newWidth);
 
                     // Kiểm tra xem bảng có bị tràn không
-                    const totalCols = table.find('th.rs-col').length;
                     const isOverflowing = table[0].scrollWidth > table.parent()[0].clientWidth;
 
-                    if (totalCols > 5 && isOverflowing) {
-                        // Nếu có đủ cột và bảng bị tràn, điều chỉnh độ rộng toàn bộ bảng
+                    if (isOverflowing) {
+                        // Điều chỉnh độ rộng toàn bộ bảng
                         let newTableWidth = startTableWidth + widthDelta;
                         table.css('width', newTableWidth);
                     } else {
-                        // Nếu ít cột, chỉ thay đổi độ rộng của cột bên phải
+                        // Chỉ thay đổi độ rộng của cột bên phải nếu có và nếu cột bên phải có thể thu nhỏ
                         if (nextCol.length && nextStartWidth - widthDelta > 0) {
                             nextCol.css('width', nextStartWidth - widthDelta);
+                        } else if (!nextCol.length) {
+                            // Không có cột bên phải, đảm bảo bảng không bị thu hẹp hơn width cố định ban đầu
+                            let minTableWidth = startTableWidth > table.parent()[0].clientWidth ? table.parent()[0].clientWidth : startTableWidth;
+                            if (table.css('width') < minTableWidth) {
+                                table.css('width', minTableWidth);
+                            }
                         }
                     }
                 }
             }
 
-            // Hàm dừng thay đổi kích thước và xóa các sự kiện
             function stopResizing() {
                 $(document).off('mousemove', resizeColumn);
                 $(document).off('mouseup', stopResizing);
                 debounceSaveColumnWidth();
             }
 
-            // Thêm sự kiện nhấn đúp để resize cột về 100px
             col.on('dblclick', function () {
                 col.css('width', '100px');
-                debounceSaveColumnWidth(); // Lưu lại độ rộng mới của cột
+                debounceSaveColumnWidth();
             });
         });
     }
@@ -97,7 +97,7 @@ $(document).ready(function () {
         $('#table-data').find('th.rs-col').each(function (index) {
             const columnName = $(this).data('column-name');
             if (!columnName) {
-                console.error('Không tìm thấy column_name cho một cột.');
+                console.error('Không tìm thấy cột.');
                 return;
             }
             const columnPosition = index;

@@ -71,7 +71,7 @@ $this->title = $menu->name;
                     <?php
                     $sortedPages = $pages;
                     usort($sortedPages, function ($a, $b) {
-                        return strcmp($a->name, $b->name);
+                        return strcasecmp(trim($a->name), trim($b->name));
                     });
                     foreach ($sortedPages as $page):
                     ?>

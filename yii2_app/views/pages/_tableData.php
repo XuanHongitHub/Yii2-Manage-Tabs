@@ -13,18 +13,12 @@ use yii\widgets\Pjax;
 $this->registerJsFile('js/components/frontend/multiTablePage.js', ['depends' => AppAsset::class]);
 $this->registerJsFile('js/components/frontend/_tablePage.js', ['depends' => AppAsset::class]);
 $this->title = $menu->name;
-$configs = [];
-
-foreach ($configColumns as $config) {
-    $configs[$config['column_name']] = $config;
-}
-// var_dump($configs);
-// var_dump($configColumns);
 
 $columns = array_merge(
     array_column($configColumns, 'column_name'),
     array_diff($columns, array_column($configColumns, 'column_name'))
 );
+
 ?>
 <!-- Modal Nhập Excel -->
 <div class="modal fade" id="importExelModal" tabindex="-1" aria-labelledby="importExelModalLabel" aria-hidden="true">
@@ -110,17 +104,17 @@ $columns = array_merge(
                 <form id="edit-form">
                     <?php foreach ($columns as $column): ?>
 
-                    <?php
-                        $config = $configs[$column] ?? null;
+                        <?php
+                        $config = $configColumns[$column] ?? null;
                         if ($column === BaseModel::HIDDEN_ID_KEY): ?>
-                    <input type="hidden" name="<?= $column ?>" id="edit-<?= $column ?>">
-                    <?php else: ?>
-                    <div class="form-group mb-2">
-                        <label
-                            for="edit-<?= $column ?>"><?= htmlspecialchars($config['display_name'] ?? $column) ?></label>
-                        <input type="text" class="form-control" name="<?= $column ?>" id="edit-<?= $column ?>">
-                    </div>
-                    <?php endif; ?>
+                            <input type="hidden" name="<?= $column ?>" id="edit-<?= $column ?>">
+                        <?php else: ?>
+                            <div class="form-group mb-2">
+                                <label
+                                    for="edit-<?= $column ?>"><?= htmlspecialchars($config['display_name'] ?? $column) ?></label>
+                                <input type="text" class="form-control" name="<?= $column ?>" id="edit-<?= $column ?>">
+                            </div>
+                        <?php endif; ?>
                     <?php endforeach; ?>
                 </form>
             </div>
@@ -143,16 +137,16 @@ $columns = array_merge(
             <div class="modal-body">
                 <form id="add-data-form">
                     <?php foreach ($columns as $column): ?>
-                    <?php
+                        <?php
                         if ($column === BaseModel::HIDDEN_ID_KEY) continue;
-                        $config = $configs[$column] ?? null;
+                        $config = $configColumns[$column] ?? null;
                         ?>
-                    <div class="form-group mb-2">
-                        <label
-                            for="<?= htmlspecialchars($column) ?>"><?= htmlspecialchars($config['display_name'] ?? $column) ?></label>
-                        <input type="text" class="form-control" name="<?= htmlspecialchars($column) ?>"
-                            id="<?= htmlspecialchars($column) ?>">
-                    </div>
+                        <div class="form-group mb-2">
+                            <label
+                                for="<?= htmlspecialchars($column) ?>"><?= htmlspecialchars($config['display_name'] ?? $column) ?></label>
+                            <input type="text" class="form-control" name="<?= htmlspecialchars($column) ?>"
+                                id="<?= htmlspecialchars($column) ?>">
+                        </div>
                     <?php endforeach; ?>
                 </form>
             </div>
@@ -185,30 +179,30 @@ $columns = array_merge(
                     </thead>
                     <tbody id="sortable-config">
                         <?php foreach ($columns as $column): ?>
-                        <?php
+                            <?php
                             if ($column === BaseModel::HIDDEN_ID_KEY) continue;
-                            $config = $configs[$column] ?? null;
+                            $config = $configColumns[$column] ?? null;
 
                             ?>
-                        <tr data-column="<?= htmlspecialchars($column) ?>">
-                            <td class="text-nowrap" style="width: 4%; text-align: center; vertical-align: middle;">
-                                <span class="drag-handle" style="cursor: grab; font-size: 20px;">&#9776;</span>
-                            </td>
-                            <td class="column-name text-nowrap" style="width: 30%; vertical-align: middle;">
-                                <?= htmlspecialchars($column) ?>
-                            </td>
-                            <td class="text-nowrap" style="width: 30%; vertical-align: middle;">
-                                <?= htmlspecialchars($config['display_name'] ?? $column) ?>
-                            </td>
-                            <td class="text-nowrap" style="width: 4%; text-align: center; vertical-align: middle;">
-                                <div class="form-check form-switch">
-                                    <input class="form-check-input column-switch text-center" type="checkbox"
-                                        id="switch-<?= htmlspecialchars($column) ?>"
-                                        data-column="<?= htmlspecialchars($column) ?>"
-                                        <?= (isset($config['is_visible']) ? $config['is_visible'] : true) ? 'checked' : '' ?>>
-                                </div>
-                            </td>
-                        </tr>
+                            <tr data-column="<?= htmlspecialchars($column) ?>">
+                                <td class="text-nowrap" style="width: 4%; text-align: center; vertical-align: middle;">
+                                    <span class="drag-handle" style="cursor: grab; font-size: 20px;">&#9776;</span>
+                                </td>
+                                <td class="column-name text-nowrap" style="width: 30%; vertical-align: middle;">
+                                    <?= htmlspecialchars($column) ?>
+                                </td>
+                                <td class="text-nowrap" style="width: 30%; vertical-align: middle;">
+                                    <?= htmlspecialchars($config['display_name'] ?? $column) ?>
+                                </td>
+                                <td class="text-nowrap" style="width: 4%; text-align: center; vertical-align: middle;">
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input column-switch text-center" type="checkbox"
+                                            id="switch-<?= htmlspecialchars($column) ?>"
+                                            data-column="<?= htmlspecialchars($column) ?>"
+                                            <?= (isset($config['is_visible']) ? $config['is_visible'] : true) ? 'checked' : '' ?>>
+                                    </div>
+                                </td>
+                            </tr>
                         <?php endforeach; ?>
 
                     </tbody>
@@ -384,14 +378,14 @@ Pjax::end();
 ?>
 
 <script>
-var pageId = "<?= $pageId ?>";
-var add_data_url = "<?= Url::to(['pages/add-data']) ?>";
-var update_data_url = "<?= Url::to(['pages/update-data']) ?>";
-var delete_data_url = "<?= Url::to(['pages/delete-data']) ?>";
-var tableName = "<?= $dataProvider->query->from[0] ?>";
-var delete_all_data_url = "<?= Url::to(['pages/delete-selected-data']) ?>";
-var import_url = "<?= Url::to(['pages/import-excel']) ?>";
-var export_url = "<?= Url::to(['pages/export-excel']) ?>";
-var save_column_config_url = "<?= Url::to(['pages/save-columns-config']) ?>";
-var save_column_width_url = "<?= Url::to(['pages/save-columns-width']) ?>";
+    var pageId = "<?= $pageId ?>";
+    var add_data_url = "<?= Url::to(['pages/add-data']) ?>";
+    var update_data_url = "<?= Url::to(['pages/update-data']) ?>";
+    var delete_data_url = "<?= Url::to(['pages/delete-data']) ?>";
+    var tableName = "<?= $dataProvider->query->from[0] ?>";
+    var delete_all_data_url = "<?= Url::to(['pages/delete-selected-data']) ?>";
+    var import_url = "<?= Url::to(['pages/import-excel']) ?>";
+    var export_url = "<?= Url::to(['pages/export-excel']) ?>";
+    var save_column_config_url = "<?= Url::to(['pages/save-columns-config']) ?>";
+    var save_column_width_url = "<?= Url::to(['pages/save-columns-width']) ?>";
 </script>

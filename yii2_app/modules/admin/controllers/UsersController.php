@@ -4,6 +4,7 @@ namespace app\modules\admin\controllers;
 
 use app\modules\admin\components\BaseAdminController;
 use app\models\User;
+use app\models\UserSearch;
 use Yii;
 use yii\data\ActiveDataProvider;
 use yii\filters\AccessControl;
@@ -47,19 +48,11 @@ class UsersController extends BaseAdminController
      */
     public function actionIndex()
     {
-        $dataProvider = new ActiveDataProvider([
-            'query' => User::find(),
-            'pagination' => [
-                'pageSize' => 10
-            ],
-            'sort' => [
-                'defaultOrder' => [
-                    'id' => SORT_DESC,
-                ]
-            ],
-        ]);
+        $searchModel = new UserSearch();
+        $dataProvider = $searchModel->search(Yii::$app->request->queryParams);
 
         return $this->render('index', [
+            'searchModel' => $searchModel,
             'dataProvider' => $dataProvider,
         ]);
     }
@@ -94,6 +87,7 @@ class UsersController extends BaseAdminController
                 $model->generateEmailVerificationToken();
 
                 if ($model->save()) {
+                    Yii::$app->session->setFlash('success', 'Tạo mới người dùng thành công.');
                     return $this->redirect(['view', 'id' => $model->id]);
                 }
             }
@@ -103,7 +97,6 @@ class UsersController extends BaseAdminController
             'model' => $model,
         ]);
     }
-
 
     /**
      * Updates an existing User model.
@@ -124,6 +117,7 @@ class UsersController extends BaseAdminController
             }
 
             if ($model->save()) {
+                Yii::$app->session->setFlash('success', 'Cập nhật người dùng thành công.');
                 return $this->redirect(['view', 'id' => $model->id]);
             } else {
                 var_dump($model->errors);
@@ -146,7 +140,7 @@ class UsersController extends BaseAdminController
     public function actionDelete($id)
     {
         $this->findModel($id)->delete();
-
+        Yii::$app->session->setFlash('success', 'Xóa người dùng thành công.');
         return $this->redirect(['index']);
     }
 

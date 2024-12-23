@@ -44,11 +44,6 @@ $this->title = 'Danh sách Page';
     </div>
 
     <div class="card-body">
-        <?php Pjax::begin([
-            'id' => 'page-gridview-pjax',
-            'enablePushState' => false,
-            'enableReplaceState' => false
-        ]); ?>
 
         <div class="d-flex">
             <div class="search-bar ms-auto">
@@ -181,7 +176,6 @@ $this->title = 'Danh sách Page';
             'layout' => "{items}\n{summary}\n{pager}",
         ]) ?>
 
-        <?php Pjax::end(); ?>
     </div>
 </div>
 

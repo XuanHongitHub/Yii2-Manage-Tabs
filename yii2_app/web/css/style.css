@@ -38831,6 +38831,7 @@ footer p .footer-icon {
 
 .page-wrapper .page-header .header-wrapper .nav-right .profile-dropdown li+li {
   margin-top: 0;
+  white-space: nowrap;
 }
 
 .page-wrapper .page-header .header-wrapper .nav-right .profile-dropdown li:last-child {

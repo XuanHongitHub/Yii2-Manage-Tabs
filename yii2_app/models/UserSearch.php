@@ -2,21 +2,29 @@
 
 namespace app\models;
 
+use yii\base\Model;
 use yii\data\ActiveDataProvider;
+use app\models\User;
 
-class PageSearch extends Page
+class UserSearch extends User
 {
+    public $searchQuery;
+    /**
+     * {@inheritdoc}
+     */
     public function rules()
     {
         return [
-            [['id'], 'integer'],
-            [['name'], 'safe'],
+            [['searchQuery'], 'safe'],
         ];
     }
 
+    /**
+     * {@inheritdoc}
+     */
     public function search($params)
     {
-        $query = Page::find();
+        $query = User::find();
 
         $dataProvider = new ActiveDataProvider([
             'query' => $query,
@@ -30,16 +38,18 @@ class PageSearch extends Page
             ],
         ]);
 
-        // Nạp dữ liệu từ các tham số và áp dụng bộ lọc
         $this->load($params);
 
         if (!$this->validate()) {
             return $dataProvider;
         }
-
-        // Bộ lọc
-        $query->andFilterWhere(['id' => $this->id]);
-        $query->andFilterWhere(['like', 'name', $this->name]);
+        if ($this->searchQuery) {
+            $query->andFilterWhere([
+                'or',
+                ['like', "LOWER(unaccent(username))", strtolower($this->searchQuery)],
+                ['like', "LOWER(unaccent(email))", strtolower($this->searchQuery)],
+            ]);
+        }
 
         return $dataProvider;
     }
